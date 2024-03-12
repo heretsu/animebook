@@ -1,0 +1,229 @@
+@import url('https://db.onlinewebfonts.com/c/297b9df3e309c6dcddfe08041bd80842?family=CCVengeanceIsMineBody');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #e8edf1;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+#anime-book-font {
+  font-family: 'CCVengeanceIsMineBody', sans-serif;
+}
+#navShadow {
+  box-shadow: 0 -4px 10px -5px rgba(0, 0, 0, 0.5);
+}
+#blurry-background{
+  filter: blur(28px);
+}
+#storyShadow{
+  box-shadow: 0 -4px 10px -5px rgba(0, 0, 0, 0.5);
+  filter: blur(8px);
+  background-color: black;
+}
+
+#modal {
+  position: fixed;
+  top: 0%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  z-index: 10;
+}
+
+#tip-modal {
+  position: fixed;
+  top: 5%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  z-index: 10;
+}
+#tip-overlay{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 15, 15, 0.356);
+  /* background-color: rgba(0, 0, 0, 0.5); */
+  /* pointer-events: none; */
+}
+
+#modal-in-middle{
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  z-index: 10;
+  opacity: 1;
+}
+
+#transparent-overlay, #overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(108, 113, 116, 0.356);
+  /* background-color: rgba(0, 0, 0, 0.5); */
+  /* pointer-events: none; */
+}
+#transparent-overlay{
+  background-color: transparent;
+}
+
+#modal-visible {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  z-index: 10;
+  opacity: 1;
+  transition: opacity 0.7s ease-in;
+}
+
+#manga-overlay, #stories-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+#manga-modal{
+  position: fixed;
+  max-height: 90%;
+  top: 5%;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  z-index: 10;
+  opacity: 1;
+  overflow: scroll;
+  transition: opacity 2.5s ease-in;
+}
+#invisible {
+  position: absolute;
+  background: black;
+  top: 0%;
+  left: 0%;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+#ima {
+  height: fit-content;
+}
+
+#stories {
+  min-width: 4.5rem;
+}
+
+#stories-container {
+  overflow: scroll;
+  scroll-behavior: smooth;
+}
+
+#stories-modal, #explorer-modal {
+  position: fixed;
+  max-height: 100%;
+  top: 0%;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  z-index: 10;
+  opacity: 1;
+  overflow: scroll;
+  transition: opacity 0.7s ease-in;
+  max-width: 100%;
+}
+#stories-cancel{
+  position: fixed;  
+  top: 0%;
+  left: 94%;
+  transform: translate(-50%, 0%);
+  z-index: 10;
+  transition: opacity 0.7s ease-in;
+}
+
+#explorer-modal{
+  transition: opacity 0.1s ease-in;
+}
+#stories-upload{
+  position: fixed;  
+  top: 80%;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  z-index: 10;
+  width: 100%;
+}
+
+#comments{
+  width: 800px;
+  position: absolute;
+  max-height: 80vh;
+  top: 0%;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  z-index: 10;
+  opacity: 1;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  transition: opacity 0.7s ease-in;
+  max-width: 100%;
+  box-shadow: 0 -4px 20px 20px rgba(0, 0, 0, 0.166);
+}
+
+#post-actions{
+  z-index: 10;
+}
+
+#left-controller{
+  position: fixed;  
+  left: 2%;
+  z-index: 10;
+  transition: opacity 0.7s ease-in;
+}
+#right-controller{
+  position: fixed;  
+  right: 2%;
+  z-index: 10;
+  transition: opacity 0.7s ease-in;
+}
+#user-profile{
+  position: fixed; 
+  top: 2%;
+  left: 2%;
+  z-index: 10;
+}
+
+#heart-animation{
+  position: fixed; 
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  z-index: 10;
+  transition: opacity 0.7s ease-in;
+}
+#unheart-animation{
+  position: fixed; 
+  top: 37%;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  z-index: 10;
+  transition: opacity 0.7s ease-in;
+}
+
+#Layer_1{
+  position: fixed; 
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  transform: rotate(0, 360);
+  z-index: 10;
+  transition: opacity 0.7s ease-in;
+}
+
+span.text-textGreen:hover {
+    cursor: pointer;
+}

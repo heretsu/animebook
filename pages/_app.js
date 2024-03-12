@@ -1,0 +1,299 @@
+import "@/styles/globals.css";
+import { UserContext } from "@/lib/userContext";
+import { useState, useEffect, useRef } from "react";
+import supabase from "@/hooks/authenticateUser";
+import { useRouter } from "next/router";
+import PopupModal from "@/components/popupModal";
+import DappLogo from "@/components/dappLogo";
+import ConnectionData from "@/lib/connectionData";
+import DbUsers from "@/hooks/dbUsers";
+
+export default function App({ Component, pageProps }) {
+  const { fetchAllPosts } = DbUsers();
+  const router = useRouter();
+  const [address, setAddress] = useState(null);
+  const { connectToWallet } = ConnectionData();
+  const [userData, setUserData] = useState(undefined);
+  const [subscribed, setSubscribed] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [openStories, setOpenStories] = useState(false);
+  const [userNumId, setUserNumId] = useState("");
+  const [postJustMade, setPostJustMade] = useState(false);
+
+  const [selectedMediaFile, setSelectedMediaFile] = useState(null);
+  const [selectedMedia, setSelectedMedia] = useState(null);
+  const [isImage, setIsImage] = useState(true);
+  const [originalPostValues, setOriginalPostValues] = useState(null);
+  const [postValues, setPostValues] = useState([]);
+  const [userPostValues, setUserPostValues] = useState([]);
+  const [storyValues, setStoryValues] = useState([]);
+  const [openComments, setOpenComments] = useState(false);
+  const [postIdForComment, setPostIdForComment] = useState(null);
+  const [commentValues, setCommentValues] = useState(null);
+  const [currentStory, setCurrentStory] = useState(null);
+  const [storiesFilter, setStoriesFilter] = useState(false);
+  const [imagesFilter, setImagesFilter] = useState(false);
+  const [videosFilter, setVideosFilter] = useState(false);
+  const [tagsFilter, setTagsFilter] = useState(false);
+  const [searchFilter, setSearchFilter] = useState(false);
+  const [commentMsg, setCommentMsg] = useState("");
+  const [parentId, setParentId] = useState(null);
+  const [hashtagList, setHashtagList] = useState(null);
+  const [originalExplorePosts, setOriginalExplorePosts] = useState(null);
+  const [explorePosts, setExplorePosts] = useState(null);
+  const [chosenTag, setChosenTag] = useState("");
+  const [followingPosts, setFollowingPosts] = useState(false);
+  const [storyViews, setStoryViews] = useState(null);
+
+  const [followerObject, setFollowerObject] = useState(null);
+  const [followingObject, setFollowingObject] = useState(null);
+  const [myProfileRoute, setMyProfileRoute] = useState(false);
+
+  const inputRef = useRef(null);
+
+  const checkIfUserExistsAndUpdateData = async (user) => {
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("useruuid", user.id);
+      if (error) {
+        console.error("ERROR FROM OUTER USER ID CHECK: ", error);
+      } else {
+        /* 
+        checking if user exists in db after authentication
+        if user does not exist i.e(data.length->0) then add user to db   
+      */
+
+        if (data.length === 0) {
+          const {addr} = await connectToWallet();
+          const newUser = {
+            useruuid: user.id,
+            username: user.user_metadata.preferred_username,
+            avatar: user.user_metadata.picture,
+            address: addr,
+          };
+          const response = await supabase.from("users").insert([newUser]);
+
+          if (response.error) {
+            console.log("ERROR FROM NEW USER INSERTION: ", response.error);
+            if (response.error.code === "23503") {
+              router.push("/signin");
+            }
+            return;
+          }
+
+          const res = await supabase
+            .from("users")
+            .select("*")
+            .eq("useruuid", user.id);
+          if (res.data.length !== 0) {
+            setUserNumId(res.data[0].id);
+            setUserData({
+              preferred_username: user.user_metadata.preferred_username,
+              picture: user.user_metadata.picture,
+              ...res.data[0],
+            });
+            if (router.pathname !== "/profile/[user]") {
+              fetchAllPosts().then((result) => {
+                setOriginalPostValues(result.data);
+                setPostValues(result.data);
+              });
+            }
+          } else {
+            console.log("ERROR FROM INNER USER ID CHECK: ", res.error);
+          }
+        } else {
+          setUserNumId(data[0].id);
+          setUserData({
+            preferred_username: user.user_metadata.preferred_username,
+            picture: user.user_metadata.picture,
+            ...data[0],
+          });
+          if (router.pathname !== "/profile/[user]") {
+            fetchAllPosts().then((result) => {
+              setOriginalPostValues(result.data);
+              setPostValues(result.data);
+            });
+          }
+        }
+
+        setSubscribed(true);
+      }
+      setAuthLoading(false);
+    } catch (err) {
+      console.log("ERROR FROM USER DATA CATCH BLOCK: ", err);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      [
+        "/",
+        "/explore",
+        "/notifications",
+        "/profile/[user]",
+        "/comments/[comments]",
+        "/settings",
+        "/earn",
+        "/create",
+        "/publishmanga",
+        "/subscriptionplan",
+      ].includes(router.pathname)
+    ) {
+      if (!subscribed) {
+        setAuthLoading(true);
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (session !== undefined && session !== null) {
+            if (session.user === undefined || session.user === null) {
+              router.push("/signin");
+            } else {
+              connectToWallet()
+                .then((res) => {
+                  setAddress(res.addr);
+                })
+                .catch((e) => {
+                  console.log(e);
+                });
+              checkIfUserExistsAndUpdateData(session.user);
+            }
+          } else {
+            console.log("session expired or account not yet created");
+            setAuthLoading(false);
+            // router.push("/signin")
+          }
+        });
+      }
+    }
+  }, [address, router.pathname, router, subscribed]);
+
+  return (
+    <UserContext.Provider
+      value={{
+        address,
+        userData,
+        setUserData,
+        subscribed,
+        profileOpen,
+        setProfileOpen,
+        openStories,
+        setOpenStories,
+        selectedMediaFile,
+        setSelectedMediaFile,
+        selectedMedia,
+        setSelectedMedia,
+        userNumId,
+        postJustMade,
+        setPostJustMade,
+        isImage,
+        setIsImage,
+        originalPostValues,
+        setOriginalPostValues,
+        postValues,
+        setPostValues,
+        storyValues,
+        setStoryValues,
+        commentValues,
+        setCommentValues,
+        openComments,
+        setOpenComments,
+        postIdForComment,
+        setPostIdForComment,
+        currentStory,
+        setCurrentStory,
+        storiesFilter,
+        setStoriesFilter,
+        imagesFilter,
+        setImagesFilter,
+        videosFilter,
+        setVideosFilter,
+        tagsFilter,
+        setTagsFilter,
+        searchFilter,
+        setSearchFilter,
+        commentMsg,
+        setCommentMsg,
+        parentId,
+        setParentId,
+        hashtagList,
+        setHashtagList,
+        originalExplorePosts,
+        setOriginalExplorePosts,
+        explorePosts,
+        setExplorePosts,
+        chosenTag,
+        setChosenTag,
+        followingPosts,
+        setFollowingPosts,
+        storyViews,
+        setStoryViews,
+        followerObject,
+        setFollowerObject,
+        followingObject,
+        setFollowingObject,
+        myProfileRoute,
+        setMyProfileRoute,
+        inputRef,
+        address,
+        setAddress,
+        userPostValues,
+        setUserPostValues,
+      }}
+    >
+      <span className="text-sm sm:text-base">
+        {[
+          "/",
+          "/explore",
+          "/notifications",
+          "/create",
+          "/publishmanga",
+          "/profile/[user]",
+          "/comments/[comments]",
+          "/settings",
+          "/earn",
+          "/subscriptionplan",
+        ].includes(router.pathname) ? (
+          authLoading ? (
+            <div className="pt-8">
+              <PopupModal success={"4"} messageTopic={""} moreInfo={""} />
+              <div id="overlay"></div>
+            </div>
+          ) : subscribed ? (
+            userData ? (
+              address ? (
+                <Component {...pageProps} />
+              ) : (
+                <div className="pt-8">
+                  <DappLogo size={"default"} />
+                  <PopupModal
+                    success={"5"}
+                    messageTopic={""}
+                    moreInfo={""}
+                    username={userData.username}
+                    avatar={userData.avatar}
+                  />
+                  <div id="overlay"></div>
+                </div>
+              )
+            ) : (
+              <div className="pt-8">
+                <DappLogo size={"default"} />
+                <PopupModal success={"3"} messageTopic={""} moreInfo={""} />
+                <div id="overlay"></div>
+              </div>
+            )
+          ) : (
+            <div className="pt-8">
+              <DappLogo size={"default"} />
+              <PopupModal success={"3"} messageTopic={""} moreInfo={""} />
+              <div id="overlay"></div>
+            </div>
+          )
+        ) : (
+          <Component {...pageProps} />
+        )}
+      </span>
+    </UserContext.Provider>
+  );
+}

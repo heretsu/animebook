@@ -1,0 +1,199 @@
+import NavBar from "@/components/navBar";
+import { useState, useContext, useEffect } from "react";
+import { UserContext } from "@/lib/userContext";
+import Image from "next/image";
+import CommentItem from "@/components/commentItem";
+import supabase from "@/hooks/authenticateUser";
+import PostCard from "@/components/postCard";
+import DbUsers from "@/hooks/dbUsers";
+export const getServerSideProps = async (context) => {
+  const { comments } = context.query;
+  return {
+    props: {
+      comments,
+    },
+  };
+};
+
+export default function Comments({ comments }) {
+  const postid = comments;
+  const {
+    userData,
+    userNumId,
+    commentValues,
+    setCommentValues,
+    commentMsg,
+    setCommentMsg,
+    parentId,
+    setParentId,
+    inputRef,
+  } = useContext(UserContext);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [commentPostLoading, setCommentPostLoading] = useState(false);
+  const [postReferenced, setPostReferenced] = useState(null);
+
+  const { fetchPost } = DbUsers();
+
+  const fetchSinglePostComments = async () => {
+    const post = await fetchPost(postid);
+    if (post.error) {
+      setErrorMsg("Failed to get post:", post.error);
+      console.log(post.error);
+      return;
+    }
+    setPostReferenced(post.data[0]);
+
+    const { data } = await supabase
+      .from("comments")
+      .select(
+        "id, created_at, content, posts(id), users(id, avatar, username), parentid"
+      )
+      .eq("postid", postid)
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      setCommentValues(data);
+      setParentId(null);
+      setCommentMsg("");
+      setCommentPostLoading(false);
+    } else {
+      setErrorMsg("Failed to get comments");
+    }
+  };
+
+  const postComment = () => {
+    setCommentPostLoading(true);
+    if (commentMsg !== "") {
+      supabase
+        .from("comments")
+        .insert({
+          postid: postid,
+          content: commentMsg,
+          userid: userNumId,
+          parentid: commentMsg.startsWith("@") ? parentId : null,
+        })
+        .then(async () => {
+          await fetchSinglePostComments();
+        });
+    } else {
+      setErrorMsg("You haven't made a comment yet. Try again");
+      setCommentPostLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSinglePostComments();
+  }, [postid]);
+
+  return (
+    <>
+      <main>
+        <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
+          <NavBar />
+          <div className="w-full py-2 space-y-5 px-2 lg:pl-lPostCustom lg:pr-rPostCustom mt-2 lg:mt-8 flex flex-col">
+            {postReferenced ? (
+              <>
+                <PostCard
+                  id={postid}
+                  media={postReferenced.media}
+                  content={postReferenced.content}
+                  created_at={postReferenced.created_at}
+                  users={postReferenced.users}
+                  myProfileId={userNumId}
+                />
+                <div className="space-x-2 flex flex-row items-center h-fit">
+                  <Image
+                    src={userData.picture}
+                    alt="user profile"
+                    height={35}
+                    width={35}
+                    className="rounded-full"
+                  />
+                  <input
+                    ref={inputRef}
+                    value={commentMsg}
+                    onChange={(e) => {
+                      setCommentMsg(e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        postComment();
+                      }
+                    }}
+                    className="text-gray-800 focus:border-2 focus:outline-none focus:border-green-500 focus:ring-0 rounded-xl w-full bg-slate-100 border border-green-500 focus:ring-0"
+                    placeholder="Leave a comment"
+                  />
+                  {commentPostLoading ? (
+                    <span className="flex items-center justify-center my-auto font-bold text-lg text-slate-400 h-full">
+                      {"..."}
+                    </span>
+                  ) : (
+                    <svg
+                      onClick={() => {
+                        postComment();
+                      }}
+                      className="cursor-pointer"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={26}
+                      height={26}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#000000"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1={22} y1={2} x2={11} y2={13} />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                  )}
+                </div>
+                {errorMsg !== "" && (
+                  <span className="pt-1 text-sm w-full flex flex-row justify-center items-center">
+                    <svg
+                      fill="red"
+                      width="20px"
+                      height="20px"
+                      viewBox="0 -8 528 528"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <title>{"fail"}</title>
+                      <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
+                    </svg>
+                    <p className="text-red-500">{errorMsg}</p>
+                  </span>
+                )}
+                <div className="bg-white shadow-xl min-h-screen h-full rounded-xl px-2 flex flex-col space-y-2">
+                  <span className="p-2 w-full border-b border-gray-400 text-center font-semibold text-base">
+                    Comments
+                  </span>
+                  {commentValues !== null && commentValues !== undefined ? (
+                    commentValues.length > 0 ? (
+                      commentValues.map((comment) => {
+                        return (
+                          <CommentItem key={comment.id} comment={comment} />
+                        );
+                      })
+                    ) : (
+                      <span className="w-full text-gray-500 text-center">
+                        Be the first to comment
+                      </span>
+                    )
+                  ) : (
+                    <span className="w-full text-gray-500 text-center">
+                      fetching comments...
+                    </span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <span className="w-full text-gray-500 text-center">
+                {"fetching comments..."}
+              </span>
+            )}
+          </div>
+        </section>
+      </main>
+    </>
+  );
+}
