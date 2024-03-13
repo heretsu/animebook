@@ -250,7 +250,7 @@ const LargeRightBar = () => {
   }, [originalPostValues, alreadyFollowed]);
 
   return (
-    <div className="h-screen pb-22 flex">
+    <div className="h-screen pb-22 sticky flex">
       <div className="h-full flex flex-col bg-white rounded-xl w-72 py-8 px-6">
         {router.pathname !== "/profile/[user]" &&
           hashtagList !== null &&

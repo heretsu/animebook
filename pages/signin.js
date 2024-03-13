@@ -11,9 +11,9 @@ const Signin = () => {
     try {
       supabase.auth.signInWithOAuth({
         provider: "twitter",
-        // options: {
-        //   redirectTo: "http://localhost:3000",
-        // },
+         options: {
+          redirectTo: "http://localhost:3000",
+         },
       });
     } catch (error) {
       throw "could not sign in";

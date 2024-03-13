@@ -168,7 +168,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
 const LargeTopBar = ({ relationship }) => {
 const {followingPosts, changePostsDisplayed, getAllPosts, searchForItem} = TopBarObjects()
   return (
-    <div className="flex flex-row w-full space-x-2 bg-white rounded-xl p-2">
+    <div className="flex flex-row w-full space-x-2 bg-white rounded-xl p-2 sticko">
       {relationship && (
         <div className="flex flex-row space-x-2 font-semibold">
           <div

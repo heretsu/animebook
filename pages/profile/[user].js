@@ -445,15 +445,11 @@ export default function User({ user }) {
               fetching info...
             </div>
           )}
-          <div>
-            <div className="hidden lg:block ml-80 py-2 pr-rSearchPadding w-screen fixed left-0">
-              <LargeTopBar relationship={false} />
-            </div>
-          </div>
+     
 
-          <div className="hidden lg:block fixed right-2 top-20">
-            <LargeRightBar />
-          </div>
+   <div className="hidden lg:block sticky right-2 top-20 heighto">
+   <LargeRightBar />
+   </div>
         </section>
         <MobileNavBar />
         <div

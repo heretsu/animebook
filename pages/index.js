@@ -141,17 +141,16 @@ export default function Home() {
               : "w-full lg:mt-20 pt-2 pb-20 lg:pt-0 lg:pb-2 space-y-3 px-2 lg:pl-lPostCustom lg:pr-rPostCustom flex flex-col"
           }
         >
+        <div className="topcont">
+          <LargeTopBar relationship={true} />
+          </div>
           <Stories />
           <Posts />
         </div>
 
-        <div>
-          <div className="hidden lg:block ml-80 py-2 pr-rSearchPadding w-screen fixed left-0">
-            <LargeTopBar relationship={true} />
-          </div>
-        </div>
 
-        <div className="hidden lg:block fixed right-2 top-20">
+
+        <div className="hidden lg:block sticky right-2 top-20 heighto">
           <LargeRightBar />
         </div>
       </section>

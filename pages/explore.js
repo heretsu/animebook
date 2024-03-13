@@ -427,6 +427,9 @@ const Explore = () => {
         <NavBar />
         <SmallTopBar middleTab={true} />
         <div className="w-full py-2 space-y-5 px-2 lg:pl-lPostCustom lg:pr-rPostCustom mt-2 lg:mt-20 flex flex-col">
+        <div className="topcont">
+          <LargeTopBar relationship={true} />
+          </div>
           <div className="text-gray-400 text-sm space-x-2 w-fit flex flex-row">
             {hashtagList !== null &&
               hashtagList !== undefined &&
@@ -534,13 +537,7 @@ const Explore = () => {
           </div>
         </div>
 
-        <div>
-          <div className="hidden lg:block ml-80 py-2 pr-rSearchPadding w-screen fixed left-0">
-            <LargeTopBar />
-          </div>
-        </div>
-
-        <div className="hidden lg:block fixed right-2 top-20">
+                <div className="hidden lg:block sticky right-2 top-20 heighto">
           <LargeRightBar />
         </div>
       </section>
