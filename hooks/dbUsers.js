@@ -19,6 +19,16 @@ export default function DbUsers() {
     return res;
   }
 
+  const fetchAllSingleUserPosts = async (userid) => {
+    const res = await supabase
+      .from("posts")
+      .select(
+        "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio)"
+      ).eq("userid", userid).order("created_at", { ascending: false });
+      
+    return res;
+  }
+
   const fetchUserMangas = async (userid) => {
     const res = await supabase
       .from("mangas")
@@ -43,5 +53,5 @@ export default function DbUsers() {
 
     return res;
   };
-  return { fetchAllPosts, fetchPost, fetchAllUsers, fetchMyUserInfo, fetchUserMangas };
+  return { fetchAllPosts, fetchPost, fetchAllUsers, fetchMyUserInfo, fetchUserMangas, fetchAllSingleUserPosts };
 }

@@ -7,7 +7,7 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 
 export const MobileNavBar = () => {
   // For dev: This is mobile nav. Post button on large nav
-  const {fullPageReload} = PageLoadOptions()
+  const { fullPageReload } = PageLoadOptions();
   const { userData, myProfileRoute } = useContext(UserContext);
   const router = useRouter();
   const [currentRoute, setCurrentRoute] = useState("/");
@@ -65,7 +65,7 @@ export const MobileNavBar = () => {
           height="28px"
           width="28px"
           stroke="transparent"
-          fill={currentRoute === "/create" ? "#74dc9c" :"black"}
+          fill={currentRoute === "/create" ? "#74dc9c" : "black"}
           x="0px"
           y="0px"
           viewBox="0 0 52 52"
@@ -98,7 +98,9 @@ export const MobileNavBar = () => {
         </svg>
 
         <svg
-          onClick={()=>{fullPageReload(`/profile/${userData.username}`)}}
+          onClick={() => {
+            fullPageReload(`/profile/${userData.username}`);
+          }}
           className="w-[28] h-[28px]"
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
@@ -106,7 +108,12 @@ export const MobileNavBar = () => {
           viewBox="0 0 14 18"
         >
           <path
-            stroke={myProfileRoute && (currentRoute === "/profile/[user]" || currentRoute === "/edit" ) ? "rgb(73, 169, 73)" : "gray"}
+            stroke={
+              myProfileRoute &&
+              (currentRoute === "/profile/[user]" || currentRoute === "/edit")
+                ? "rgb(73, 169, 73)"
+                : "gray"
+            }
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="1.1"
@@ -119,7 +126,7 @@ export const MobileNavBar = () => {
 };
 
 const NavBar = () => {
-  const {fullPageReload} = PageLoadOptions()
+  const { fullPageReload } = PageLoadOptions();
   const { userData, myProfileRoute } = useContext(UserContext);
   const router = useRouter();
   const [currentRoute, setCurrentRoute] = useState("/");
@@ -136,17 +143,24 @@ const NavBar = () => {
         </div>
         <span className="border-t py-3 cursor-pointer flex justify-start items-center space-x-1">
           {userData && (
-            <Image
-              src={userData.picture}
-              alt="user myprofile"
-              height={35}
-              width={35}
-              className="rounded-full"
-            />
+            <span className="relative h-8 w-8 flex">
+              <Image
+                src={userData.picture}
+                alt="user myprofile"
+                height={35}
+                width={35}
+                className="rounded-full"
+              />
+            </span>
           )}
           <span className="text-sm flex flex-row items-center justify-start">
             <span>{"@"}</span>
-            <span onClick={()=>{fullPageReload(`/profile/${userData.username}`)}} className="font-semibold">
+            <span
+              onClick={() => {
+                fullPageReload(`/profile/${userData.username}`);
+              }}
+              className="font-semibold"
+            >
               {userData && userData.username}
             </span>
           </span>
@@ -204,7 +218,7 @@ const NavBar = () => {
           </div>
           <div
             onClick={() => {
-              router.push("/notifications");
+              fullPageReload("/notifications");
             }}
             className={
               currentRoute == "/notifications"
@@ -231,10 +245,12 @@ const NavBar = () => {
             <span>Notifications</span>
           </div>
           <div
-            onClick={()=>{fullPageReload(`/profile/${userData.username}`)
+            onClick={() => {
+              fullPageReload(`/profile/${userData.username}`);
             }}
             className={
-              myProfileRoute && (currentRoute === "/profile/[user]" || currentRoute === "/edit" )
+              myProfileRoute &&
+              (currentRoute === "/profile/[user]" || currentRoute === "/edit")
                 ? "text-textGreen text-start cursor-pointer flex flex-row space-x-3 items-center"
                 : "text-start cursor-pointer flex flex-row space-x-3 items-center"
             }
@@ -248,7 +264,11 @@ const NavBar = () => {
             >
               <path
                 stroke={
-                  myProfileRoute && (currentRoute === "/profile/[user]" || currentRoute === "/edit" ) ? "rgb(73, 169, 73)" : "#000000"
+                  myProfileRoute &&
+                  (currentRoute === "/profile/[user]" ||
+                    currentRoute === "/edit")
+                    ? "rgb(73, 169, 73)"
+                    : "#000000"
                 }
                 strokeLinecap="round"
                 strokeLinejoin="round"

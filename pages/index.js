@@ -11,6 +11,8 @@ import { useRouter } from "next/router";
 import CommentCard from "@/components/commentCard";
 import DappLibrary from "@/lib/dappLibrary";
 import Spinner from "@/components/spinner";
+import CommentConfig from "@/components/commentConfig";
+import ReactPlayer from "react-player";
 
 export default function Home() {
   const [storyUploading, setStoryUploading] = useState(false);
@@ -33,9 +35,12 @@ export default function Home() {
     userData,
     openComments,
     setOpenComments,
+    storyValues,
     currentStory,
     setCurrentStory,
-    storyViews
+    storyViews,
+    playVideo,
+    setPlayVideo,
   } = useContext(UserContext);
 
   const closeStory = () => {
@@ -54,7 +59,7 @@ export default function Home() {
         const newName = Date.now() + file.name;
         supabase.storage
           .from("mediastore")
-          .upload(newName, file)
+          .upload("stories/" + newName, file)
           .then((result) => {
             if (result.data) {
               const mediaUrl =
@@ -108,7 +113,12 @@ export default function Home() {
         setStoryToView(userStories[storyIndex + 1]);
         setStoryIndex(storyIndex + 1);
       } else {
-        console.log("no new story from this user after this");
+        const n = storyValues.find((ns) => {
+          return ns.newIndex === currentStory.newIndex + 1;
+        });
+        console.log(n);
+        fetchViews(n.stories[0].dbIndex);
+        setCurrentStory(n);
       }
     } else {
       if (storyIndex - 1 >= 0) {
@@ -116,10 +126,16 @@ export default function Home() {
         setStoryToView(userStories[storyIndex - 1]);
         setStoryIndex(storyIndex - 1);
       } else {
-        console.log("no story from this user before this");
+        const ln = storyValues.find((ls) => {
+          return ls.newIndex === currentStory.newIndex - 1;
+        });
+        console.log(ln);
+        fetchViews(ln.stories[0].dbIndex);
+        setCurrentStory(ln);
       }
     }
   };
+
   useEffect(() => {
     if (currentStory !== null) {
       //using ... to destructure array else if done directly the original array will be mutated (reversed as well)
@@ -136,21 +152,17 @@ export default function Home() {
         <SmallTopBar middleTab={true} relationship={true} />
         <div
           className={
-            openComments
-              ? "fixed w-full lg:mt-20 pt-2 pb-20 lg:pt-0 lg:pb-2 space-y-3 px-2 lg:pl-lPostCustom lg:pr-rPostCustom flex flex-col"
-              : "w-full lg:mt-20 pt-2 pb-20 lg:pt-0 lg:pb-2 space-y-3 px-2 lg:pl-lPostCustom lg:pr-rPostCustom flex flex-col"
+            "w-full lg:mt-20 pt-2 pb-20 lg:pt-0 lg:pb-2 space-y-3 px-2 lg:pl-lPostCustom lg:pr-rPostCustom flex flex-col"
           }
         >
-        <div className="topcont">
+                <div className="topcont">
           <LargeTopBar relationship={true} />
           </div>
           <Stories />
           <Posts />
         </div>
 
-
-
-        <div className="hidden lg:block sticky right-2 top-20 heighto">
+<div className="hidden lg:block sticky right-2 top-20 heighto">
           <LargeRightBar />
         </div>
       </section>
@@ -167,15 +179,15 @@ export default function Home() {
               <Image
                 src={selectedMedia}
                 alt="Story"
-                height={500}
-                width={500}
+                height={600}
+                width={600}
                 className="w-full h-full object-contain"
               />
             )
           ) : (
             <video
-              width={500}
-              height={500}
+              width={600}
+              height={600}
               src={selectedMedia}
               autoPlay
               loop
@@ -216,19 +228,19 @@ export default function Home() {
               storyToView.media.endsWith("MOV") ||
               storyToView.media.endsWith("3gp") ||
               storyToView.media.endsWith("3GP") ? (
-                <video
-                  width={500}
-                  height={500}
-                  src={storyToView.media}
-                  autoPlay
+                <ReactPlayer
+                  url={storyToView.media}
+                  playing={playVideo}
+                  width="100%"
+                  height="100%"
                   loop
-                ></video>
+                />
               ) : (
                 <Image
                   src={storyToView.media}
                   alt="Story"
-                  height={500}
-                  width={500}
+                  height={600}
+                  width={600}
                   className="w-full h-full object-contain"
                 />
               ))}
@@ -255,7 +267,9 @@ export default function Home() {
               <span className="flex flex-row text-base w-full justify-center text-start">
                 <span className="flex flex-col space-y-2 items-center">
                   <span className="bg-black px-2">
-                    {storyToView.content !== null && storyToView.content}
+                    {storyToView.content !== null && (
+                      <CommentConfig text={storyToView.content} tags={true} />
+                    )}
                   </span>
                   {currentStory.id === userNumId && (
                     <div
@@ -285,7 +299,6 @@ export default function Home() {
                       </div>
                     </div>
                   )}
-                  {/* <div className="h-[80vh] absolute w-full bg-white">a</div> */}
                 </span>
               </span>
             </div>
@@ -315,7 +328,10 @@ export default function Home() {
         </div>
       )}
       <div
-        onClick={closeStory}
+        onClick={() => {
+          setPlayVideo(false);
+          closeStory();
+        }}
         id={
           openStories || selectedMedia !== null ? "stories-cancel" : "invisible"
         }
@@ -363,13 +379,14 @@ export default function Home() {
         ""
       )}
       {openComments && (
-        <>
+        <><span id="comments-modal">
           <CommentCard openComments={openComments} />
+        </span>
           <div
             onClick={() => {
               setOpenComments(false);
             }}
-            id="transparent-overlay"
+            id="overlay"
           ></div>
         </>
       )}

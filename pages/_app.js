@@ -50,7 +50,15 @@ export default function App({ Component, pageProps }) {
   const [followingObject, setFollowingObject] = useState(null);
   const [myProfileRoute, setMyProfileRoute] = useState(false);
 
+  const [deletePost, setDeletePost] = useState(null);
+  const [playVideo, setPlayVideo] = useState(false);
+
   const inputRef = useRef(null);
+
+  const [openManga, setOpenManga] = useState(false);
+  const [mgComic, setMgComic] = useState(null);
+  const [openPurchaseModal, setOpenPurchaseModal] = useState(false);
+  const [allUserObject, setAllUserObject] = useState(null) 
 
   const checkIfUserExistsAndUpdateData = async (user) => {
     try {
@@ -66,8 +74,9 @@ export default function App({ Component, pageProps }) {
         if user does not exist i.e(data.length->0) then add user to db   
       */
 
-        if (data.length === 0) {
-          const {addr} = await connectToWallet();
+        if (user.id !== null && user.id !== undefined && data.length === 0) {
+          const { addr } = await connectToWallet();
+          setAddress(addr);
           const newUser = {
             useruuid: user.id,
             username: user.user_metadata.preferred_username,
@@ -106,6 +115,7 @@ export default function App({ Component, pageProps }) {
           }
         } else {
           setUserNumId(data[0].id);
+          setAddress(data[0].address);
           setUserData({
             preferred_username: user.user_metadata.preferred_username,
             picture: user.user_metadata.picture,
@@ -118,7 +128,6 @@ export default function App({ Component, pageProps }) {
             });
           }
         }
-
         setSubscribed(true);
       }
       setAuthLoading(false);
@@ -149,13 +158,6 @@ export default function App({ Component, pageProps }) {
             if (session.user === undefined || session.user === null) {
               router.push("/signin");
             } else {
-              connectToWallet()
-                .then((res) => {
-                  setAddress(res.addr);
-                })
-                .catch((e) => {
-                  console.log(e);
-                });
               checkIfUserExistsAndUpdateData(session.user);
             }
           } else {
@@ -239,6 +241,17 @@ export default function App({ Component, pageProps }) {
         setAddress,
         userPostValues,
         setUserPostValues,
+        deletePost,
+        setDeletePost,
+        playVideo,
+        setPlayVideo,
+        openManga,
+        setOpenManga,
+        mgComic,
+        setMgComic,
+        openPurchaseModal,
+        setOpenPurchaseModal,
+        allUserObject, setAllUserObject
       }}
     >
       <span className="text-sm sm:text-base">
@@ -262,6 +275,7 @@ export default function App({ Component, pageProps }) {
           ) : subscribed ? (
             userData ? (
               address ? (
+                
                 <Component {...pageProps} />
               ) : (
                 <div className="pt-8">

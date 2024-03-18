@@ -1,5 +1,4 @@
 import { useState, useContext, useEffect } from "react";
-import onePiece from "@/assets/onePiece.jpg";
 import Image from "next/image";
 import PlusIcon from "@/components/plusIcon";
 import Posts from "@/components/posts";
@@ -13,6 +12,9 @@ import supabase from "@/hooks/authenticateUser";
 import { useRouter } from "next/router";
 import Spinner from "@/components/spinner";
 import PopupModal from "@/components/popupModal";
+import PriceFeedStation from "@/lib/priceFeedStation";
+import { ethers } from "ethers";
+import ConnectionData from "@/lib/connectionData";
 
 export const getServerSideProps = async (context) => {
   const { user } = context.query;
@@ -24,6 +26,8 @@ export const getServerSideProps = async (context) => {
 };
 
 export default function User({ user }) {
+  const { connectToWallet } = ConnectionData();
+  const { getUsdPrice } = PriceFeedStation();
   const router = useRouter();
   const { fetchAllUsers, fetchAllPosts, fetchUserMangas } = DbUsers();
   const { fetchFollowing, fetchFollows } = Relationships();
@@ -37,17 +41,27 @@ export default function User({ user }) {
     followingObject,
     setFollowingObject,
     setMyProfileRoute,
+    deletePost,
+    setDeletePost,
+    openPurchaseModal,
+    mgComic,
+    openManga,
+    setOpenPurchaseModal,
+    setMgComic,
+    setOpenManga,
+    setAllUserObject
   } = useContext(UserContext);
 
   const [openPremium, setOpenPremium] = useState(false);
-  const [openManga, setOpenManga] = useState(false);
   const [alreadyFollowed, setAlreadyFollowed] = useState(false);
   const [itsMe, setItsMe] = useState(false);
   const [userBasicInfo, setUserBasicInfo] = useState(null);
   const [mangaLoading, setMangaLoading] = useState(false);
   const [mangaObjects, setMangaObjects] = useState(null);
-  const [openTipModal, setOpenTipModal] = useState(false)
+  const [openTipModal, setOpenTipModal] = useState(false);
+  const [subscribedUser, setSubscribedUser] = useState(false);
 
+  const [mangaIndex, setMangaIndex] = useState(0);
   const fetchFollowingAndFollowers = async (userid) => {
     const followings = await fetchFollowing(userid);
 
@@ -73,6 +87,7 @@ export default function User({ user }) {
       })
       .catch((e) => console.log(e));
   };
+
   function userSpecificPosts(result) {
     setPostValues(
       result.data.filter(
@@ -103,8 +118,93 @@ export default function User({ user }) {
     return reversedDate;
   };
 
+  const mangaToggle = (status) => {
+    if (status) {
+      if (mangaIndex + 1 < mgComic.filepaths.length) {
+        setMangaIndex(mangaIndex + 1);
+      }
+    } else {
+      if (mangaIndex - 1 >= 0) {
+        setMangaIndex(mangaIndex - 1);
+      }
+    }
+  };
+
+  const checkPurchaseOrSubscribe = async (mg) => {
+    let allowRead = false;
+    const { data } = await supabase.from("subscriptions").select().match({
+      subscriber: userNumId,
+      creator: userBasicInfo.id,
+    });
+
+    if (data && data.length > 0) {
+      allowRead = true;
+    } else {
+      const response = await supabase.from("purchases").select().match({
+        mangaid: mg.id,
+        userid: userNumId,
+      });
+      if (response.data && response.data.length > 0) {
+        allowRead = true;
+      }
+    }
+    return allowRead;
+  };
+
+  const subscribeToPublisher = async () => {
+    try {
+      const prs = await getUsdPrice();
+      const sendAmount = parseFloat(userBasicInfo.subprice) / prs.ethPrice;
+      const wei = ethers.utils.parseUnits(
+        sendAmount.toFixed(18).toString(),
+        18
+      );
+      console.log(wei);
+
+      const { provider } = await connectToWallet();
+      let transactionResponse = null;
+
+      transactionResponse = await provider.getSigner().sendTransaction({
+        to: userBasicInfo.address,
+        value: wei,
+      });
+
+      const receipt = await transactionResponse.wait();
+      console.log(receipt);
+
+      if (receipt) {
+        const { error } = await supabase.from("subscriptions").insert({
+          subscriber: userNumId,
+          creator: userBasicInfo.id,
+        });
+        if (!error) {
+          setSubscribedUser(true);
+        }
+      }
+    } catch (e) {
+      console.log(e.message);
+    }
+  };
+
+  const readManga = async (mg) => {
+    if (itsMe) {
+      setMgComic(mg);
+      setOpenManga(true);
+    } else {
+      const res = await checkPurchaseOrSubscribe(mg);
+      if (res) {
+        setMgComic(mg);
+        setOpenManga(true);
+      } else {
+        setMgComic(mg);
+        setOpenPurchaseModal(true);
+      }
+    }
+  };
+
   useEffect(() => {
     fetchAllUsers().then((r) => {
+      setAllUserObject(r.data)
       if (r.data !== null && r.data !== undefined && r.data.length !== 0) {
         const currentUserExtraInfo = r.data.find(
           (c) => c.username.toLowerCase() === user.toLowerCase()
@@ -116,6 +216,18 @@ export default function User({ user }) {
 
         fetchFollowingAndFollowers(currentUserExtraInfo.id)
           .then((res) => {
+            supabase
+              .from("subscriptions")
+              .select()
+              .match({
+                subscriber: userNumId,
+                creator: currentUserExtraInfo.id,
+              })
+              .then(({ data }) => {
+                if (data && data.length > 0) {
+                  setSubscribedUser(true);
+                }
+              });
             setFollowerObject(res.followings.data);
             setFollowingObject(res.followers.data);
 
@@ -161,7 +273,7 @@ export default function User({ user }) {
                   )}
                   <span className="text-xs md:text-sm rounded-b-2xl absolute inset-0 flex flex-col justify-between text-white">
                     <span className="w-full flex flex-row justify-end pt-2 pr-4">
-                      {itsMe ? (
+                      {itsMe && (
                         <span
                           onClick={() => {
                             router.push("/settings");
@@ -170,20 +282,20 @@ export default function User({ user }) {
                         >
                           Edit profile
                         </span>
-                      ) : (
-                        <span></span>
                       )}
                     </span>
                     <span className="rounded-b-2xl space-y-1 w-full px-2 pt-2 bg-gray-800 bg-opacity-70">
                       <span className="font-semibold flex flex-row w-full justify-between items-center">
                         <span className="flex flex-row justify-start items-center space-x-0.5">
-                          <Image
-                            src={userBasicInfo.avatar}
-                            alt="user"
-                            height={35}
-                            width={35}
-                            className="border border-white rounded-full"
-                          />
+                          <span className="relative h-8 w-8 flex">
+                            <Image
+                              src={userBasicInfo.avatar}
+                              alt="user"
+                              width={35}
+                              height={35}
+                              className="border border-white rounded-full"
+                            />
+                          </span>
                           <span className="font-semibold text-[0.85rem] pr-2">
                             {userBasicInfo.username}
                           </span>
@@ -300,7 +412,12 @@ export default function User({ user }) {
                         </svg>
                         <span>{`send ${userBasicInfo.username} san a tip`}</span>
                       </span>
-                      <span onClick={()=>{setOpenTipModal(true)}} className="cursor-pointer text-xs sm:text-sm font-bold py-1 px-2 bg-pastelGreen text-white border-2 border-white shadow-xl rounded-2xl">
+                      <span
+                        onClick={() => {
+                          setOpenTipModal(true);
+                        }}
+                        className="cursor-pointer text-xs sm:text-sm font-bold py-1 px-2 bg-pastelGreen text-white border-2 border-white shadow-xl rounded-2xl"
+                      >
                         Send Tip
                       </span>
                     </span>
@@ -337,10 +454,21 @@ export default function User({ user }) {
                                       ).toFixed(2)} per month`}
                                     </span>
                                   </span>
-                                  <span className="cursor-pointer font-semibold flex flex-row h-fit space-x-1 rounded-lg p-3.5 bg-pastelGreen text-white">
-                                    <span>SUBSCRIBE</span>
-                                    <span>NOW</span>
-                                  </span>
+                                  {subscribedUser ? (
+                                    <span className="cursor-pointer font-semibold flex h-fit rounded-lg p-3.5 bg-gray-500 bg-opacity-40 text-white">
+                                      <span>SUBSCRIBED</span>
+                                    </span>
+                                  ) : (
+                                    <span
+                                      onClick={() => {
+                                        subscribeToPublisher();
+                                      }}
+                                      className="cursor-pointer font-semibold flex flex-row h-fit space-x-1 rounded-lg p-3.5 bg-pastelGreen text-white"
+                                    >
+                                      <span>SUBSCRIBE</span>
+                                      <span>NOW</span>
+                                    </span>
+                                  )}
                                 </span>
                               )}
                             </>
@@ -361,7 +489,7 @@ export default function User({ user }) {
                                   <span
                                     key={mangaSeries.id}
                                     onClick={() => {
-                                      // setOpenManga(true);
+                                      readManga(mangaSeries);
                                     }}
                                     className="cursor-pointer h-fit relative rounded-lg overflow-hidden"
                                   >
@@ -445,63 +573,125 @@ export default function User({ user }) {
               fetching info...
             </div>
           )}
-     
+         
 
-   <div className="hidden lg:block sticky right-2 top-20 heighto">
-   <LargeRightBar />
-   </div>
+          <div className="hidden lg:block sticky right-2 top-20 heighto">
+            <LargeRightBar />
+          </div>
         </section>
         <MobileNavBar />
-        <div
-          id={openManga ? "manga-modal" : "invisible"}
-          className="w-11/12 sm:w-10/12 flex justify-center"
-        >
-          <span className="w-fit space-y-[0.13rem] flex flex-col justify-start items-center">
-            <span className="text-black w-fit bg-white rounded-lg w-full mb-2 p-4 text-sm font-semibold">
-              {"One Thief: Chapter 1"}
-            </span>
-            <span className="relative w-fit flex flex-col justify-center">
-              <span className="text-white font-semibold pt-3 pr-2.5 absolute inset-0 h-fit w-full flex justify-end">
-                <span
-                  onClick={() => {
-                    setOpenManga(false);
-                  }}
-                  className="cursor-pointer bg-pastelGreen py-0.5 px-2 rounded text-center"
-                >
-                  {"x"}
+        {mgComic && (
+          <div
+            id={openManga ? "manga-modal" : "invisible"}
+            className="w-11/12 sm:w-10/12 flex justify-center"
+          >
+            <span className="w-fit space-y-[0.13rem] flex flex-col justify-start items-center">
+              <span className="text-black w-fit bg-white rounded-lg w-full mb-2 p-4 text-sm font-semibold">
+                {mgComic.name}
+              </span>
+              <span className="relative w-fit flex flex-col justify-center">
+                <span className="text-white font-semibold pt-3 pr-2.5 absolute inset-0 h-fit w-full flex justify-end">
+                  <span
+                    onClick={() => {
+                      setOpenManga(false);
+                    }}
+                    className="cursor-pointer bg-pastelGreen py-0.5 px-2 rounded text-center"
+                  >
+                    {"x"}
+                  </span>
+                </span>
+                <Image
+                  src={mgComic.filepaths[mangaIndex]}
+                  alt="post"
+                  height={700}
+                  width={700}
+                  className="rounded-xl object-contain border-[0.25rem] border-white"
+                />
+                <span className="font-semibold text-white px-2.5 absolute w-full flex justify-between">
+                  <span
+                    onClick={() => {
+                      mangaToggle(false);
+                    }}
+                    className="cursor-pointer bg-pastelGreen py-0.5 px-2 rounded text-center"
+                  >
+                    {"<"}
+                  </span>
+                  <span
+                    onClick={() => {
+                      mangaToggle(true);
+                    }}
+                    className="cursor-pointer bg-pastelGreen py-0.5 px-2 rounded text-center"
+                  >
+                    {">"}
+                  </span>
                 </span>
               </span>
-              <Image
-                src={onePiece}
-                alt="post"
-                height={500}
-                width={500}
-                className="rounded-xl object-contain border-[0.25rem] border-white"
-              />
-              <span className="font-semibold text-white px-2.5 absolute w-full flex justify-between">
-                <span className="cursor-pointer bg-pastelGreen py-0.5 px-2 rounded text-center">
-                  {"<"}
-                </span>
-                <span className="cursor-pointer bg-pastelGreen py-0.5 px-2 rounded text-center">
-                  {">"}
-                </span>
-              </span>
             </span>
-          </span>
-        </div>
+          </div>
+        )}
+
         {openManga && (
           <div id="manga-overlay" className="bg-black bg-opacity-80"></div>
         )}
-        {openTipModal && (<>
-          <PopupModal
-            success={"6"}
-            username={userBasicInfo.username}
-            avatar={userBasicInfo.avatar}
-            sourceAddress={userNumId}
-            destinationAddress={userBasicInfo.address}
-            userDestinationId={userBasicInfo.id}
-          />
-          <div onClick={()=>{setOpenTipModal(false)}} id="tip-overlay"></div>
+
+        {openTipModal && (
+          <>
+            <PopupModal
+              success={"6"}
+              username={userBasicInfo.username}
+              avatar={userBasicInfo.avatar}
+              sourceAddress={userNumId}
+              destinationAddress={userBasicInfo.address}
+              userDestinationId={userBasicInfo.id}
+            />
+            <div
+              onClick={() => {
+                setOpenTipModal(false);
+              }}
+              id="tip-overlay"
+            ></div>
+          </>
+        )}
+
+        {openPurchaseModal && (
+          <>
+            <PopupModal
+              success={"8"}
+              username={userBasicInfo.username}
+              mangaImage={mgComic.cover}
+              sourceAddress={userNumId}
+              destinationAddress={userBasicInfo.address}
+              userDestinationId={userBasicInfo.id}
+              mangaPrice={mgComic.price}
+              mangaName={mgComic.name}
+              mangaId={mgComic.id}
+            />
+            <div
+              onClick={() => {
+                setOpenPurchaseModal(false);
+              }}
+              id="tip-overlay"
+            ></div>
+          </>
+        )}
+
+        {deletePost !== null && (
+          <>
+            <PopupModal
+              success={"7"}
+              username={userBasicInfo.username}
+              avatar={userBasicInfo.avatar}
+              sourceAddress={userNumId}
+              destinationAddress={userBasicInfo.address}
+              userDestinationId={userBasicInfo.id}
+            />
+            <div
+              onClick={() => {
+                setDeletePost(null);
+              }}
+              id="overlay"
+              className="bg-black bg-opacity-80"
+            ></div>
           </>
         )}
       </main>

@@ -90,13 +90,15 @@ export default function CommentCard({openComments}) {
         </svg>
       </span>
       <div className="pt-5 space-x-2 flex flex-row items-center h-fit">
+      <span className="relative h-8 w-8 flex">
         <Image
           src={userData.picture}
           alt="user profile"
           height={35}
           width={35}
-          className="rounded-full"
+          className="absolute rounded-full"
         />
+        </span>
         <input
           ref={inputRef}
           value={commentMsg}

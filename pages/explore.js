@@ -463,7 +463,7 @@ const Explore = () => {
                       onClick={() => {
                         exploreAndAllDetails(post[0], explorePosts[post.newId]);
                       }}
-                      className="cursor-pointer h-fit relative rounded-xl overflow-hidden"
+                      className="cursor-pointer h-auto relative rounded-xl overflow-hidden"
                     >
                       {post[0].media !== null &&
                         post[0].media !== undefined &&
@@ -481,7 +481,7 @@ const Explore = () => {
                             autoPlay
                             loop
                             muted
-                            className="w-full h-full rounded-lg object-contain"
+                            className="w-full h-full rounded-lg object-cover"
                           ></video>
                         ) : (
                           <Image
@@ -489,7 +489,7 @@ const Explore = () => {
                             alt="Post"
                             height={500}
                             width={500}
-                            className="w-full h-full"
+                            className="w-full h-full object-cover"
                           />
                         ))}
                       <div className="absolute inset-0 text-white flex flex-col justify-end">
@@ -501,13 +501,15 @@ const Explore = () => {
                           }}
                           className="w-fit hover:underline pl-2 pb-2 flex flex-row justify-start items-center space-x-1"
                         >
-                          <Image
-                            src={post[0].users.avatar}
-                            alt="user profile"
-                            height={35}
-                            width={35}
-                            className="rounded-full border border-white"
-                          />
+                          <span className="relative h-8 w-8 flex">
+                            <Image
+                              src={post[0].users.avatar}
+                              alt="user profile"
+                              height={35}
+                              width={35}
+                              className="rounded-full border border-white"
+                            />
+                          </span>
                           <span className="font-semibold text-center text-sm">
                             {post[0].users.username}
                           </span>
@@ -537,7 +539,7 @@ const Explore = () => {
           </div>
         </div>
 
-                <div className="hidden lg:block sticky right-2 top-20 heighto">
+        <div className="hidden lg:block sticky right-2 top-20 heighto">
           <LargeRightBar />
         </div>
       </section>
@@ -600,13 +602,15 @@ const Explore = () => {
                   }}
                   className="hover:underline cursor-pointer flex justify-start items-center space-x-2"
                 >
-                  <Image
-                    src={currentPost[0].users.avatar}
-                    alt="user profile"
-                    height={35}
-                    width={35}
-                    className="rounded-full"
-                  />
+                  <span className="relative h-8 w-8 flex">
+                    <Image
+                      src={currentPost[0].users.avatar}
+                      alt="user profile"
+                      height={35}
+                      width={35}
+                      className="rounded-full"
+                    />
+                  </span>
                   <span className="font-semibold">
                     {currentPost[0].users.username}
                   </span>
@@ -617,7 +621,7 @@ const Explore = () => {
                 className="pb-12 flex flex-col text-base w-full justify-center text-start"
               >
                 <span className="bg-black px-4 w-fit mx-auto">
-                  <CommentConfig  text={currentPost[0].content} tags={true} />
+                  <CommentConfig text={currentPost[0].content} tags={true} />
                 </span>
                 <PostActions
                   id={currentPost[0].id}
@@ -670,7 +674,7 @@ const Explore = () => {
                 </svg>
               )}
             </div>
-            {/* Story Controllers */}
+            {/* explore post Controllers */}
             <div className="text-xl font-semibold w-full absolute inset-0 flex flex-row justify-between items-center h-fit my-auto">
               <span
                 onClick={() => {

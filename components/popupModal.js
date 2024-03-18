@@ -10,8 +10,11 @@ import ErcTwentyToken from "../lib/static/ErcTwentyToken.json";
 import PriceFeedStation from "@/lib/priceFeedStation";
 import { ethers } from "ethers";
 import DappLibrary from "@/lib/dappLibrary";
+import supabase from "@/hooks/authenticateUser";
+import DbUsers from "@/hooks/dbUsers";
 
 export default function PopupModal({
+  address,
   success,
   messageTopic,
   moreInfo,
@@ -20,12 +23,24 @@ export default function PopupModal({
   destinationAddress,
   userDestinationId,
   avatar,
+  mangaPrice,
+  mangaImage,
+  mangaName,
+  mangaId,
 }) {
-  const {sendNotification} = DappLibrary()
+  const { sendNotification } = DappLibrary();
   const ercABI = ErcTwentyToken.abi;
   const { getUsdPrice } = PriceFeedStation();
   const [activateSpinner, setActivateSpinner] = useState(false);
-  const { setAddress } = useContext(UserContext);
+  const {
+    setAddress,
+    deletePost,
+    setDeletePost,
+    userNumId,
+    setPostValues,
+    setOpenPurchaseModal,
+    
+  } = useContext(UserContext);
   const { connectToWallet } = ConnectionData();
   const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
@@ -34,14 +49,15 @@ export default function PopupModal({
   const [prices, setPrices] = useState(null);
   const [coinAmount, setCoinAmount] = useState(null);
   const [weiValue, setWeiValue] = useState("");
-  const [tipMessage, setTipMessage] = useState("")
+  const [tipMessage, setTipMessage] = useState("");
   const [err, setErr] = useState(null);
 
   const toggleCurrency = (coin) => {
-    setErr("")
-    setTipMessage("")
+    setErr("");
+    setTipMessage("");
     setCurrency(coin);
     convertToCoin(usdValue, coin);
+    convertPriceToCoin(coin, prices);
   };
 
   function formatNumber(number) {
@@ -73,17 +89,39 @@ export default function PopupModal({
     }
   };
 
+  const convertPriceToCoin = (coin, prs) => {
+    let sendAmount = 0;
+    if (coin === "luffy") {
+      sendAmount = parseFloat(mangaPrice) / prs.tokenPrice;
+    } else {
+      sendAmount = parseFloat(mangaPrice) / prs.ethPrice;
+    }
+    const amountInWei = ethers.utils.parseUnits(
+      sendAmount.toFixed(coin === "luffy" ? 9 : 18).toString(),
+      coin === "luffy" ? 9 : 18
+    );
+    setCoinAmount(`${formatNumber(sendAmount)} ${coin}`);
+    setWeiValue(amountInWei);
+  };
+
   const sendTip = async () => {
     if (weiValue !== "") {
       try {
-        const amt = coinAmount
-        const coin = currency
+        const amt = coinAmount;
+        const coin = currency;
         const { provider } = await connectToWallet();
         let transactionResponse = null;
 
         if (currency === "luffy") {
-          const tokenContract = new ethers.Contract("0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7", ercABI, provider.getSigner());
-          transactionResponse = await tokenContract.transfer(destinationAddress, weiValue);
+          const tokenContract = new ethers.Contract(
+            "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
+            ercABI,
+            provider.getSigner()
+          );
+          transactionResponse = await tokenContract.transfer(
+            destinationAddress,
+            weiValue
+          );
         } else {
           transactionResponse = await provider.getSigner().sendTransaction({
             to: destinationAddress,
@@ -91,13 +129,21 @@ export default function PopupModal({
           });
         }
         const receipt = await transactionResponse.wait();
-        setTipMessage(`Tipped ${username} $${amt} in ${coin}`)
-        setCoinAmount("")
-        sendNotification("tip", userDestinationId, 0, 0, `tipped you ${amt} ${coin}`)
-
+        setTipMessage(`Tipped ${username} $${amt} in ${coin}`);
+        setCoinAmount("");
+        sendNotification(
+          "tip",
+          userDestinationId,
+          0,
+          0,
+          `tipped you ${amt} ${coin}`
+        );
       } catch (e) {
-        console.log(e.message)
-        if (e.message && e.message.includes("insufficient funds") || e.message.includes("ERC20: transfer amount exceeds balance")) {
+        console.log(e.message);
+        if (
+          (e.message && e.message.includes("insufficient funds")) ||
+          e.message.includes("ERC20: transfer amount exceeds balance")
+        ) {
           setErr(`Insufficient ${currency} balance`);
         } else {
           setErr(e.message.slice(0, 25).concat("..."));
@@ -109,11 +155,109 @@ export default function PopupModal({
     setActivateSpinner(false);
   };
 
+  const purchaseManga = async () => {
+    setActivateSpinner(true);
+    try {
+      const { provider } = await connectToWallet();
+      let transactionResponse = null;
+
+      if (currency === "luffy") {
+        const tokenContract = new ethers.Contract(
+          "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
+          ercABI,
+          provider.getSigner()
+        );
+        transactionResponse = await tokenContract.transfer(
+          destinationAddress,
+          weiValue
+        );
+      } else {
+        transactionResponse = await provider.getSigner().sendTransaction({
+          to: destinationAddress,
+          value: weiValue,
+        });
+      }
+      const receipt = await transactionResponse.wait();
+      console.log(receipt);
+
+      if (receipt) {
+        await supabase.from("purchases").insert({
+          mangaid: mangaId,
+          userid: userNumId,
+        });
+        setOpenPurchaseModal(false)
+      }
+    } catch (e) {
+      console.log(e.message);
+      if (
+        (e.message && e.message.includes("insufficient funds")) ||
+        e.message.includes("ERC20: transfer amount exceeds balance")
+      ) {
+        setErr(`Insufficient ${currency} balance`);
+      } else {
+        setErr(e.message.slice(0, 25).concat("..."));
+      }
+    }
+    setActivateSpinner(false);
+  };
+
+  const deletePostViaId = async () => {
+    if (deletePost.media !== null && deletePost.media !== undefined) {
+      const { data, error } = await supabase.storage
+        .from("mediastore")
+        .remove([deletePost.media.split("public/mediastore/")[1]]);
+      console.log(data, error);
+      if (data.length !== 0) {
+        supabase
+          .from("posts")
+          .delete()
+          .eq("id", deletePost.postid)
+          .eq("userid", userNumId)
+          .then((response) => {
+            console.log("response: ", response);
+            DbUsers()
+              .fetchAllSingleUserPosts(userNumId)
+              .then(({ data }) => {
+                if (data) {
+                  setPostValues(data);
+                }
+              });
+          })
+          .catch((e) => {
+            console.log("error: ", e);
+          });
+      }
+    } else {
+      supabase
+        .from("posts")
+        .delete()
+        .eq("id", deletePost.postid)
+        .eq("userid", userNumId)
+        .then((response) => {
+          console.log("response: ", response);
+          DbUsers()
+            .fetchAllSingleUserPosts(userNumId)
+            .then(({ data }) => {
+              if (data) {
+                setPostValues(data);
+              }
+            });
+        })
+        .catch((e) => {
+          console.log("error: ", e);
+        });
+    }
+    setDeletePost(null);
+  };
+
   useEffect(() => {
     setModalVisible(true);
-    getUsdPrice().then((res) => {
-      setPrices(res);
-    });
+    if (mangaPrice){
+      getUsdPrice().then((res) => {
+        setPrices(res);
+        convertPriceToCoin("eth", res);
+      });
+    }
   }, []);
   return (
     <div
@@ -126,6 +270,8 @@ export default function PopupModal({
           ? "modal-in-middle"
           : success == "6"
           ? "tip-modal"
+          : success == "7"
+          ? "modal-in-middle"
           : "modal"
       }
       className={
@@ -136,7 +282,129 @@ export default function PopupModal({
           : "bg-white text-black space-y-3 rounded-xl pt-6 pb-7 px-4 lg:px-20 w-9/12 lg:w-2/5 flex flex-col items-center"
       }
     >
-      {success == "6" ? (
+      {success == "8" ? (
+        <div className="flex flex-col py-2 w-full justify-center relative">
+          <span className="w-full space-x-0.5 text-lg font-semibold text-gray-500 flex flex-row justify-center items-center">
+            <span>{`Purchase manga from ${username}`}</span>
+          </span>
+
+          <span className="mx-auto py-3">
+            <Image
+              src={mangaImage}
+              alt="user profile"
+              height={80}
+              width={80}
+              className="rounded"
+            />
+          </span>
+
+          <span className="text-center w-full flex flex-col justify-center itemts-center">
+            <span className="w-fit mx-auto flex flex-row space-x-1">
+              <span>{"Name: "}</span>
+              <span className="font-medium">{mangaName}</span>
+            </span>
+            <span className="w-fit mx-auto flex flex-row space-x-1">
+              <span>{"Price: "}</span>
+              <span className="text-green-500 font-medium">{`$${mangaPrice}`}</span>
+            </span>
+          </span>
+          <span className="text-slate-700 mx-auto">{coinAmount}</span>
+          <span className="py-5 flex flex-row justify-center w-fit mx-auto rounded-lg space-x-4">
+            <span
+              onClick={() => {
+                toggleCurrency("luffy");
+              }}
+              className={`${
+                currency === "luffy"
+                  ? "text-white bg-pastelGreen"
+                  : "text-black bg-white"
+              } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
+            >
+              <Image
+                src={luffyLogo}
+                alt="luffy logo"
+                height={25}
+                width={25}
+                className="rounded-full"
+              />
+              <span className="font-semibold text-sm">LUFFY</span>
+            </span>
+
+            <span
+              onClick={() => {
+                toggleCurrency("eth");
+              }}
+              className={`${
+                currency === "eth"
+                  ? "text-white bg-pastelGreen"
+                  : "text-black bg-white"
+              } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
+            >
+              <ETHSVG size={"25"} />
+              <span className="font-medium text-sm">ETH</span>
+            </span>
+          </span>
+          {activateSpinner ? (
+            <span className="mx-auto">
+              <Spinner spinnerSize={"medium"} />
+            </span>
+          ) : (
+            <span
+              onClick={() => {
+                purchaseManga();
+              }}
+              className="text-lg w-full text-white text-center cursor-pointer font-bold bg-pastelGreen py-2 px-4 rounded-xl"
+            >
+              Checkout
+            </span>
+          )}
+          {err && (
+            <span className="text-sm text-center w-full flex flex-row justify-center items-center">
+              <svg
+                fill="red"
+                width="20px"
+                height="20px"
+                viewBox="0 -8 528 528"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title>{"fail"}</title>
+                <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
+              </svg>
+              <p className="text-red-500">{err}</p>
+            </span>
+          )}
+        </div>
+      ) : success == "7" ? (
+        <div className="flex flex-col py-2 w-full relative">
+          <span className="mx-auto pb-4 text-lg font-medium">
+            {"Are you sure you want to delete this post?"}
+          </span>
+          {activateSpinner ? (
+            <span className="mx-auto">
+              <Spinner spinnerSize={"medium"} />
+            </span>
+          ) : (
+            <span className="text-white font-semibold w-full flex flex-row justify-center items-center space-x-20">
+              <span
+                onClick={() => {
+                  deletePostViaId();
+                }}
+                className="cursor-pointer bg-red-400 px-3 py-2 rounded-lg"
+              >
+                Delete
+              </span>
+              <span
+                onClick={() => {
+                  setDeletePost(null);
+                }}
+                className="cursor-pointer bg-slate-900 px-3 py-2 rounded-lg"
+              >
+                Cancel
+              </span>
+            </span>
+          )}
+        </div>
+      ) : success == "6" ? (
         <div className="flex flex-col py-2 w-full relative">
           <span className="w-full space-x-0.5 text-lg font-semibold text-gray-500 flex flex-row justify-center items-center">
             <svg
@@ -271,7 +539,13 @@ export default function PopupModal({
               </svg>
               <p className="text-red-500">{err}</p>
             </span>
-          ) : tipMessage !== "" && <span className="text-green-500 font-medium w-full flex flex-row justify-center items-center text-sm text-center">{tipMessage}</span>}
+          ) : (
+            tipMessage !== "" && (
+              <span className="text-green-500 font-medium w-full flex flex-row justify-center items-center text-sm text-center">
+                {tipMessage}
+              </span>
+            )
+          )}
           <span className="pt-2 mx-auto text-gray-500 font-medium">
             {"arigato (ありがとう)"}
           </span>

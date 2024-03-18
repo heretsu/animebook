@@ -76,14 +76,17 @@ export default function CommentItem({comment}) {
     comment.parentid === null && (
       <span className="space-y-2">
         <span className="flex flex-row items-center space-x-2">
-          <span onClick={()=>{fullPageReload(`/profile/${comment.users.username}`)}}><Image
+
+        <span onClick={()=>{fullPageReload(`/profile/${comment.users.username}`)}} className="relative h-8 w-8 flex">
+          <Image
             src={comment.users.avatar}
-            alt="user profile"
-            height={35}
+            alt="user"
             width={35}
+            height={35}
             className="rounded-full"
           />
-          </span>
+        </span>
+
           <span className="text-start space-x-1 flex flex-col items-center w-fit rounded-xl py-1 px-2 bg-pastelGreen text-white">
             <p className="w-full text-normal font-semibold">
               {comment.users.username}

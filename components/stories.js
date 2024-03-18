@@ -2,6 +2,7 @@ import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "@/lib/userContext";
 import DappLibrary from "@/lib/dappLibrary";
+import supabase from "@/hooks/authenticateUser";
 
 const Stories = () => {
   const { fetchStories, fetchViews } = DappLibrary();
@@ -13,6 +14,8 @@ const Stories = () => {
     userData,
     setIsImage,
     setCurrentStory,
+    userNumId,
+    setPlayVideo
   } = useContext(UserContext);
 
   const mediaChange = (e) => {
@@ -37,12 +40,12 @@ const Stories = () => {
       setSelectedMedia(URL.createObjectURL(file));
     }
   };
+
   useEffect(() => {
-    fetchStories()
+    fetchStories();
   }, []);
 
   return (
-    
     <div
       id="stories-container"
       className="font-semibold space-x-1.5 relative w-full items-start flex flex-row bg-transparent"
@@ -82,7 +85,12 @@ const Stories = () => {
           return (
             <div
               onClick={() => {
-                fetchViews(storyValues[story.newIndex].stories[storyValues[story.newIndex].stories.length - 1].dbIndex)
+                fetchViews(
+                  storyValues[story.newIndex].stories[
+                    storyValues[story.newIndex].stories.length - 1
+                  ].dbIndex
+                );
+                setPlayVideo(true)
                 setCurrentStory(storyValues[story.newIndex]);
                 setOpenStories(true);
               }}
@@ -100,7 +108,6 @@ const Stories = () => {
                   width={40}
                   height={40}
                   src={story.stories[0].media}
-                  
                 ></video>
               ) : (
                 <Image
@@ -108,7 +115,6 @@ const Stories = () => {
                   alt="Story"
                   height={40}
                   width={40}
-                  
                   className="w-full h-full object-cover"
                 />
               )}

@@ -25,16 +25,25 @@ const Notifications = () => {
           result.data.forEach((note) => {
             const period = getNotificationPeriod(note.created_at);
             if (!noteObject[period]) {
-              noteObject[period] = [];
+                noteObject[period] = [];
             }
-            noteObject[period].push({
-              type: note.type,
-              content: note.content,
-              avatar: note.users.avatar,
-              username: note.users.username,
-              userid: note.users.id,
-            });
-          });
+            // Create a unique identifier for each note
+            const noteIdentifier = `${note.type}-${note.content}-${note.users.id}-${note.postid}`;
+            // Check if this note already exists in the array
+            const isNoteAlreadyAdded = noteObject[period].some(
+                existingNote => `${existingNote.type}-${existingNote.content}-${existingNote.userid}-${existingNote.postid}` === noteIdentifier
+            );
+            if (!isNoteAlreadyAdded) {
+                noteObject[period].push({
+                    type: note.type,
+                    content: note.content,
+                    avatar: note.users.avatar,
+                    username: note.users.username,
+                    userid: note.users.id,
+                    postid: note.postid
+                });
+            }
+        });
           setNotifyUserObject(noteObject);
         }
       });

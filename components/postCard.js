@@ -8,6 +8,26 @@ import Relationships from "@/hooks/relationships";
 import PostInViewport from "@/lib/postInViewport";
 import DappLibrary from "@/lib/dappLibrary";
 import { useRouter } from "next/router";
+import ReactPlayer from "react-player";
+
+export const BinSvg = ({ pixels }) => {
+  return (
+    <svg
+      width={pixels}
+      height={pixels}
+      viewBox="0 0 16 16"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="red"
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M10 3h3v1h-1v9l-1 1H4l-1-1V4H2V3h3V2a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1zM9 2H6v1h3V2zM4 13h7V4H4v9zm2-8H5v7h1V5zm1 0h1v7H7V5zm2 0h1v7H9V5z"
+      />
+    </svg>
+  );
+};
+
 export default function PostCard({
   id,
   media,
@@ -20,8 +40,13 @@ export default function PostCard({
   const { sendNotification } = DappLibrary();
   const [alreadyFollowed, setAlreadyFollowed] = useState(null);
   const { fetchFollows } = Relationships();
-  const { setOpenComments, setPostIdForComment, setCommentValues } =
-    useContext(UserContext);
+  const {
+    setOpenComments,
+    setPostIdForComment,
+    setCommentValues,
+    deletePost,
+    setDeletePost,
+  } = useContext(UserContext);
   const [comments, setComments] = useState(null);
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(null);
@@ -36,6 +61,10 @@ export default function PostCard({
   const [ref, isBeingViewed] = PostInViewport({
     threshold: 0.5,
   });
+
+  const deleteAction = () => {
+    setDeletePost({ postid: id, media: media });
+  };
 
   const addBookmark = () => {
     if (bookmarkReentry) {
@@ -191,36 +220,45 @@ export default function PostCard({
             onClick={() => {
               router.push(`/profile/${users.username}`);
             }}
-            className="cursor-pointer flex justify-start items-center space-x-2"
+            className="cursor-pointer flex flex-row justify-start items-center space-x-2"
           >
-            <Image
-              src={users.avatar}
-              alt="user profile"
-              height={35}
-              width={35}
-              className="rounded-full"
-            />
+            <span className="relative h-9 w-9 flex">
+              <Image
+                src={users.avatar}
+                alt="user profile"
+                width={35}
+                height={35}
+                className="rounded-full object"
+              />
+            </span>
             <span className="font-semibold">{users.username}</span>
           </span>
 
-          {router.pathname !== "/profile/[user]" &&
-            users.id !== myProfileId &&
-            (alreadyFollowed === null ? (
-              ""
-            ) : alreadyFollowed ? (
-              <span className="text-slate-600">Following</span>
-            ) : (
-              <PlusIcon
-                alreadyFollowed={alreadyFollowed}
-                setAlreadyFollowed={setAlreadyFollowed}
-                followerUserId={myProfileId}
-                followingUserId={users.id}
-                size={"19"}
-                color={"default"}
-              />
-            ))}
+          {router.pathname === "/profile/[user]" && users.id === myProfileId ? (
+            <span onClick={deleteAction} className="cursor-pointer">
+              <BinSvg pixels={"20px"} />
+            </span>
+          ) : alreadyFollowed === null ? (
+            ""
+          ) : alreadyFollowed ? (
+            <span className="text-slate-600">Following</span>
+          ) : (
+            <PlusIcon
+              alreadyFollowed={alreadyFollowed}
+              setAlreadyFollowed={setAlreadyFollowed}
+              followerUserId={myProfileId}
+              followingUserId={users.id}
+              size={"19"}
+              color={"default"}
+            />
+          )}
         </span>
-        <span onDoubleClick={()=>{likePost()}} className="w-full flex justify-center">
+        <span
+          onDoubleClick={() => {
+            likePost();
+          }}
+          className="relative w-full max-h-[600px] flex justify-center"
+        >
           {media !== null &&
             media !== undefined &&
             media !== "" &&
@@ -230,20 +268,15 @@ export default function PostCard({
             media.endsWith("MOV") ||
             media.endsWith("3gp") ||
             media.endsWith("3GP") ? (
-              <video
-                width={500}
-                height={500}
-                src={media}
-                controls
-                className="w-full h-full rounded-lg object-contain"
-              ></video>
+              <video src={media} height={600} width={600} controls></video>
             ) : (
+              
               <Image
                 src={media}
                 alt="post"
-                height={500}
-                width={500}
-                className="w-full h-full rounded-lg object-contain"
+                width={600}
+                height={600}
+                className="rounded-lg object-cover"
               />
             ))}
         </span>
@@ -292,12 +325,12 @@ export default function PostCard({
                 onClick={() => {
                   setPostIdForComment(id);
                   setCommentValues(comments);
-                  if (router.pathname === "/profile/[user]"){
-                    router.push(`/comments/${id}`)
-                  } else if(router.pathname === "/comments/[comments]"){
-                    console.log('comment page')
-                    return
-                  } else{
+                  if (router.pathname === "/profile/[user]") {
+                    router.push(`/comments/${id}`);
+                  } else if (router.pathname === "/comments/[comments]") {
+                    console.log("comment page");
+                    return;
+                  } else {
                     setOpenComments(true);
                   }
                 }}

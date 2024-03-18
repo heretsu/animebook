@@ -11,9 +11,12 @@ const Signin = () => {
     try {
       supabase.auth.signInWithOAuth({
         provider: "twitter",
-        // options: {
-        //   redirectTo: "http://localhost:3000",
-        // },
+        options: {
+          redirectTo: "https://animebook-cypherp0nk.vercel.app/",
+        },
+        options: {
+           redirectTo: "http://localhost:3000",
+         },
       });
     } catch (error) {
       throw "could not sign in";
@@ -137,7 +140,7 @@ const Signin = () => {
           />
         </svg>
         <div
-          onClick={address ? login : ()=>{setErrorMsg("Click on Connect wallet first");}}
+          onClick={address ? login : ()=>{setErrorMsg("Click on Connect wallet first")}}
           className={
             address
               ? "text-slate-700 bg-pastelGreen cursor-pointer p-2 space-x-2 flex flex-row justify-center items-center rounded-xl w-full text-sm"
