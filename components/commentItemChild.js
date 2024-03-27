@@ -8,13 +8,17 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 
 export default function CommentItemChild({ commentChild }) {
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, setCommentMsg, setParentId, inputRef } =
+  const { userNumId, setCommentMsg, setParentId, inputRef, userData } =
     useContext(UserContext);
   const [likes, setLikes] = useState(null);
   const [liked, setLiked] = useState(false);
   const [reentry, setReentry] = useState(false);
 
   const likeComment = (id) => {
+    if (userData === undefined || userData === null){
+      fullPageReload('/signin');
+      return;
+    }
     if (reentry) {
       setReentry(false);
       if (liked) {
@@ -50,15 +54,22 @@ export default function CommentItemChild({ commentChild }) {
         }
       });
   };
-  useEffect(() => {
-    fetchCommentLikes();
-  }, []);
 
   const replyComment = (parentCommentId, commentOwner) => {
+    if (userData === undefined || userData === null){
+      fullPageReload('/signin');
+      return
+    }
     setCommentMsg(`@${commentOwner} `);
     setParentId(parentCommentId);
     inputRef.current.focus();
   };
+  
+  useEffect(() => {
+    fetchCommentLikes();
+  }, []);
+
+  
   return (
     likes !== null && (
       <span className="ml-12 flex flex-row items-center space-x-2">

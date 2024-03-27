@@ -4,8 +4,9 @@ import { UserContext } from "@/lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import CommentItem from "./commentItem";
 import { useRouter } from "next/router";
+import PageLoadOptions from "@/hooks/pageLoadOptions";
 
-export default function CommentCard({openComments}) {
+export default function CommentCard({ openComments }) {
   const {
     userData,
     postIdForComment,
@@ -17,9 +18,9 @@ export default function CommentCard({openComments}) {
     parentId,
     setParentId,
     inputRef,
-    setOpenComments
+    setOpenComments,
   } = useContext(UserContext);
-  const router = useRouter()
+  const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
   const [commentPostLoading, setCommentPostLoading] = useState(false);
 
@@ -44,6 +45,10 @@ export default function CommentCard({openComments}) {
 
   const postComment = () => {
     setCommentPostLoading(true);
+    if (userData === undefined || userData === null) {
+      PageLoadOptions().fullPageReload("/signin");
+      return;
+    }
     if (commentMsg !== "") {
       supabase
         .from("comments")
@@ -71,7 +76,10 @@ export default function CommentCard({openComments}) {
         <span></span>
         <span>Comments</span>
         <svg
-          onClick={()=>{setOpenComments(false);router.push(`/comments/${postIdForComment}`)}}
+          onClick={() => {
+            setOpenComments(false);
+            router.push(`/comments/${postIdForComment}`);
+          }}
           className="cursor-pointer"
           width="22px"
           height="22px"
@@ -90,14 +98,16 @@ export default function CommentCard({openComments}) {
         </svg>
       </span>
       <div className="pt-5 space-x-2 flex flex-row items-center h-fit">
-      <span className="relative h-8 w-8 flex">
-        <Image
-          src={userData.picture}
-          alt="user profile"
-          height={35}
-          width={35}
-          className="absolute rounded-full"
-        />
+        <span className="relative h-8 w-8 flex">
+          {userData &&
+            <Image
+              src={userData.picture}
+              alt="user profile"
+              height={35}
+              width={35}
+              className="absolute rounded-full"
+            />
+          }
         </span>
         <input
           ref={inputRef}
@@ -160,10 +170,14 @@ export default function CommentCard({openComments}) {
               return <CommentItem key={comment.id} comment={comment} />;
             })
           ) : (
-            <span className="w-full text-gray-500 text-center">Be the first to comment</span>
+            <span className="w-full text-gray-500 text-center">
+              Be the first to comment
+            </span>
           )
         ) : (
-          <span className="w-full text-gray-500 text-center">fetching comments...</span>
+          <span className="w-full text-gray-500 text-center">
+            fetching comments...
+          </span>
         )}
       </div>
     </div>

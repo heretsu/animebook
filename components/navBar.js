@@ -127,7 +127,7 @@ export const MobileNavBar = () => {
 
 const NavBar = () => {
   const { fullPageReload } = PageLoadOptions();
-  const { userData, myProfileRoute } = useContext(UserContext);
+  const { userData, myProfileRoute, NotSignedIn } = useContext(UserContext);
   const router = useRouter();
   const [currentRoute, setCurrentRoute] = useState("/");
 
@@ -153,17 +153,23 @@ const NavBar = () => {
               />
             </span>
           )}
-          <span className="text-sm flex flex-row items-center justify-start">
-            <span>{"@"}</span>
-            <span
-              onClick={() => {
-                fullPageReload(`/profile/${userData.username}`);
-              }}
-              className="font-semibold"
-            >
-              {userData && userData.username}
+          {userData ? (
+            <span className="text-sm flex flex-row items-center justify-start">
+              <span>{"@"}</span>
+              <span
+                onClick={() => {
+                  fullPageReload(`/profile/${userData.username}`);
+                }}
+                className="font-semibold"
+              >
+                {userData && userData.username}
+              </span>{" "}
             </span>
-          </span>
+          ) : ( NotSignedIn &&
+            <span onClick={()=>{fullPageReload('/signin')}} className="cursor-pointer w-full bg-pastelGreen px-8 py-2 text-center text-white font-bold rounded-xl">
+              Login
+            </span>
+          )}
         </span>
         <div className="text-sm block font-medium space-y-6 pr-28 py-7 border-y border-gray-200">
           <div

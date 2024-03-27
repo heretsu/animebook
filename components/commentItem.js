@@ -9,13 +9,17 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 
 export default function CommentItem({comment}) {
   const {fullPageReload} = PageLoadOptions()
-  const {userNumId, commentValues, setCommentMsg, setParentId, inputRef} = useContext(UserContext)
+  const {userNumId, commentValues, setCommentMsg, setParentId, inputRef, userData} = useContext(UserContext)
   const [likes, setLikes] = useState(null);
   const [liked, setLiked] = useState(false);
   const [reentry, setReentry] = useState(false);
   const [commentChildren, setCommentChildren] = useState(null);
 
   const likeComment = (id) => {
+    if (userData === undefined || userData === null){
+      fullPageReload('/signin');
+      return;
+    }
     if (reentry) {
       setReentry(false);
       if (liked) {
@@ -63,6 +67,10 @@ export default function CommentItem({comment}) {
   };
 
   const replyComment = (parentCommentId, commentOwner) => {
+    if (userData === undefined || userData === null){
+      fullPageReload('/signin');
+      return;
+    }
     setCommentMsg(`@${commentOwner} `);
     setParentId(parentCommentId);
     inputRef.current.focus();

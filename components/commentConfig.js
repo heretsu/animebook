@@ -28,8 +28,7 @@ const CommentConfig = ({ text, tags }) => {
       setChosenTag(htag);
       const selectedTag = originalPostValues.filter(
         (post) =>
-          post.content.toLowerCase().includes(htag) ||
-          post.content.toUpperCase().includes(htag)
+          post.content.toLowerCase().includes(htag.toLowerCase())
       );
 
       setPostValues(selectedTag);

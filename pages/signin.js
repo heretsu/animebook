@@ -12,7 +12,7 @@ const Signin = () => {
       supabase.auth.signInWithOAuth({
         provider: "twitter",
         // options: {
-        //   redirectTo: "http://localhost:3000",
+        //   redirectTo: "https://animebook-cypherp0nk.vercel.app/",
         // },
       });
     } catch (error) {

@@ -203,11 +203,12 @@ body {
 
 #comments{
   width: 800px;
+  margin: auto;
   position: sticky;
-  max-height: 80vh;
+  max-height: 60vh;
   bottom: 0;
-  left: 50%;
-  transform: translate(-50%, 0%);
+  /* left: 100%; */
+  /* transform: translate(-50%, 0%); */
   z-index: 10;
   opacity: 1;
   overflow-y: scroll;

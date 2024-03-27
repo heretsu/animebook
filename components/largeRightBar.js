@@ -39,6 +39,7 @@ const LargeRightBar = () => {
     setExplorePosts,
     chosenTag,
     setChosenTag,
+    userData
   } = useContext(UserContext);
 
   const toggleContentFilter = (postContents) => {
@@ -155,8 +156,7 @@ const LargeRightBar = () => {
         setChosenTag(htag[0]);
         const selectedTag = originalExplorePosts.filter(
           (post) =>
-            (post[0].content.toLowerCase().includes(htag[0]) ||
-              post[0].content.toUpperCase().includes(htag[0])) &&
+            (post[0].content.toLowerCase().includes(htag[0].toLowerCase())) &&
             post[0].media !== null &&
             post[0].media !== undefined
         );
@@ -172,8 +172,7 @@ const LargeRightBar = () => {
         setChosenTag(htag[0]);
         const selectedTag = originalPostValues.filter(
           (post) =>
-            post.content.toLowerCase().includes(htag[0]) ||
-            post.content.toUpperCase().includes(htag[0])
+            post.content.toLowerCase().includes(htag[0].toLowerCase())
         );
 
         setPostValues(selectedTag);
@@ -181,6 +180,9 @@ const LargeRightBar = () => {
     }
   };
   const fetchYouMayKnow = async () => {
+    if (userData){
+
+    
     const followResult = await fetchFollowing(userNumId);
     fetchAllUsers().then((res) => {
       let unfollowedUsers = [];
@@ -199,7 +201,7 @@ const LargeRightBar = () => {
         i++;
       }
       setYouMayKnow(unfollowedUsers);
-    });
+    });}
   };
 
   const fetchAllHashTags = () => {

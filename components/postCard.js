@@ -9,6 +9,7 @@ import PostInViewport from "@/lib/postInViewport";
 import DappLibrary from "@/lib/dappLibrary";
 import { useRouter } from "next/router";
 import ReactPlayer from "react-player";
+import PageLoadOptions from "@/hooks/pageLoadOptions";
 
 export const BinSvg = ({ pixels }) => {
   return (
@@ -37,7 +38,7 @@ export default function PostCard({
   myProfileId,
 }) {
   const router = useRouter();
-  const { sendNotification } = DappLibrary();
+  const { sendNotification, postTimeAgo } = DappLibrary();
   const [alreadyFollowed, setAlreadyFollowed] = useState(null);
   const { fetchFollows } = Relationships();
   const {
@@ -46,6 +47,7 @@ export default function PostCard({
     setCommentValues,
     deletePost,
     setDeletePost,
+    userData,
   } = useContext(UserContext);
   const [comments, setComments] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -197,7 +199,7 @@ export default function PostCard({
       });
     }
     if (!viewed && isBeingViewed) {
-      if (users.id !== myProfileId) {
+      if (userData && users.id !== myProfileId) {
         addView();
       }
     }
@@ -218,9 +220,10 @@ export default function PostCard({
         <span className="flex flex-row justify-between items-center">
           <span
             onClick={() => {
+              console.log("yoo");
               router.push(`/profile/${users.username}`);
             }}
-            className="cursor-pointer flex flex-row justify-start items-center space-x-2"
+            className="cursor-pointer flex flex-row justify-start items-center space-x-0"
           >
             <span className="relative h-9 w-9 flex">
               <Image
@@ -231,31 +234,40 @@ export default function PostCard({
                 className="rounded-full object"
               />
             </span>
-            <span className="font-semibold">{users.username}</span>
+            <span className="pl-2 pr-1 font-semibold">{users.username}</span>
+            <span className="text-[0.7rem] text-gray-400">
+              {postTimeAgo(created_at)}
+            </span>
           </span>
 
-          {router.pathname === "/profile/[user]" && users.id === myProfileId ? (
-            <span onClick={deleteAction} className="cursor-pointer">
-              <BinSvg pixels={"20px"} />
-            </span>
-          ) : alreadyFollowed === null ? (
-            ""
-          ) : alreadyFollowed ? (
-            <span className="text-slate-600">Following</span>
-          ) : (
-            <PlusIcon
-              alreadyFollowed={alreadyFollowed}
-              setAlreadyFollowed={setAlreadyFollowed}
-              followerUserId={myProfileId}
-              followingUserId={users.id}
-              size={"19"}
-              color={"default"}
-            />
-          )}
+          {userData &&
+            (router.pathname === "/profile/[user]" &&
+            users.id === myProfileId ? (
+              <span onClick={deleteAction} className="cursor-pointer">
+                <BinSvg pixels={"20px"} />
+              </span>
+            ) : alreadyFollowed === null ? (
+              ""
+            ) : alreadyFollowed ? (
+              <span className="text-slate-600">Following</span>
+            ) : (
+              <PlusIcon
+                alreadyFollowed={alreadyFollowed}
+                setAlreadyFollowed={setAlreadyFollowed}
+                followerUserId={myProfileId}
+                followingUserId={users.id}
+                size={"19"}
+                color={"default"}
+              />
+            ))}
         </span>
         <span
           onDoubleClick={() => {
-            likePost();
+            if (userData) {
+              likePost();
+            } else {
+              PageLoadOptions().fullPageReload("/signin");
+            }
           }}
           className="relative w-full max-h-[600px] flex justify-center"
         >
@@ -270,7 +282,6 @@ export default function PostCard({
             media.endsWith("3GP") ? (
               <video src={media} height={600} width={600} controls></video>
             ) : (
-              
               <Image
                 src={media}
                 alt="post"
@@ -290,7 +301,11 @@ export default function PostCard({
               {liked ? (
                 <svg
                   onClick={() => {
-                    likePost();
+                    if (userData) {
+                      likePost();
+                    } else {
+                      PageLoadOptions().fullPageReload("/signin");
+                    }
                   }}
                   className="cursor-pointer text-red-400"
                   width="26px"
@@ -305,7 +320,11 @@ export default function PostCard({
               ) : (
                 <svg
                   onClick={() => {
-                    likePost();
+                    if (userData) {
+                      likePost();
+                    } else {
+                      PageLoadOptions().fullPageReload("/signin");
+                    }
                   }}
                   className="cursor-pointer"
                   fill="#000000"
@@ -370,7 +389,11 @@ export default function PostCard({
           </div>
           <svg
             onClick={() => {
-              addBookmark();
+              if (userData) {
+                addBookmark();
+              } else {
+                PageLoadOptions().fullPageReload("/signin");
+              }
             }}
             className="cursor-pointer w-5 h-5 text-black"
             aria-hidden="true"

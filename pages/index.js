@@ -158,7 +158,7 @@ export default function Home() {
                 <div className="topcont">
           <LargeTopBar relationship={true} />
           </div>
-          <Stories />
+          {userData && <Stories />}
           <Posts />
         </div>
 

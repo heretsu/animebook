@@ -20,6 +20,7 @@ export default function App({ Component, pageProps }) {
   const [openStories, setOpenStories] = useState(false);
   const [userNumId, setUserNumId] = useState("");
   const [postJustMade, setPostJustMade] = useState(false);
+  const [NotSignedIn, setNotSignedIn] = useState(false)
 
   const [selectedMediaFile, setSelectedMediaFile] = useState(null);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -161,8 +162,15 @@ export default function App({ Component, pageProps }) {
               checkIfUserExistsAndUpdateData(session.user);
             }
           } else {
+            if (router.pathname !== "/profile/[user]") {
+                fetchAllPosts().then((result) => {
+                  setOriginalPostValues(result.data);
+                  setPostValues(result.data);
+                });
+              }
             console.log("session expired or account not yet created");
             setAuthLoading(false);
+            setNotSignedIn(true)
             // router.push("/signin")
           }
         });
@@ -251,18 +259,14 @@ export default function App({ Component, pageProps }) {
         setMgComic,
         openPurchaseModal,
         setOpenPurchaseModal,
-        allUserObject, setAllUserObject
+        allUserObject, setAllUserObject, NotSignedIn, setNotSignedIn
       }}
     >
       <span className="text-sm sm:text-base">
         {[
-          "/",
-          "/explore",
           "/notifications",
           "/create",
           "/publishmanga",
-          "/profile/[user]",
-          "/comments/[comments]",
           "/settings",
           "/earn",
           "/subscriptionplan",

@@ -30,7 +30,7 @@ export const TopBarObjects = () => {
     if (router.pathname === "/profile/[user]") {
       setOpenSuggestions(
         allUserObject.filter((user) =>
-          user.username.toLowerCase().includes(e.target.value)
+          user.username.toLowerCase().includes(e.target.value.toLowerCase())
         )
       );
     } else if (router.pathname === "/explore") {
@@ -59,6 +59,10 @@ export const TopBarObjects = () => {
   };
 
   const changePostsDisplayed = () => {
+    if (userData === undefined || userData === null){
+      PageLoadOptions().fullPageReload('/signin')
+      return;
+    }
     fetchFollowing(userNumId).then((res) => {
       let followingPosts = [];
       let i = res.data.length - 1;
@@ -92,6 +96,7 @@ export const TopBarObjects = () => {
     setOpenSuggestions
   };
 };
+
 export const SmallTopBar = ({ middleTab, relationship }) => {
   const {
     followingPosts,

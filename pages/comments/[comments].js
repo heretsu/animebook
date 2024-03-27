@@ -6,6 +6,7 @@ import CommentItem from "@/components/commentItem";
 import supabase from "@/hooks/authenticateUser";
 import PostCard from "@/components/postCard";
 import DbUsers from "@/hooks/dbUsers";
+import PageLoadOptions from "@/hooks/pageLoadOptions";
 export const getServerSideProps = async (context) => {
   const { comments } = context.query;
   return {
@@ -62,6 +63,10 @@ export default function Comments({ comments }) {
   };
 
   const postComment = () => {
+    if (userData === undefined || userData === null){
+      PageLoadOptions().fullPageReload('/signin')
+      return;
+    }
     setCommentPostLoading(true);
     if (commentMsg !== "") {
       supabase
@@ -102,13 +107,13 @@ export default function Comments({ comments }) {
                   myProfileId={userNumId}
                 />
                 <div className="space-x-2 flex flex-row items-center h-fit">
-                  <Image
+                  {userData && <Image
                     src={userData.picture}
                     alt="user profile"
                     height={35}
                     width={35}
                     className="rounded-full"
-                  />
+                  />}
                   <input
                     ref={inputRef}
                     value={commentMsg}

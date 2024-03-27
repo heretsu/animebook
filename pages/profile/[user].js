@@ -15,6 +15,7 @@ import PopupModal from "@/components/popupModal";
 import PriceFeedStation from "@/lib/priceFeedStation";
 import { ethers } from "ethers";
 import ConnectionData from "@/lib/connectionData";
+import PageLoadOptions from "@/hooks/pageLoadOptions";
 
 export const getServerSideProps = async (context) => {
   const { user } = context.query;
@@ -49,7 +50,8 @@ export default function User({ user }) {
     setOpenPurchaseModal,
     setMgComic,
     setOpenManga,
-    setAllUserObject
+    setAllUserObject,
+    userData,
   } = useContext(UserContext);
 
   const [openPremium, setOpenPremium] = useState(false);
@@ -131,6 +133,10 @@ export default function User({ user }) {
   };
 
   const checkPurchaseOrSubscribe = async (mg) => {
+    if (userData === undefined || userData === null) {
+      PageLoadOptions().fullPageReload("/signin");
+      return;
+    }
     let allowRead = false;
     const { data } = await supabase.from("subscriptions").select().match({
       subscriber: userNumId,
@@ -152,6 +158,10 @@ export default function User({ user }) {
   };
 
   const subscribeToPublisher = async () => {
+    if (userData === undefined || userData === null) {
+      PageLoadOptions().fullPageReload("/signin");
+      return;
+    }
     try {
       const prs = await getUsdPrice();
       const sendAmount = parseFloat(userBasicInfo.subprice) / prs.ethPrice;
@@ -187,6 +197,10 @@ export default function User({ user }) {
   };
 
   const readManga = async (mg) => {
+    if (userData === undefined || userData === null) {
+      PageLoadOptions().fullPageReload("/signin");
+      return;
+    }
     if (itsMe) {
       setMgComic(mg);
       setOpenManga(true);
@@ -204,7 +218,7 @@ export default function User({ user }) {
 
   useEffect(() => {
     fetchAllUsers().then((r) => {
-      setAllUserObject(r.data)
+      setAllUserObject(r.data);
       if (r.data !== null && r.data !== undefined && r.data.length !== 0) {
         const currentUserExtraInfo = r.data.find(
           (c) => c.username.toLowerCase() === user.toLowerCase()
@@ -299,27 +313,28 @@ export default function User({ user }) {
                           <span className="font-semibold text-[0.85rem] pr-2">
                             {userBasicInfo.username}
                           </span>
-                          {itsMe ? (
-                            <span>You</span>
-                          ) : alreadyFollowed ? (
-                            <div
-                              onClick={() => {
-                                unfollowThisUser(userNumId, userBasicInfo.id);
-                              }}
-                              className="cursor-pointer bg-gray-800 px-2 py-1 border border-gray-400 rounded-md"
-                            >
-                              Unfollow
-                            </div>
-                          ) : (
-                            <PlusIcon
-                              alreadyFollowed={alreadyFollowed}
-                              setAlreadyFollowed={setAlreadyFollowed}
-                              followerUserId={userNumId}
-                              followingUserId={userBasicInfo.id}
-                              size={"15"}
-                              color={"default"}
-                            />
-                          )}
+                          {userData &&
+                            (itsMe ? (
+                              <span>You</span>
+                            ) : alreadyFollowed ? (
+                              <div
+                                onClick={() => {
+                                  unfollowThisUser(userNumId, userBasicInfo.id);
+                                }}
+                                className="cursor-pointer bg-gray-800 px-2 py-1 border border-gray-400 rounded-md"
+                              >
+                                Unfollow
+                              </div>
+                            ) : (
+                              <PlusIcon
+                                alreadyFollowed={alreadyFollowed}
+                                setAlreadyFollowed={setAlreadyFollowed}
+                                followerUserId={userNumId}
+                                followingUserId={userBasicInfo.id}
+                                size={"15"}
+                                color={"default"}
+                              />
+                            ))}
                         </span>
                         <span className="space-x-1.5 lg:space-x-6">
                           {userPostValues !== null &&
@@ -414,6 +429,10 @@ export default function User({ user }) {
                       </span>
                       <span
                         onClick={() => {
+                          if (userData === undefined || userData === null) {
+                            PageLoadOptions().fullPageReload("/signin");
+                            return;
+                          }
                           setOpenTipModal(true);
                         }}
                         className="cursor-pointer text-xs sm:text-sm font-bold py-1 px-2 bg-pastelGreen text-white border-2 border-white shadow-xl rounded-2xl"
@@ -573,7 +592,6 @@ export default function User({ user }) {
               fetching info...
             </div>
           )}
-         
 
           <div className="hidden lg:block sticky right-2 top-20 heighto">
             <LargeRightBar />
