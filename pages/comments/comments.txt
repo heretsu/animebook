@@ -1,3 +1,4 @@
+import NavBar from "@/components/navBar";
 import { useState, useContext, useEffect } from "react";
 import { UserContext } from "@/lib/userContext";
 import Image from "next/image";
@@ -90,32 +91,14 @@ export default function Comments({ comments }) {
   }, [postid]);
 
   return (
-      <main className="w-full">
+    <>
+      <main>
         <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
-          <div className="w-full py-2 px-2 flex flex-col">
+          <NavBar />
+          <div className="w-full py-2 space-y-5 px-2 lg:pl-lPostCustom lg:pr-rPostCustom mt-2 lg:mt-8 flex flex-col">
             {postReferenced ? (
-              <div className="flex flex-col md:flex-row">
-                <span className={postReferenced.media ? "hidden md:flex h-screen w-full bg-black items-center justify-center" : "w-0"}>
-                {postReferenced.media && <Image
-                src={postReferenced.media}
-                alt="post"
-                width={600}
-                height={600}
-                className="object-cover w-full"
-              />}
-                </span>
-                <div className="min-h-screen md:bg-white md:max-h-screen rounded-xl md:rounded-none flex flex-col">
-                  <span className="hidden md:flex">
-                  <PostCard
-                  id={postid}
-                  content={postReferenced.content}
-                  created_at={postReferenced.created_at}
-                  users={postReferenced.users}
-                  myProfileId={userNumId}
-                />
-                </span>
-                <span className="flex md:hidden">
-                  <PostCard
+              <>
+                <PostCard
                   id={postid}
                   media={postReferenced.media}
                   content={postReferenced.content}
@@ -123,8 +106,7 @@ export default function Comments({ comments }) {
                   users={postReferenced.users}
                   myProfileId={userNumId}
                 />
-                </span>
-                <div className="my-3 px-2 space-x-2 flex flex-row items-center h-fit">
+                <div className="space-x-2 flex flex-row items-center h-fit">
                   {userData && <Image
                     src={userData.picture}
                     alt="user profile"
@@ -132,7 +114,6 @@ export default function Comments({ comments }) {
                     width={35}
                     className="rounded-full"
                   />}
-                  <div className="border border-green-500 rounded-xl w-full flex flex-row items-center justify-center pr-2">
                   <input
                     ref={inputRef}
                     value={commentMsg}
@@ -144,7 +125,7 @@ export default function Comments({ comments }) {
                         postComment();
                       }
                     }}
-                    className="text-gray-800 focus:border-none focus:outline-none focus:ring-0 rounded-xl w-full bg-transparent border border-transparent focus:ring-0"
+                    className="text-gray-800 focus:border-2 focus:outline-none focus:border-green-500 focus:ring-0 rounded-xl w-full bg-slate-100 border border-green-500 focus:ring-0"
                     placeholder="Leave a comment"
                   />
                   {commentPostLoading ? (
@@ -171,7 +152,6 @@ export default function Comments({ comments }) {
                       <polygon points="22 2 15 22 11 13 2 9 22 2" />
                     </svg>
                   )}
-                  </div>
                 </div>
                 {errorMsg !== "" && (
                   <span className="pt-1 text-sm w-full flex flex-row justify-center items-center">
@@ -188,16 +168,15 @@ export default function Comments({ comments }) {
                     <p className="text-red-500">{errorMsg}</p>
                   </span>
                 )}
-                <div className="flex flex-col pb-2 bg-white md:min-h-0 md:h-full md:overflow-scroll rounded-xl px-2 space-y-2">
+                <div className="bg-white shadow-xl min-h-screen h-full rounded-xl px-2 flex flex-col space-y-2">
                   <span className="p-2 w-full border-b border-gray-400 text-center font-semibold text-base">
                     Comments
                   </span>
                   {commentValues !== null && commentValues !== undefined ? (
                     commentValues.length > 0 ? (
                       commentValues.map((comment) => {
-                        return (<>
-                          <CommentItem key={comment.id} comment={comment}/>
-                          </>
+                        return (
+                          <CommentItem key={comment.id} comment={comment} />
                         );
                       })
                     ) : (
@@ -211,8 +190,7 @@ export default function Comments({ comments }) {
                     </span>
                   )}
                 </div>
-                </div>
-              </div>
+              </>
             ) : (
               <span className="w-full text-gray-500 text-center">
                 {"fetching comments..."}
@@ -221,6 +199,6 @@ export default function Comments({ comments }) {
           </div>
         </section>
       </main>
-    
+    </>
   );
 }

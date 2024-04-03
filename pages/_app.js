@@ -13,7 +13,7 @@ export default function App({ Component, pageProps }) {
   const router = useRouter();
   const [address, setAddress] = useState(null);
   const { connectToWallet } = ConnectionData();
-  const [userData, setUserData] = useState(undefined);
+  const [userData, setUserData] = useState(undefined); 
   const [subscribed, setSubscribed] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);

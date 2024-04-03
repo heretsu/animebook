@@ -59,6 +59,7 @@ export default function PostCard({
   const [views, setViews] = useState(null);
   const [viewed, setViewed] = useState(false);
   const [viewReentry, setViewReentry] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const [ref, isBeingViewed] = PostInViewport({
     threshold: 0.5,
@@ -215,7 +216,9 @@ export default function PostCard({
     comments !== null && (
       <div
         ref={ref}
-        className="shadow-xl bg-white space-y-3 py-4 px-3 rounded-xl flex flex-col justify-center text-start"
+        className={`${
+          router !== "/comments/[comments]" && "shadow-xl"
+        } bg-white space-y-3 py-4 px-3 rounded-xl flex flex-col justify-center text-start`}
       >
         <span className="flex flex-row justify-between items-center">
           <span
@@ -280,19 +283,40 @@ export default function PostCard({
             media.endsWith("MOV") ||
             media.endsWith("3gp") ||
             media.endsWith("3GP") ? (
-              <video src={media} height={600} width={600} controls></video>
-            ) : (
-              <Image
+              <video
+                onClick={() => {
+                  router.push(`/comments/${id}`);
+                }}
                 src={media}
-                alt="post"
-                width={600}
                 height={600}
-                className="rounded-lg object-cover"
-              />
+                width={600}
+                controls
+              ></video>
+            ) : (
+              <span
+                className="cursor-pointer"
+                onClick={() => {
+                  router.push(`/comments/${id}`);
+                }}
+              >
+                <Image
+                  src={media}
+                  alt="post"
+                  width={600}
+                  height={600}
+                  className="rounded-lg object-cover"
+                />
+              </span>
             ))}
         </span>
         {content !== null && content !== undefined && content !== "" && (
-          <CommentConfig text={content} tags={true} />
+          <span
+            onClick={() => {
+              router.push(`/comments/${id}`);
+            }}
+          >
+            <CommentConfig text={content} tags={true} />
+          </span>
         )}
 
         <div className="flex flow-row items-center justify-between">
@@ -344,14 +368,7 @@ export default function PostCard({
                 onClick={() => {
                   setPostIdForComment(id);
                   setCommentValues(comments);
-                  if (router.pathname === "/profile/[user]") {
-                    router.push(`/comments/${id}`);
-                  } else if (router.pathname === "/comments/[comments]") {
-                    console.log("comment page");
-                    return;
-                  } else {
-                    setOpenComments(true);
-                  }
+                  router.push(`/comments/${id}`);
                 }}
                 className="cursor-pointer"
                 fill="#000000"
@@ -387,28 +404,64 @@ export default function PostCard({
               <div className="text-gray-800">{views.length}</div>
             </div>
           </div>
-          <svg
-            onClick={() => {
-              if (userData) {
-                addBookmark();
-              } else {
-                PageLoadOptions().fullPageReload("/signin");
-              }
-            }}
-            className="cursor-pointer w-5 h-5 text-black"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            fill={bookmarked ? "currentColor" : "none"}
-            viewBox="0 0 14 20"
-          >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="m13 19-6-5-6 5V2a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17Z"
-            />
-          </svg>
+          <div className="space-x-3 w-fit flex flex-row justify-center items-center">
+            {copied ? (
+              <span
+                className="text-xs text-black font-light"
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `https://animebook.io/comments/${id}`
+                  );
+                }}
+              >
+                copied
+              </span>
+            ) : (
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 15 15"
+                strokeWidth={1.2}
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="cursor-pointer"
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `https://animebook.io/comments/${id}`
+                  );
+                  setCopied(true);
+                }}
+              >
+                <path
+                  d="M4.5 7.5L8.5 7.5M11 4L8.5 7.49542L11 11M14.5 2.4987C14.5 3.60198 13.604 4.49739 12.5 4.49739C11.396 4.49739 10.5 3.60198 10.5 2.4987C10.5 1.39542 11.396 0.5 12.5 0.5C13.604 0.5 14.5 1.39542 14.5 2.4987ZM14.5 12.4922C14.5 13.5954 13.604 14.4909 12.5 14.4909C11.396 14.4909 10.5 13.5954 10.5 12.4922C10.5 11.3889 11.396 10.4935 12.5 10.4935C13.604 10.4935 14.5 11.3889 14.5 12.4922ZM4.5 7.49543C4.5 8.59871 3.604 9.49413 2.5 9.49413C1.396 9.49413 0.5 8.59871 0.5 7.49543C0.5 6.39215 1.396 5.49673 2.5 5.49673C3.604 5.49673 4.5 6.39215 4.5 7.49543Z"
+                  stroke="#000000"
+                  strokeLinecap="square"
+                />
+              </svg>
+            )}
+            <svg
+              onClick={() => {
+                if (userData) {
+                  addBookmark();
+                } else {
+                  PageLoadOptions().fullPageReload("/signin");
+                }
+              }}
+              className="cursor-pointer w-5 h-5 text-black"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill={bookmarked ? "currentColor" : "none"}
+              viewBox="0 0 14 20"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="m13 19-6-5-6 5V2a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17Z"
+              />
+            </svg>
+          </div>
         </div>
       </div>
     )
