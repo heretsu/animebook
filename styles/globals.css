@@ -329,3 +329,8 @@ margin-top: 0.5rem !important;
 .h-auto {
   height: auto;
 }
+
+img, video {
+    max-width: 100%;
+    height: 100%;
+}
