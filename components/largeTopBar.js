@@ -107,11 +107,12 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
     setOpenSuggestions
   } = TopBarObjects();
   const [mobileSearchToggle, setMobileSearchToggle] = useState(false);
+  const router = useRouter();
 
   return (
     <div
       id="fixed-topbar"
-      className="lg:hidden py-3 px-2 flex flex-row w-full justify-between sm:justify-start space-x-2 bg-white"
+      className={`lg:hidden py-3 px-2 flex flex-row w-full justify-between sm:justify-start space-x-2 bg-white`}
     >
       <span className="flex justify-center items-center">
         <DappLogo size={"small"} />

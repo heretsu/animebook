@@ -6,6 +6,7 @@ import supabase from "@/hooks/authenticateUser";
 import PostCard from "@/components/postCard";
 import DbUsers from "@/hooks/dbUsers";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import { useRouter } from "next/router";
 export const getServerSideProps = async (context) => {
   const { comments } = context.query;
   return {
@@ -16,6 +17,7 @@ export const getServerSideProps = async (context) => {
 };
 
 export default function Comments({ comments }) {
+  const router = useRouter()
   const postid = comments;
   const {
     userData,
@@ -62,8 +64,8 @@ export default function Comments({ comments }) {
   };
 
   const postComment = () => {
-    if (userData === undefined || userData === null){
-      PageLoadOptions().fullPageReload('/signin')
+    if (userData === undefined || userData === null) {
+      PageLoadOptions().fullPageReload("/signin");
       return;
     }
     setCommentPostLoading(true);
@@ -90,87 +92,141 @@ export default function Comments({ comments }) {
   }, [postid]);
 
   return (
-      <main className="w-full">
-        <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
-          <div className="w-full py-2 px-2 flex flex-col">
-            {postReferenced ? (
-              <div className="flex flex-col md:flex-row">
-                <span className={postReferenced.media ? "hidden md:flex h-screen w-full bg-black items-center justify-center" : "w-0"}>
-                {postReferenced.media && <Image
-                src={postReferenced.media}
-                alt="post"
-                width={600}
-                height={600}
-                className="object-cover w-full"
-              />}
-                </span>
-                <div className="min-h-screen md:bg-white md:max-h-screen rounded-xl md:rounded-none flex flex-col">
-                  <span className="hidden md:flex">
+    <main className="w-full">
+      <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
+        <div className="w-full py-2 px-2 flex flex-col">
+          {postReferenced ? (
+            <div className="flex flex-col md:flex-row">
+              <span
+                className={
+                  postReferenced.media
+                    ? "hidden md:flex h-screen w-full bg-black items-center justify-center"
+                    : "w-0"
+                }
+              >
+                {postReferenced.media &&
+                  (postReferenced.media.endsWith("mp4") ||
+                  postReferenced.media.endsWith("MP4") ||
+                  postReferenced.media.endsWith("mov") ||
+                  postReferenced.media.endsWith("MOV") ||
+                  postReferenced.media.endsWith("3gp") ||
+                  postReferenced.media.endsWith("3GP") ? (
+                    <video
+                      src={postReferenced.media}
+                      height={600}
+                      width={600}
+                      autoPlay
+                      loop
+                    ></video>
+                  ) : (
+                    <Image
+                      src={postReferenced.media}
+                      alt="post"
+                      width={600}
+                      height={600}
+                      className="object-cover w-full"
+                    />
+                  ))}
+              </span>
+              <div
+                className={`${
+                  !postReferenced.media && "w-full"
+                } min-h-screen md:bg-white md:max-h-screen rounded-xl md:rounded-none flex flex-col`}
+              >
+                <svg
+                  onClick={() => {
+                    router.push("/");
+                  }}
+                  width="35px"
+                  height="35px"
+                  viewBox="0 0 48 48"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="my-2 cursor-pointer"
+                >
+                  <rect
+                    width={48}
+                    height={48}
+                    fill="white"
+                    fillOpacity={0.01}
+                  />
+                  <path
+                    d="M31 36L19 24L31 12"
+                    stroke="gray"
+                    strokeWidth={4}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+
+                <span className="hidden md:flex">
                   <PostCard
-                  id={postid}
-                  content={postReferenced.content}
-                  created_at={postReferenced.created_at}
-                  users={postReferenced.users}
-                  myProfileId={userNumId}
-                />
+                    id={postid}
+                    content={postReferenced.content}
+                    created_at={postReferenced.created_at}
+                    users={postReferenced.users}
+                    myProfileId={userNumId}
+                  />
                 </span>
                 <span className="flex md:hidden">
                   <PostCard
-                  id={postid}
-                  media={postReferenced.media}
-                  content={postReferenced.content}
-                  created_at={postReferenced.created_at}
-                  users={postReferenced.users}
-                  myProfileId={userNumId}
-                />
+                    id={postid}
+                    media={postReferenced.media}
+                    content={postReferenced.content}
+                    created_at={postReferenced.created_at}
+                    users={postReferenced.users}
+                    myProfileId={userNumId}
+                  />
                 </span>
                 <div className="my-3 px-2 space-x-2 flex flex-row items-center h-fit">
-                  {userData && <Image
-                    src={userData.picture}
-                    alt="user profile"
-                    height={35}
-                    width={35}
-                    className="rounded-full"
-                  />}
-                  <div className="border border-green-500 rounded-xl w-full flex flex-row items-center justify-center pr-2">
-                  <input
-                    ref={inputRef}
-                    value={commentMsg}
-                    onChange={(e) => {
-                      setCommentMsg(e.target.value);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        postComment();
-                      }
-                    }}
-                    className="text-gray-800 focus:border-none focus:outline-none focus:ring-0 rounded-xl w-full bg-transparent border border-transparent focus:ring-0"
-                    placeholder="Leave a comment"
-                  />
-                  {commentPostLoading ? (
-                    <span className="flex items-center justify-center my-auto font-bold text-lg text-slate-400 h-full">
-                      {"..."}
-                    </span>
-                  ) : (
-                    <svg
-                      onClick={() => {
-                        postComment();
-                      }}
-                      className="cursor-pointer"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width={26}
-                      height={26}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#000000"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1={22} y1={2} x2={11} y2={13} />
-                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
+                  {userData && (
+                    <Image
+                      src={userData.picture}
+                      alt="user profile"
+                      height={35}
+                      width={35}
+                      className="rounded-full"
+                    />
                   )}
+                  <div className="border border-green-500 rounded-xl w-full flex flex-row items-center justify-center pr-2">
+                    <input
+                      ref={inputRef}
+                      value={commentMsg}
+                      onChange={(e) => {
+                        setCommentMsg(e.target.value);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          postComment();
+                        }
+                      }}
+                      className="text-gray-800 focus:border-none focus:outline-none focus:ring-0 rounded-xl w-full bg-transparent border border-transparent focus:ring-0"
+                      placeholder="Leave a comment"
+                    />
+                    {commentPostLoading ? (
+                      <span className="flex items-center justify-center my-auto font-bold text-lg text-slate-400 h-full">
+                        {"..."}
+                      </span>
+                    ) : (
+                      <svg
+                        onClick={() => {
+                          postComment();
+                        }}
+                        className="cursor-pointer"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width={26}
+                        height={26}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#000000"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1={22} y1={2} x2={11} y2={13} />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                      </svg>
+                    )}
                   </div>
                 </div>
                 {errorMsg !== "" && (
@@ -195,8 +251,9 @@ export default function Comments({ comments }) {
                   {commentValues !== null && commentValues !== undefined ? (
                     commentValues.length > 0 ? (
                       commentValues.map((comment) => {
-                        return (<>
-                          <CommentItem key={comment.id} comment={comment}/>
+                        return (
+                          <>
+                            <CommentItem key={comment.id} comment={comment} />
                           </>
                         );
                       })
@@ -211,16 +268,15 @@ export default function Comments({ comments }) {
                     </span>
                   )}
                 </div>
-                </div>
               </div>
-            ) : (
-              <span className="w-full text-gray-500 text-center">
-                {"fetching comments..."}
-              </span>
-            )}
-          </div>
-        </section>
-      </main>
-    
+            </div>
+          ) : (
+            <span className="w-full text-gray-500 text-center">
+              {"fetching comments..."}
+            </span>
+          )}
+        </div>
+      </section>
+    </main>
   );
 }

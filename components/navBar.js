@@ -165,10 +165,17 @@ const NavBar = () => {
                 {userData && userData.username}
               </span>{" "}
             </span>
-          ) : ( NotSignedIn &&
-            <span onClick={()=>{fullPageReload('/signin')}} className="cursor-pointer w-full bg-pastelGreen px-8 py-2 text-center text-white font-bold rounded-xl">
-              Login
-            </span>
+          ) : (
+            NotSignedIn && (
+              <span
+                onClick={() => {
+                  fullPageReload("/signin");
+                }}
+                className="cursor-pointer w-full bg-pastelGreen px-8 py-2 text-center text-white font-bold rounded-xl"
+              >
+                Login
+              </span>
+            )
           )}
         </span>
         <div className="text-sm block font-medium space-y-6 pr-28 py-7 border-y border-gray-200">
@@ -222,6 +229,29 @@ const NavBar = () => {
             </svg>
             <span>Explore</span>
           </div>
+          <div
+            onClick={() => {
+              fullPageReload("/communities");
+            }}
+            className={
+              currentRoute == "/communities" || currentRoute == "/communities/[community]"
+                ? "text-textGreen text-start cursor-pointer flex flex-row space-x-3 items-center"
+                : "text-start cursor-pointer flex flex-row space-x-3 items-center"
+            }
+          >
+            <svg
+              width="24px"
+              height="24px"
+              viewBox="0 0 32 32"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              
+            >
+              <path d="M 2 5 L 2 21 L 6 21 L 6 26.09375 L 7.625 24.78125 L 12.34375 21 L 22 21 L 22 5 Z M 4 7 L 20 7 L 20 19 L 11.65625 19 L 11.375 19.21875 L 8 21.90625 L 8 19 L 4 19 Z M 24 9 L 24 11 L 28 11 L 28 23 L 24 23 L 24 25.90625 L 20.34375 23 L 12.84375 23 L 10.34375 25 L 19.65625 25 L 26 30.09375 L 26 25 L 30 25 L 30 9 Z"/>
+            </svg>
+            <span>Communities</span>
+          </div>
+
           <div
             onClick={() => {
               fullPageReload("/notifications");

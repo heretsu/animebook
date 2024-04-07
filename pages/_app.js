@@ -55,6 +55,7 @@ export default function App({ Component, pageProps }) {
   const [playVideo, setPlayVideo] = useState(false);
 
   const inputRef = useRef(null);
+  const communityInputRef = useRef(null)
 
   const [openManga, setOpenManga] = useState(false);
   const [mgComic, setMgComic] = useState(null);
@@ -142,6 +143,8 @@ export default function App({ Component, pageProps }) {
       [
         "/",
         "/explore",
+        "/communities",
+        "/communities/[community]",
         "/notifications",
         "/profile/[user]",
         "/comments/[comments]",
@@ -245,6 +248,7 @@ export default function App({ Component, pageProps }) {
         myProfileRoute,
         setMyProfileRoute,
         inputRef,
+        communityInputRef,
         address,
         setAddress,
         userPostValues,

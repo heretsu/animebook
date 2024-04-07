@@ -6,7 +6,7 @@ import { UserContext } from "@/lib/userContext";
 import Spinner from "./spinner";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 
-const PostContainer = () => {
+const PostContainer = ({communityId, community}) => {
   const { fullPageReload } = PageLoadOptions();
   const { userNumId } = useContext(UserContext);
   const router = useRouter();
@@ -43,6 +43,10 @@ const PostContainer = () => {
   };
 
   const createPost = async () => {
+    if (!userNumId){
+      fullPageReload('/signin')
+      return;
+    }
     setPostLoading(true);
     if (mediaPost) {
       if (mediaFile !== null) {
@@ -50,20 +54,33 @@ const PostContainer = () => {
           const newName = Date.now() + file.name;
           const bucketResponse = await supabase.storage
             .from("mediastore")
-            .upload(newName, file);
+            .upload(
+              `${communityId ? "community_posts/" + newName : newName}`,
+              file
+            );
 
           if (bucketResponse.data) {
             const mediaUrl =
               process.env.NEXT_PUBLIC_SUPABASE_URL +
               "/storage/v1/object/public/mediastore/" +
               bucketResponse.data.path;
+            if (communityId) {
+              await supabase.from("community_posts").insert({
+                userid: userNumId,
+                media: mediaUrl,
+                content: mediaContent,
+                communityid: parseInt(communityId)
+              });
+              fullPageReload(`/communities/${community}`)
 
-            await supabase.from("posts").insert({
-              userid: userNumId,
-              media: mediaUrl,
-              content: mediaContent,
-            });
-            fullPageReload("/");
+            } else {
+              await supabase.from("posts").insert({
+                userid: userNumId,
+                media: mediaUrl,
+                content: mediaContent,
+              });
+              fullPageReload("/");
+            }
           }
         }
       } else {
@@ -74,19 +91,36 @@ const PostContainer = () => {
       }
     } else {
       if (content !== "") {
-        await supabase.from("posts").insert({
-          userid: userNumId,
-          media: null,
-          content: content,
-        });
-        fullPageReload("/");
+        if (communityId){
+          await supabase.from("community_posts").insert({
+            userid: userNumId,
+            media: null,
+            content: content,
+            communityid: parseInt(communityId)
+          });
+          fullPageReload(`/communities/${community}`)
+        }
+        else{
+          await supabase.from("posts").insert({
+            userid: userNumId,
+            media: null,
+            content: content,
+          });
+          fullPageReload("/");
+        }
+        
       } else {
+        setPostLoading(true);
         setErrorMsg("Failed to post. Post is empty");
       }
     }
+    
   };
 
   useEffect(() => {
+    if (community){
+      setMediaPost(false)
+    }
     // Media blob revoked after component is unmounted. Doing this to prevent memory leaks
     return () => {
       if (selectedMedia) {

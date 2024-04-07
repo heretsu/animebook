@@ -69,8 +69,10 @@ export default function PopupModal({
   }
 
   const convertToCoin = (usd, coin) => {
+    console.log(prices)
     if (usd !== "" && coin !== "" && !isNaN(usd) && prices) {
       let sendAmount = 0;
+      console.log(usd)
 
       if (coin === "luffy") {
         sendAmount = parseFloat(usd) / prices.tokenPrice;
@@ -90,11 +92,14 @@ export default function PopupModal({
   };
 
   const convertPriceToCoin = (coin, prs) => {
+    if (success == "6" && usdValue === ""){
+      return;
+    }
     let sendAmount = 0;
     if (coin === "luffy") {
-      sendAmount = parseFloat(mangaPrice) / prs.tokenPrice;
+      sendAmount = parseFloat(success == '6' ? usdValue : mangaPrice) / prs.tokenPrice;
     } else {
-      sendAmount = parseFloat(mangaPrice) / prs.ethPrice;
+      sendAmount = parseFloat(success == '6' ? usdValue : mangaPrice) / prs.ethPrice;
     }
     const amountInWei = ethers.utils.parseUnits(
       sendAmount.toFixed(coin === "luffy" ? 9 : 18).toString(),
@@ -252,8 +257,9 @@ export default function PopupModal({
 
   useEffect(() => {
     setModalVisible(true);
-    if (mangaPrice){
+    if (mangaPrice || (success == "6")){
       getUsdPrice().then((res) => {
+        console.log(res)
         setPrices(res);
         convertPriceToCoin("eth", res);
       });
@@ -440,7 +446,6 @@ export default function PopupModal({
                   setUsdValue(
                     !isNaN(e.target.value) ? e.target.value : usdValue
                   );
-
                   convertToCoin(e.target.value, currency);
                 }}
                 value={usdValue}

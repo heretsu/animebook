@@ -385,9 +385,9 @@ export default function User({ user }) {
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       stroke={openPremium ? "white" : "#94a3b8"}
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.5"
                       className="pr-1"
                     >
                       <rect

@@ -51,7 +51,7 @@ const PlusIcon = ({
   return (
     <span
       onClick={followUser}
-      className="cursor-pointer relative border border-red-400 bg-white h-fit w-fit rounded-full"
+      className={`cursor-pointer relative border ${color === 'green' ? 'border-[#74dc9c]' : 'border-red-400'} bg-white h-fit w-fit rounded-full`}
     >
       <svg
         onClick={() => {}}
@@ -61,7 +61,7 @@ const PlusIcon = ({
         height={`${size}px`}
         width={`${size}px`}
         stroke="transparent"
-        fill="#f87171"
+        fill={color === "green" ? "#74dc9c" : "#f87171"}
         x="0px"
         y="0px"
         viewBox="0 0 52 52"
