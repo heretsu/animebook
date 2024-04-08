@@ -155,14 +155,14 @@ export default function Home() {
             "w-full lg:mt-20 pt-2 pb-20 lg:pt-0 lg:pb-2 space-y-3 px-2 lg:pl-lPostCustom lg:pr-rPostCustom flex flex-col"
           }
         >
-                <div className="topcont">
-          <LargeTopBar relationship={true} />
+          <div className="topcont">
+            <LargeTopBar relationship={true} />
           </div>
           {userData && <Stories />}
           <Posts />
         </div>
 
-<div className="hidden lg:block sticky right-2 top-20 heighto">
+        <div className="hidden lg:block sticky right-2 top-20 heighto">
           <LargeRightBar />
         </div>
       </section>
@@ -379,9 +379,10 @@ export default function Home() {
         ""
       )}
       {openComments && (
-        <><span id="comments-modal">
-          <CommentCard openComments={openComments} />
-        </span>
+        <>
+          <span id="comments-modal">
+            <CommentCard openComments={openComments} />
+          </span>
           <div
             onClick={() => {
               setOpenComments(false);

@@ -9,24 +9,35 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 
 export const TopBarObjects = () => {
   const router = useRouter();
-  const { fetchAllPosts } = DbUsers();
+  const { fetchAllUsers, fetchAllPosts } = DbUsers();
   const { fetchFollowing } = Relationships();
   const [openSuggestions, setOpenSuggestions] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [allowSearch, setAllowSearch] = useState(false);
+  const [disableReentry, setDisableReentry] = useState(false);
+  const [disableUsersReentry, setDisableUsersReentry] = useState(false);
+  const [openUsers, setOpenUsers] = useState(null);
 
   const {
     allUserObject,
+    setAllUserObject,
     followingPosts,
     setFollowingPosts,
     originalPostValues,
+    setOriginalPostValues,
     postValues,
     setPostValues,
     userNumId,
     setSearchFilter,
     setTagsFilter,
     originalExplorePosts,
+    explorePosts,
     setExplorePosts,
+    userData,
+    routedUser
   } = useContext(UserContext);
-  const searchForItem = (e) => {
+
+  const retrieveItem = (type) => {
     if (router.pathname === "/profile/[user]") {
       setOpenSuggestions(
         allUserObject.filter((user) =>
@@ -57,14 +68,91 @@ export const TopBarObjects = () => {
       setPostValues(foundItems);
     }
   };
+  const getAllSearchData = () => {
+    if (!postValues) {
+      fetchAllPosts()
+        .then((result) => {
+          setPostValues(result.data);
+        })
+        .catch((e) => console.log(e, "largetopbar.js posts error"));
+    }
+
+    if (!allUserObject) {
+      // setDisableUsersReentry(true);
+      fetchAllUsers()
+        .then((res) => {
+          setAllUserObject(res.data);
+        })
+        .catch((e) => console.log(e, "largetopbar.js users error"));
+    }
+  };
+
+  const searchForItem = (e) => {
+    if (e.target.value !== "") {
+      if (!postValues || !allUserObject || !originalPostValues) {
+        getAllSearchData();
+      }
+
+      setSearchText(e.target.value.toLowerCase());
+     
+      const foundPosts =
+        router.pathname === "/profile/[user]"
+          ? originalPostValues
+            ? originalPostValues.filter((post) => {
+                if (post.users.username.toLowerCase() === routedUser.toLowerCase()) {
+                  return post.content
+                    .toLowerCase()
+                    .includes(e.target.value.toLowerCase());
+                }
+              })
+            : []
+          : originalPostValues
+          ? originalPostValues.filter((post) =>
+              post.content.toLowerCase().includes(e.target.value.toLowerCase())
+            )
+          : [];
+
+
+      const foundExplorePosts = originalExplorePosts
+        ? originalExplorePosts.filter((post) =>
+            post[0].content.toLowerCase().includes(e.target.value.toLowerCase())
+          )
+        : [];
+
+      const foundUsers = allUserObject
+        ? allUserObject.filter((user) =>
+            user.username.toLowerCase().includes(e.target.value.toLowerCase())
+          )
+        : [];
+      setTagsFilter(false);
+      // setSearchFilter(true);
+
+      setOpenSuggestions({
+        foundPosts: foundPosts,
+        foundExplorePosts: foundExplorePosts,
+        foundUsers: foundUsers,
+      });
+    } else {
+      setOpenSuggestions(null);
+    }
+  };
 
   const changePostsDisplayed = () => {
-    if (userData === undefined || userData === null){
-      PageLoadOptions().fullPageReload('/signin')
+    if (userData === undefined || userData === null) {
+      PageLoadOptions().fullPageReload("/signin");
       return;
     }
     fetchFollowing(userNumId).then((res) => {
       let followingPosts = [];
+      if (!res.data){
+        return
+      }
+      if (router.pathname === "/explore" || router.pathname === "/profile/[user]"){
+        console.log('following decoy. cypher largetopbar.js')
+        setFollowingPosts(true)
+        return
+      }
+      
       let i = res.data.length - 1;
       if (res.data !== null && res.data !== undefined) {
         while (i >= 0) {
@@ -89,35 +177,51 @@ export const TopBarObjects = () => {
   };
   return {
     followingPosts,
+    getAllSearchData,
     changePostsDisplayed,
     getAllPosts,
     searchForItem,
     openSuggestions,
-    setOpenSuggestions
+    setOpenSuggestions,
+    setPostValues,
+    openUsers,
+    setOpenUsers,
+    setExplorePosts,
   };
 };
 
 export const SmallTopBar = ({ middleTab, relationship }) => {
+  const router = useRouter();
   const {
     followingPosts,
     changePostsDisplayed,
     getAllPosts,
     searchForItem,
+    getAllSearchData,
     openSuggestions,
-    setOpenSuggestions
+    setOpenSuggestions,
+    setPostValues,
+    setExplorePosts,
+    openUsers,
+    setOpenUsers,
   } = TopBarObjects();
   const [mobileSearchToggle, setMobileSearchToggle] = useState(false);
-  const router = useRouter();
+  const { fullPageReload } = PageLoadOptions();
 
   return (
     <div
       id="fixed-topbar"
       className={`lg:hidden py-3 px-2 flex flex-row w-full justify-between sm:justify-start space-x-2 bg-white`}
     >
-      <span className="flex justify-center items-center">
+      <span
+        onClick={() => {
+          fullPageReload("/");
+        }}
+        className="flex justify-center items-center"
+      >
         <DappLogo size={"small"} />
       </span>
-      {middleTab && relationship && !mobileSearchToggle && (
+      {router.pathname !== "/explore" && router.pathname !== "/profile/user" && (middleTab && relationship && !mobileSearchToggle) && (
         <div className="flex flex-row font-semibold">
           <div
             onClick={getAllPosts}
@@ -142,7 +246,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
           </div>
         </div>
       )}
-      {middleTab && relationship ? (
+      {router.pathname !== "/explore" && router.pathname !== "/profile/[user]" && (middleTab && relationship) ? (
         <>
           {/* search bar 1 out of 4 */}
           <span
@@ -194,6 +298,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
               </svg>
               <input
                 onChange={searchForItem}
+                onClick={getAllSearchData}
                 type="search"
                 className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
                 placeholder="Search for users, images, hashtags and more!"
@@ -222,6 +327,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
             </svg>
             <input
               onChange={searchForItem}
+              onClick={getAllSearchData}
               type="search"
               className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
               placeholder="Search for users, images, hashtags and more!"
@@ -229,50 +335,116 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
           </span>
         </span>
       )}
-          {openSuggestions && (
-          <span id="mobile-suggests" className="flex flex-col">
-            {openSuggestions.length !== 0 &&
-              openSuggestions.slice(0,8).map((os) => {
-                return (
-                  <span key={os.id} onClick={()=>{PageLoadOptions().fullPageReload(`/profile/${os.username}`)}} className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium">
-                    <span className="relative h-8 w-8 flex">
-                      <Image
-                        src={os.avatar}
-                        alt="user"
-                        width={30}
-                        height={30}
-                        className="border border-white rounded-full"
-                      />
-                    </span>
-                    <span>{os.username}</span>
+      {(openSuggestions !== null || openUsers !== null) && (
+        <span id="mobile-suggests" className="flex flex-col">
+          {openSuggestions !== null && (
+            <span className="w-full flex flex-col">
+              <span
+                onClick={() => {
+                  if (
+                    router.pathname !== "/explore" &&
+                    openSuggestions.foundPosts &&
+                    openSuggestions.foundPosts.length === 0
+                  ) {
+                    return;
+                  } else {
+                    setPostValues(openSuggestions.foundPosts);
+                  }
+                  if (
+                    router.pathname === "/explore" &&
+                    openSuggestions.foundExplorePosts &&
+                    openSuggestions.foundExplorePosts.length === 0
+                  ) {
+                    return;
+                  } else {
+                    setExplorePosts(openSuggestions.foundExplorePosts);
+                  }
+
+                  setOpenSuggestions(null);
+                }}
+                className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+              >
+                {`${
+                  router.pathname === "/explore"
+                    ? openSuggestions.foundExplorePosts.length
+                    : openSuggestions.foundPosts.length
+                } posts found`}
+              </span>
+              <span
+                onClick={() => {
+                  if (
+                    openSuggestions.foundUsers &&
+                    openSuggestions.foundUsers.length === 0
+                  ) {
+                    return;
+                  }
+                  const users = openSuggestions.foundUsers;
+                  setOpenSuggestions(null);
+                  setOpenUsers(users);
+                }}
+                className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+              >
+                {`${openSuggestions.foundUsers.length} users found`}
+              </span>
+            </span>
+          )}
+          {openUsers !== null &&
+            openUsers.length !== 0 &&
+            openUsers.slice(0, 8).map((os) => {
+              return (
+                <span
+                  key={os.id}
+                  onClick={() => {
+                    fullPageReload(`/profile/${os.username}`);
+                  }}
+                  className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                >
+                  <span className="relative h-8 w-8 flex">
+                    <Image
+                      src={os.avatar}
+                      alt="user"
+                      width={30}
+                      height={30}
+                      className="border border-white rounded-full"
+                    />
                   </span>
-                );
-              })}
-          </span>
-          
-        )}
-        {
-          openSuggestions && <div
-          onClick={() => {setOpenSuggestions(null)}}
+                  <span>{os.username}</span>
+                </span>
+              );
+            })}
+        </span>
+      )}
+      {(openSuggestions !== null || openUsers !== null) && (
+        <div
+          onClick={() => {
+            setOpenSuggestions(null);
+            setOpenUsers(null);
+          }}
           id="clear-overlay"
         ></div>
-        }
+      )}
     </div>
   );
 };
 
 const LargeTopBar = ({ relationship }) => {
+  const router = useRouter();
   const {
     followingPosts,
     changePostsDisplayed,
     getAllPosts,
     searchForItem,
+    getAllSearchData,
     openSuggestions,
-    setOpenSuggestions
+    setOpenSuggestions,
+    setPostValues,
+    setExplorePosts,
+    openUsers,
+    setOpenUsers,
   } = TopBarObjects();
   return (
     <div className="flex flex-row w-full space-x-2 bg-white rounded-xl p-2">
-      {relationship && (
+      {router.pathname !== "/explore" && router.pathname !== "/profile/[user]" && relationship && (
         <div className="flex flex-row space-x-2 font-semibold">
           <div
             onClick={getAllPosts}
@@ -299,36 +471,94 @@ const LargeTopBar = ({ relationship }) => {
       )}
       {/* search bar 4 out of 4 */}
       <div className="w-full flex flex-col">
-      <div className="py-1 pl-4 w-full flex flex-row items-center rounded-lg bg-gray-100">
-        <svg
-          className="w-4 h-4 text-gray-500"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 20 20"
-        >
-          <path
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+        <div className="py-1 pl-4 w-full flex flex-row items-center rounded-lg bg-gray-100">
+          <svg
+            className="w-4 h-4 text-gray-500"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 20 20"
+          >
+            <path
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+            />
+          </svg>
+          <input
+            onChange={searchForItem}
+            onClick={getAllSearchData}
+            type="search"
+            className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+            placeholder="Search for users, images, hashtags and more!"
           />
-        </svg>
-        <input
-          onChange={searchForItem}
-          type="search"
-          className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
-          placeholder="Search for users, images, hashtags and more!"
-        />
-        
-      </div>
-      {openSuggestions && (
-          <span className="flex flex-col z-10">
-            {openSuggestions.length !== 0 &&
-              openSuggestions.slice(0,8).map((os) => {
+        </div>
+        {(openSuggestions !== null || openUsers !== null) && (
+          <span id="mobile-suggests" className="flex flex-col">
+            {openSuggestions !== null && (
+              <span className="w-full flex flex-col">
+                <span
+                  onClick={() => {
+                    if (
+                      router.pathname !== "/explore" &&
+                      openSuggestions.foundPosts &&
+                      openSuggestions.foundPosts.length === 0
+                    ) {
+                      return;
+                    } else {
+                      setPostValues(openSuggestions.foundPosts);
+                    }
+                    if (
+                      router.pathname === "/explore" &&
+                      openSuggestions.foundExplorePosts &&
+                      openSuggestions.foundExplorePosts.length === 0
+                    ) {
+                      return;
+                    } else {
+                      setExplorePosts(openSuggestions.foundExplorePosts);
+                    }
+
+                    setOpenSuggestions(null);
+                  }}
+                  className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                >
+                  {`${
+                    router.pathname === "/explore"
+                      ? openSuggestions.foundExplorePosts.length
+                      : openSuggestions.foundPosts.length
+                  } posts found`}
+                </span>
+                <span
+                  onClick={() => {
+                    if (
+                      openSuggestions.foundUsers &&
+                      openSuggestions.foundUsers.length === 0
+                    ) {
+                      return;
+                    }
+                    const users = openSuggestions.foundUsers;
+                    setOpenSuggestions(null);
+                    setOpenUsers(users);
+                  }}
+                  className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                >
+                  {`${openSuggestions.foundUsers.length} users found`}
+                </span>
+              </span>
+            )}
+            {openUsers !== null &&
+              openUsers.length !== 0 &&
+              openUsers.slice(0, 8).map((os) => {
                 return (
-                  <span key={os.id} onClick={()=>{PageLoadOptions().fullPageReload(`/profile/${os.username}`)}} className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium">
+                  <span
+                    key={os.id}
+                    onClick={() => {
+                      fullPageReload(`/profile/${os.username}`);
+                    }}
+                    className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                  >
                     <span className="relative h-8 w-8 flex">
                       <Image
                         src={os.avatar}
@@ -344,13 +574,16 @@ const LargeTopBar = ({ relationship }) => {
               })}
           </span>
         )}
-        </div>
-      {
-          openSuggestions && <div
-          onClick={() => {setOpenSuggestions(null)}}
+      </div>
+      {(openSuggestions !== null || openUsers !== null) && (
+        <div
+          onClick={() => {
+            setOpenSuggestions(null);
+            setOpenUsers(null);
+          }}
           id="clear-overlay"
         ></div>
-        }
+      )}
     </div>
   );
 };

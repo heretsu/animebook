@@ -168,6 +168,7 @@ const Explore = () => {
   };
 
   const getSelectedHashTag = (htag) => {
+    console.log(htag[0])
     if (htag[0] === chosenTag) {
       setChosenTag(null);
       setExplorePosts(originalExplorePosts);
@@ -176,11 +177,11 @@ const Explore = () => {
 
       const selectedTag = originalExplorePosts.filter(
         (post) =>
-          (post[0].content.toLowerCase().includes(htag[0]) ||
-            post[0].content.toUpperCase().includes(htag[0])) &&
+          post[0].content.toLowerCase().includes(htag[0].toLowerCase()) &&
           post[0].media !== null &&
           post[0].media !== undefined
       );
+      console.log(selectedTag)
       setExplorePosts(selectedTag);
     }
   };

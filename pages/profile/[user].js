@@ -36,6 +36,7 @@ export default function User({ user }) {
     userPostValues,
     setUserPostValues,
     setPostValues,
+    setOriginalPostValues,
     userNumId,
     followerObject,
     setFollowerObject,
@@ -52,6 +53,7 @@ export default function User({ user }) {
     setOpenManga,
     setAllUserObject,
     userData,
+    setRoutedUser
   } = useContext(UserContext);
 
   const [openPremium, setOpenPremium] = useState(false);
@@ -217,6 +219,7 @@ export default function User({ user }) {
   };
 
   useEffect(() => {
+    setRoutedUser(user)
     fetchAllUsers().then((r) => {
       setAllUserObject(r.data);
       if (r.data !== null && r.data !== undefined && r.data.length !== 0) {
@@ -261,6 +264,7 @@ export default function User({ user }) {
     fetchAllPosts().then((result) => {
       if (result.data !== null && result.data !== undefined) {
         userSpecificPosts(result);
+        setOriginalPostValues(result.data)
       }
     });
   }, [userNumId]);
@@ -273,6 +277,9 @@ export default function User({ user }) {
           <SmallTopBar middleTab={true} />
           {userBasicInfo !== null && userBasicInfo !== undefined ? (
             <div className="w-full py-2 space-y-5 px-2 lg:pl-lPostCustom lg:pr-rPostCustom mt-2 lg:mt-20 flex flex-col">
+              <div className="topcont">
+            <LargeTopBar relationship={true} />
+          </div>
               <div className="flex flex-col space-y-3">
                 <span className="relative flex h-[150px] sm:h-[200px] w-full">
                   {userBasicInfo.cover ? (

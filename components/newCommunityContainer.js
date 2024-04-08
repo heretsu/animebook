@@ -253,6 +253,7 @@ const NewCommunityContainer = () => {
                 onChange={(e) => {
                   setAnimeName(e.target.value);
                 }}
+                maxLength={50}
                 placeholder={"One piece community"}
                 className="px-4 h-15 rounded-xl w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
               />
@@ -263,6 +264,7 @@ const NewCommunityContainer = () => {
                 onChange={(e) => {
                   setBio(e.target.value);
                 }}
+                maxLength={250}
                 placeholder={"One piece community for all..."}
                 className="px-4 h-15 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
               />

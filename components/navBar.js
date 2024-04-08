@@ -55,6 +55,16 @@ export const MobileNavBar = () => {
           />
         </svg>
 
+        <svg onClick={()=>{router.push("/communities")}}
+          width="28px"
+          height="28px"
+          viewBox="0 0 32 32"
+          xmlns="http://www.w3.org/2000/svg"
+          fill={currentRoute == "/communities" || currentRoute == "communities/[community]" ? "rgb(73, 169, 73)" : "gray"}
+        >
+          <path d="M 2 5 L 2 21 L 6 21 L 6 26.09375 L 7.625 24.78125 L 12.34375 21 L 22 21 L 22 5 Z M 4 7 L 20 7 L 20 19 L 11.65625 19 L 11.375 19.21875 L 8 21.90625 L 8 19 L 4 19 Z M 24 9 L 24 11 L 28 11 L 28 23 L 24 23 L 24 25.90625 L 20.34375 23 L 12.84375 23 L 10.34375 25 L 19.65625 25 L 26 30.09375 L 26 25 L 30 25 L 30 9 Z" />
+        </svg>
+
         <svg
           onClick={() => {
             router.push("/create");
@@ -120,6 +130,42 @@ export const MobileNavBar = () => {
             d="M7 8a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-2 3h4a4 4 0 0 1 4 4v2H1v-2a4 4 0 0 1 4-4Z"
           />
         </svg>
+
+        <svg onClick={()=>{router.push("/earn")}}
+              width="28px"
+              height="28px"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <ellipse
+                rx="8.5"
+                ry="9"
+                transform="matrix(-1 0 0 1 10.5 12)"
+                stroke={
+                  currentRoute == "/earn" ? "rgb(73, 169, 73)" : "gray"
+                }
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M13 8.8C12.3732 8.29767 11.5941 8 10.7498 8C8.67883 8 7 9.79086 7 12C7 14.2091 8.67883 16 10.7498 16C11.5941 16 12.3732 15.7023 13 15.2"
+                stroke={
+                  currentRoute == "/earn" ? "rgb(73, 169, 73)" : "gray"
+                }
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M11 3C14.6667 3 22 3.9 22 12C22 20.1 14.6667 21 11 21"
+                stroke={
+                  currentRoute == "/earn" ? "rgb(73, 169, 73)" : "gray"
+                }
+                strokeWidth="1.8"
+              />
+            </svg>
       </div>
     </div>
   );
@@ -234,7 +280,8 @@ const NavBar = () => {
               fullPageReload("/communities");
             }}
             className={
-              currentRoute == "/communities" || currentRoute == "/communities/[community]"
+              currentRoute == "/communities" ||
+              currentRoute == "/communities/[community]"
                 ? "text-textGreen text-start cursor-pointer flex flex-row space-x-3 items-center"
                 : "text-start cursor-pointer flex flex-row space-x-3 items-center"
             }
@@ -245,9 +292,8 @@ const NavBar = () => {
               viewBox="0 0 32 32"
               xmlns="http://www.w3.org/2000/svg"
               fill="currentColor"
-              
             >
-              <path d="M 2 5 L 2 21 L 6 21 L 6 26.09375 L 7.625 24.78125 L 12.34375 21 L 22 21 L 22 5 Z M 4 7 L 20 7 L 20 19 L 11.65625 19 L 11.375 19.21875 L 8 21.90625 L 8 19 L 4 19 Z M 24 9 L 24 11 L 28 11 L 28 23 L 24 23 L 24 25.90625 L 20.34375 23 L 12.84375 23 L 10.34375 25 L 19.65625 25 L 26 30.09375 L 26 25 L 30 25 L 30 9 Z"/>
+              <path d="M 2 5 L 2 21 L 6 21 L 6 26.09375 L 7.625 24.78125 L 12.34375 21 L 22 21 L 22 5 Z M 4 7 L 20 7 L 20 19 L 11.65625 19 L 11.375 19.21875 L 8 21.90625 L 8 19 L 4 19 Z M 24 9 L 24 11 L 28 11 L 28 23 L 24 23 L 24 25.90625 L 20.34375 23 L 12.84375 23 L 10.34375 25 L 19.65625 25 L 26 30.09375 L 26 25 L 30 25 L 30 9 Z" />
             </svg>
             <span>Communities</span>
           </div>

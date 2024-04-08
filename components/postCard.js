@@ -223,7 +223,6 @@ export default function PostCard({
         <span className="flex flex-row justify-between items-center">
           <span
             onClick={() => {
-              console.log("yoo");
               router.push(`/profile/${users.username}`);
             }}
             className="cursor-pointer flex flex-row justify-start items-center space-x-0"

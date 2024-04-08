@@ -60,7 +60,8 @@ export default function App({ Component, pageProps }) {
   const [openManga, setOpenManga] = useState(false);
   const [mgComic, setMgComic] = useState(null);
   const [openPurchaseModal, setOpenPurchaseModal] = useState(false);
-  const [allUserObject, setAllUserObject] = useState(null) 
+  const [allUserObject, setAllUserObject] = useState(null);
+  const [routedUser, setRoutedUser] = useState(null)
 
   const checkIfUserExistsAndUpdateData = async (user) => {
     try {
@@ -263,7 +264,7 @@ export default function App({ Component, pageProps }) {
         setMgComic,
         openPurchaseModal,
         setOpenPurchaseModal,
-        allUserObject, setAllUserObject, NotSignedIn, setNotSignedIn
+        allUserObject, setAllUserObject, NotSignedIn, setNotSignedIn, routedUser, setRoutedUser
       }}
     >
       <span className="text-sm sm:text-base">

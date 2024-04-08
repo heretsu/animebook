@@ -35,7 +35,7 @@ body {
   }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1023px) {
   .topcont {
     display: none;
   }
@@ -271,7 +271,7 @@ body {
 #mobile-suggests{
   position: absolute; 
   background: white;
-  top: 2.5%;
+  top: 100%;
   z-index: 10;
   width: 50%;
 }

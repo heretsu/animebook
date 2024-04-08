@@ -91,11 +91,51 @@ const Communities = () => {
         <div className="w-full pb-2 space-y-8 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
           <SmallTopBar middleTab={true} />
           {addCommunity ? (
-            <div className="w-full space-y-5 mt-2 lg:mt-20 flex flex-col">
+            <div className="w-full space-y-5 mt-1 lg:mt-20 flex flex-col">
+              <svg
+                onClick={() => {
+                  setAddCommunity(false);
+                }}
+                width="35px"
+                height="35px"
+                viewBox="0 0 48 48"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="my-2 cursor-pointer"
+              >
+                <rect width={48} height={48} fill="white" fillOpacity={0.01} />
+                <path
+                  d="M31 36L19 24L31 12"
+                  stroke="gray"
+                  strokeWidth={4}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
               <NewCommunityContainer />
             </div>
           ) : requestCommunity ? (
             <div className="space-y-5 mt-2 lg:mt-20 flex flex-col">
+              <svg
+                onClick={() => {
+                  setRequestCommunity(false);
+                }}
+                width="35px"
+                height="35px"
+                viewBox="0 0 48 48"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="my-2 cursor-pointer"
+              >
+                <rect width={48} height={48} fill="white" fillOpacity={0.01} />
+                <path
+                  d="M31 36L19 24L31 12"
+                  stroke="gray"
+                  strokeWidth={4}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
               <span className="text-center my-auto w-full font-medium">
                 {"What community would you like to see on AnimeBook?"}
               </span>
@@ -139,8 +179,8 @@ const Communities = () => {
                     Your community suggestion is saved and will be considered
                   </span>
                 </span>
-              ) : (
-                userData ? <a
+              ) : userData ? (
+                <a
                   href={`mailto:AnimeBookLuffy@gmail.com?subject=communityRequestFrom${userData.id}${suggestionName}&body=${suggestionDescription}`}
                   onClick={() => {
                     () => {
@@ -150,10 +190,16 @@ const Communities = () => {
                   className="cursor-pointer shadow-xl font-medium mx-auto w-fit py-1 px-3 rounded-lg bg-pastelGreen text-white"
                 >
                   Request Community
-                </a> : <span
-                onClick={()=>{fullPageReload('/signin')}}
+                </a>
+              ) : (
+                <span
+                  onClick={() => {
+                    fullPageReload("/signin");
+                  }}
                   className="cursor-pointer shadow-xl border-2 border-gray-500 font-semibold mx-auto w-fit py-1 px-3 rounded-lg bg-transparent text-gray-500"
-                >{"Login to request"}</span>
+                >
+                  {"Login to request"}
+                </span>
               )}
             </div>
           ) : (

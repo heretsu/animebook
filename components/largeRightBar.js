@@ -148,7 +148,10 @@ const LargeRightBar = () => {
   };
 
   const getSelectedHashTag = (htag) => {
+
     if (router.pathname === "/explore") {
+      console.log(htag[0])
+
       if (htag[0] === chosenTag) {
         setChosenTag(null);
         setExplorePosts(originalExplorePosts);
@@ -249,7 +252,7 @@ const LargeRightBar = () => {
       setSliceIndex(sliceIndex + 1);
     }
     fetchYouMayKnow();
-  }, [originalPostValues, alreadyFollowed]);
+  }, [originalPostValues, alreadyFollowed, userData]);
 
   return (
     <div className="h-screen pb-22 flex">
