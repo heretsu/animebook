@@ -1,7 +1,7 @@
 import Image from "next/image";
 import CommentConfig from "./commentConfig";
 import PlusIcon from "./plusIcon";
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import supabase from "@/hooks/authenticateUser";
 import { UserContext } from "@/lib/userContext";
 import Relationships from "@/hooks/relationships";
@@ -37,6 +37,7 @@ export default function PostCard({
   users,
   myProfileId,
 }) {
+  const videoRef = useRef(null)
   const router = useRouter();
   const { sendNotification, postTimeAgo } = DappLibrary();
   const [alreadyFollowed, setAlreadyFollowed] = useState(null);
@@ -60,6 +61,7 @@ export default function PostCard({
   const [viewed, setViewed] = useState(false);
   const [viewReentry, setViewReentry] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [playVideo, setPlayVideo] = useState(false)
 
   const [ref, isBeingViewed] = PostInViewport({
     threshold: 0.5,
@@ -187,6 +189,27 @@ export default function PostCard({
         }
       });
   };
+  const loadVideoSnippet = (e) => {
+    if (e.target.buffered.length > 0) {
+      const loadedPercentage =
+        (e.target.buffered.end(0) / e.target.duration) * 100;
+      if (loadedPercentage >= 50) {
+        e.target.preload = "none";
+      }
+    }
+  };
+
+  const togglePlayPause = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+        setPlayVideo(true)
+      } else {
+        videoRef.current.pause();
+        setPlayVideo(false)
+      }
+    }
+  };
 
   useEffect(() => {
     if (users.id !== myProfileId) {
@@ -216,9 +239,9 @@ export default function PostCard({
     comments !== null && (
       <div
         ref={ref}
-        className={`${
-          router !== "/comments/[comments]" && "shadow-xl"
-        } ${!media && "w-full"} bg-white space-y-3 py-4 px-3 rounded-xl flex flex-col justify-center text-start`}
+        className={`${router !== "/comments/[comments]" && "shadow-xl"} ${
+          !media && "w-full"
+        } bg-white space-y-3 py-4 px-3 rounded-xl flex flex-col justify-center text-start`}
       >
         <span className="flex flex-row justify-between items-center">
           <span
@@ -282,13 +305,45 @@ export default function PostCard({
             media.endsWith("MOV") ||
             media.endsWith("3gp") ||
             media.endsWith("3GP") ? (
-              <video
-                
-                src={media}
-                height={600}
-                width={600}
-                controls
-              ></video>
+              <span
+                onClick={() => {
+                  if (router.pathname !== "/comments/[comments]") {
+                    router.push(`/comments/${id}`);
+                  } else {
+                    togglePlayPause()
+                  }
+                }}
+                className="relative cursor-pointer flex justify-center items-center bg-black w-full"
+              >
+                <video
+                className="relative max-h-[600px]"
+                  src={media}
+                  ref={videoRef}
+                  height={600}
+                  width={600}
+                  loop
+                  onProgress={(e) => {
+                    loadVideoSnippet(e);
+                  }}
+                ></video>
+                {!playVideo && <svg
+                  fill="white"
+                  width="70px"
+                  height="70px"
+                  viewBox="0 0 36 36"
+                  preserveAspectRatio="xMidYMid meet"
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlnsXlink="http://www.w3.org/1999/xlink"
+                  className="absolute m-auto bg-black bg-opacity-20 p-2 rounded-full"
+                >
+                  <title>{"play-solid"}</title>
+                  <path
+                    className="clr-i-solid clr-i-solid-path-1"
+                    d="M32.16,16.08,8.94,4.47A2.07,2.07,0,0,0,6,6.32V29.53a2.06,2.06,0,0,0,3,1.85L32.16,19.77a2.07,2.07,0,0,0,0-3.7Z"
+                  />
+                  <rect x={0} y={0} width={36} height={36} fillOpacity={0} />
+                </svg>}
+              </span>
             ) : (
               <span
                 className="cursor-pointer"
@@ -311,6 +366,7 @@ export default function PostCard({
             onClick={() => {
               router.push(`/comments/${id}`);
             }}
+            className="break-all overflow-wrap-word whitespace-preline"
           >
             <CommentConfig text={content} tags={true} />
           </span>

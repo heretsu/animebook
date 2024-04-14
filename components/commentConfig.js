@@ -37,7 +37,7 @@ const CommentConfig = ({ text, tags }) => {
         router.pathname === "/comments/[comments]" ||
         router.pathname === "/profile/[user]"
       ) {
-        router.push("/");
+        router.push("/home");
       }
     }
   };

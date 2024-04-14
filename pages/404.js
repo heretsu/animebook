@@ -21,7 +21,7 @@ const NotFound = () => {
           <div className="flex flex-row space-x-4">
             <span
               onClick={() => {
-                router.push("/");
+                router.push("/home");
               }}
               className="cursor-pointer text-sm font-semibold rounded-2xl bg-pastelGreen text-white py-3 w-40 text-center"
             >
@@ -29,7 +29,7 @@ const NotFound = () => {
             </span>
             <span
               onClick={() => {
-                router.push("/signin");
+                router.push("/");
               }}
               className="cursor-pointer text-sm font-semibold rounded-2xl bg-transparent border border-pastelGreen text-pastelGreen py-3 w-40 text-center"
             >

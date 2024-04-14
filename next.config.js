@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  exportPathMap: function () {
+    return {
+      '/': { page: '/index.html' }, 
+    };
+  },
   reactStrictMode: true,
   images: {
     remotePatterns: [
@@ -9,6 +14,7 @@ const nextConfig = {
       }
     ]
   }
+  
 }
 
 module.exports = nextConfig

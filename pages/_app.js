@@ -7,20 +7,21 @@ import PopupModal from "@/components/popupModal";
 import DappLogo from "@/components/dappLogo";
 import ConnectionData from "@/lib/connectionData";
 import DbUsers from "@/hooks/dbUsers";
+import Onboard from "@/components/onboard";
 
 export default function App({ Component, pageProps }) {
   const { fetchAllPosts } = DbUsers();
   const router = useRouter();
   const [address, setAddress] = useState(null);
   const { connectToWallet } = ConnectionData();
-  const [userData, setUserData] = useState(undefined); 
+  const [userData, setUserData] = useState(undefined);
   const [subscribed, setSubscribed] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [openStories, setOpenStories] = useState(false);
   const [userNumId, setUserNumId] = useState("");
   const [postJustMade, setPostJustMade] = useState(false);
-  const [NotSignedIn, setNotSignedIn] = useState(false)
+  const [NotSignedIn, setNotSignedIn] = useState(false);
 
   const [selectedMediaFile, setSelectedMediaFile] = useState(null);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -55,74 +56,83 @@ export default function App({ Component, pageProps }) {
   const [playVideo, setPlayVideo] = useState(false);
 
   const inputRef = useRef(null);
-  const communityInputRef = useRef(null)
+  const communityInputRef = useRef(null);
 
   const [openManga, setOpenManga] = useState(false);
   const [mgComic, setMgComic] = useState(null);
   const [openPurchaseModal, setOpenPurchaseModal] = useState(false);
   const [allUserObject, setAllUserObject] = useState(null);
-  const [routedUser, setRoutedUser] = useState(null)
+  const [routedUser, setRoutedUser] = useState(null);
+  const [onboarding, setOnboarding] = useState(false)
+  const [allUsers, setAllUsers] = useState(null)
+  const [oauthDetails, setOauthDetails] = useState(null)
 
   const checkIfUserExistsAndUpdateData = async (user) => {
     try {
-      const { data, error } = await supabase
+      const dbresponse = await supabase
         .from("users")
         .select("*")
-        .eq("useruuid", user.id);
-      if (error) {
-        console.error("ERROR FROM OUTER USER ID CHECK: ", error);
+        
+      if (dbresponse.error) {
+        console.error("ERROR FROM OUTER USER ID CHECK: ", dbresponse.error);
       } else {
-        /* 
+        setAllUsers(dbresponse.data)
+        const data = dbresponse.data.find((u) => u.useruuid === user.id)
+        /*
         checking if user exists in db after authentication
-        if user does not exist i.e(data.length->0) then add user to db   
+        if user does not exist i.e(!data) then add user to db   
       */
 
-        if (user.id !== null && user.id !== undefined && data.length === 0) {
+        if (!data) {
           const { addr } = await connectToWallet();
           setAddress(addr);
-          const newUser = {
-            useruuid: user.id,
-            username: user.user_metadata.preferred_username,
-            avatar: user.user_metadata.picture,
-            address: addr,
-          };
-          const response = await supabase.from("users").insert([newUser]);
+          if (user.user_metadata.preferred_username) {
+            const newUser = {
+              useruuid: user.id,
+              username: user.user_metadata.preferred_username,
+              avatar: user.user_metadata.picture,
+              address: addr,
+            };
+            const response = await supabase.from("users").insert([newUser]);
 
-          if (response.error) {
-            console.log("ERROR FROM NEW USER INSERTION: ", response.error);
-            if (response.error.code === "23503") {
-              router.push("/signin");
+            if (response.error) {
+              console.log("ERROR FROM NEW USER INSERTION: ", response.error);
+              if (response.error.code === "23503") {
+                router.push("/signin");
+              }
+              return;
             }
-            return;
-          }
 
-          const res = await supabase
-            .from("users")
-            .select("*")
-            .eq("useruuid", user.id);
-          if (res.data.length !== 0) {
-            setUserNumId(res.data[0].id);
-            setUserData({
-              preferred_username: user.user_metadata.preferred_username,
-              picture: user.user_metadata.picture,
-              ...res.data[0],
-            });
-            if (router.pathname !== "/profile/[user]") {
-              fetchAllPosts().then((result) => {
-                setOriginalPostValues(result.data);
-                setPostValues(result.data);
+            const res = await supabase
+              .from("users")
+              .select("*")
+              .eq("useruuid", user.id);
+            if (res.data.length !== 0) {
+              setUserNumId(res.data[0].id);
+              setUserData({
+                preferred_username: res.data[0].username,
+                picture: user.user_metadata.picture,
+                ...res.data[0],
               });
+              if (router.pathname !== "/profile/[user]") {
+                fetchAllPosts().then((result) => {
+                  setOriginalPostValues(result.data);
+                  setPostValues(result.data);
+                });
+              }
+            } else {
+              console.log("ERROR FROM INNER USER ID CHECK: ", res.error);
             }
-          } else {
-            console.log("ERROR FROM INNER USER ID CHECK: ", res.error);
+          } else{
+            setOnboarding(true)
           }
         } else {
-          setUserNumId(data[0].id);
-          setAddress(data[0].address);
+          setUserNumId(data.id);
+          setAddress(data.address);
           setUserData({
-            preferred_username: user.user_metadata.preferred_username,
+            preferred_username: data.username,
             picture: user.user_metadata.picture,
-            ...data[0],
+            ...data,
           });
           if (router.pathname !== "/profile/[user]") {
             fetchAllPosts().then((result) => {
@@ -142,7 +152,7 @@ export default function App({ Component, pageProps }) {
   useEffect(() => {
     if (
       [
-        "/",
+        "/home",
         "/explore",
         "/communities",
         "/communities/[community]",
@@ -163,18 +173,19 @@ export default function App({ Component, pageProps }) {
             if (session.user === undefined || session.user === null) {
               router.push("/signin");
             } else {
+              setOauthDetails(session.user)
               checkIfUserExistsAndUpdateData(session.user);
             }
           } else {
             if (router.pathname !== "/profile/[user]") {
-                fetchAllPosts().then((result) => {
-                  setOriginalPostValues(result.data);
-                  setPostValues(result.data);
-                });
-              }
+              fetchAllPosts().then((result) => {
+                setOriginalPostValues(result.data);
+                setPostValues(result.data);
+              });
+            }
             console.log("session expired or account not yet created");
             setAuthLoading(false);
-            setNotSignedIn(true)
+            setNotSignedIn(true);
             // router.push("/signin")
           }
         });
@@ -264,7 +275,12 @@ export default function App({ Component, pageProps }) {
         setMgComic,
         openPurchaseModal,
         setOpenPurchaseModal,
-        allUserObject, setAllUserObject, NotSignedIn, setNotSignedIn, routedUser, setRoutedUser
+        allUserObject,
+        setAllUserObject,
+        NotSignedIn,
+        setNotSignedIn,
+        routedUser,
+        setRoutedUser,
       }}
     >
       <span className="text-sm sm:text-base">
@@ -284,7 +300,6 @@ export default function App({ Component, pageProps }) {
           ) : subscribed ? (
             userData ? (
               address ? (
-                
                 <Component {...pageProps} />
               ) : (
                 <div className="pt-8">
@@ -313,7 +328,7 @@ export default function App({ Component, pageProps }) {
               <div id="overlay"></div>
             </div>
           )
-        ) : (
+        ) : (onboarding ? <Onboard allUsers={allUsers} me={oauthDetails} address={address} /> :
           <Component {...pageProps} />
         )}
       </span>

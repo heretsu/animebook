@@ -414,13 +414,10 @@ const Community = ({ community }) => {
                   />
                 </svg>
                 <CommunityPostCard
-                  media={
-                    "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/1712106722501Bildschirmfoto 2024-04-03 um 02.38.34.png"
-                  }
                   {...communityDetails.posts.find(
                     (p) => p.id === parseInt(focusPostId)
                   )}
-                  id={4}
+                  
                   myProfileId={userNumId}
                   community={community}
                   comments={comments}

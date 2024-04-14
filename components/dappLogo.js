@@ -8,7 +8,7 @@ export default function DappLogo({size}) {
       <span id="anime-book-font">b</span>
     </div>
     :
-    <div className="flex flex-row w-full justify-center items-center text-center text-logoSize">
+    <div className="ml-2 flex flex-row w-fit items-center text-center text-3xl">
       <span id="anime-book-font" className="pr-2 text-pastelGreen">
         Anime
       </span>

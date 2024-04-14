@@ -79,7 +79,7 @@ const PostContainer = ({communityId, community}) => {
                 media: mediaUrl,
                 content: mediaContent,
               });
-              fullPageReload("/");
+              fullPageReload("/home");
             }
           }
         }
@@ -106,7 +106,7 @@ const PostContainer = ({communityId, community}) => {
             media: null,
             content: content,
           });
-          fullPageReload("/");
+          fullPageReload("/home");
         }
         
       } else {

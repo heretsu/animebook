@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { UserContext } from "@/lib/userContext";
 import Image from "next/image";
 import CommentItem from "@/components/commentItem";
@@ -17,8 +17,10 @@ export const getServerSideProps = async (context) => {
 };
 
 export default function Comments({ comments }) {
-  const router = useRouter()
+  const videoRef = useRef(null);
+  const router = useRouter();
   const postid = comments;
+  const [viewMedia, setViewMedia] = useState(false);
   const {
     userData,
     userNumId,
@@ -33,6 +35,7 @@ export default function Comments({ comments }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [commentPostLoading, setCommentPostLoading] = useState(false);
   const [postReferenced, setPostReferenced] = useState(null);
+  const [playVideo, setPlayVideo] = useState(false);
 
   const { fetchPost } = DbUsers();
 
@@ -87,6 +90,18 @@ export default function Comments({ comments }) {
     }
   };
 
+  const togglePlayPause = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+        setPlayVideo(true);
+      } else {
+        videoRef.current.pause();
+        setPlayVideo(false);
+      }
+    }
+  };
+
   useEffect(() => {
     fetchSinglePostComments();
   }, [postid]);
@@ -98,6 +113,17 @@ export default function Comments({ comments }) {
           {postReferenced ? (
             <div className="flex flex-col md:flex-row">
               <span
+              onClick={() => {
+                if (postReferenced.media && postReferenced.media.toLowerCase().endsWith("webp") ||
+                postReferenced.media.toLowerCase().endsWith("jpg") ||
+                postReferenced.media.toLowerCase().endsWith("jpeg") ||
+                postReferenced.media.toLowerCase().endsWith("png") ||
+                postReferenced.media.toLowerCase().endsWith("svg") ||
+                postReferenced.media.toLowerCase().endsWith("gif")){
+                  setViewMedia(true);
+                }
+                
+              }}
                 className={
                   postReferenced.media
                     ? "hidden md:flex h-screen w-full bg-black items-center justify-center"
@@ -111,31 +137,62 @@ export default function Comments({ comments }) {
                   postReferenced.media.endsWith("MOV") ||
                   postReferenced.media.endsWith("3gp") ||
                   postReferenced.media.endsWith("3GP") ? (
-                    <video
-                      src={postReferenced.media}
-                      height={600}
-                      width={600}
-                      autoPlay
-                      loop
-                    ></video>
+                    <span
+                      onClick={togglePlayPause}
+                      className="relative cursor-pointer flex justify-center items-center bg-black w-full"
+                    >
+                      <video
+                        className="max-h-screen max-w-[100%] m-auto"
+                        ref={videoRef}
+                        src={postReferenced.media}
+                        height={600}
+                        width={600}
+                        loop
+                      ></video>
+                      {!playVideo && (
+                        <svg
+                          fill="white"
+                          width="70px"
+                          height="70px"
+                          viewBox="0 0 36 36"
+                          preserveAspectRatio="xMidYMid meet"
+                          xmlns="http://www.w3.org/2000/svg"
+                          xmlnsXlink="http://www.w3.org/1999/xlink"
+                          className="absolute m-auto bg-black bg-opacity-20 p-2 rounded-full"
+                        >
+                          <title>{"play-solid"}</title>
+                          <path
+                            className="clr-i-solid clr-i-solid-path-1"
+                            d="M32.16,16.08,8.94,4.47A2.07,2.07,0,0,0,6,6.32V29.53a2.06,2.06,0,0,0,3,1.85L32.16,19.77a2.07,2.07,0,0,0,0-3.7Z"
+                          />
+                          <rect
+                            x={0}
+                            y={0}
+                            width={36}
+                            height={36}
+                            fillOpacity={0}
+                          />
+                        </svg>
+                      )}
+                    </span>
                   ) : (
                     <Image
                       src={postReferenced.media}
                       alt="post"
                       width={600}
                       height={600}
-                      className="object-cover w-full"
+                      className="object-contain w-full max-w-[100%] m-auto"
                     />
                   ))}
               </span>
               <div
                 className={`${
-                  !postReferenced.media && "w-full"
+                  !postReferenced.media ? "w-full" : "md:w-1/3"
                 } min-h-screen md:bg-white md:max-h-screen rounded-xl md:rounded-none flex flex-col`}
               >
                 <svg
                   onClick={() => {
-                    router.push("/");
+                    router.push("/home");
                   }}
                   width="35px"
                   height="35px"
@@ -180,13 +237,15 @@ export default function Comments({ comments }) {
                 </span>
                 <div className="my-3 px-2 space-x-2 flex flex-row items-center h-fit">
                   {userData && (
-                    <Image
-                      src={userData.picture}
-                      alt="user profile"
-                      height={35}
-                      width={35}
-                      className="rounded-full"
-                    />
+                    
+                      <Image
+                        src={userData.picture}
+                        alt="user profile"
+                        height={35}
+                        width={35}
+                        className="rounded-full"
+                      />
+                    
                   )}
                   <div className="border border-green-500 rounded-xl w-full flex flex-row items-center justify-center pr-2">
                     <input
@@ -277,6 +336,50 @@ export default function Comments({ comments }) {
           )}
         </div>
       </section>
+      {
+        <div
+          id={viewMedia ? "explorer-modal" : "invisible"}
+          className="h-screen text-white w-full p-2"
+        >
+          
+          <span className="m-auto relative">
+            {postReferenced && postReferenced.media && (
+              <Image
+                src={postReferenced.media}
+                alt="post"
+                width={600}
+                height={600}
+                className="object-cover w-full max-h-[100%] max-w-[100%] m-auto"
+              />
+            )}
+          </span>
+        </div>
+      }
+      <div
+        
+        id={viewMedia ? "stories-cancel" : "invisible"}
+        className="cursor-pointer text-white font-bold justify-end items-center mt-4"
+      >
+        <span
+          onClick={() => {
+            setViewMedia(false)
+          }}
+          className="bg-pastelGreen text-xl py-1 px-2 rounded-lg"
+        >
+          x
+        </span>
+      </div>
+      {viewMedia && (
+        <>
+          <div
+            onClick={() => {
+              setViewMedia(false);
+            }}
+            id="stories-overlay"
+            className="bg-black bg-opacity-80"
+          ></div>
+        </>
+      )}
     </main>
   );
 }

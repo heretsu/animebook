@@ -4,13 +4,13 @@ import { useState, useEffect, useContext } from "react";
 import { UserContext } from "@/lib/userContext";
 import DappLogo from "./dappLogo";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import animeFontAndImage from "@/assets/animebookFontAndImage.png"
 
 export const MobileNavBar = () => {
-  // For dev: This is mobile nav. Post button on large nav
+  // For dev: This is mobile nav. 
   const { fullPageReload } = PageLoadOptions();
-  const { userData, myProfileRoute } = useContext(UserContext);
   const router = useRouter();
-  const [currentRoute, setCurrentRoute] = useState("/");
+  const [currentRoute, setCurrentRoute] = useState("/home");
 
   useEffect(() => {
     setCurrentRoute(router.pathname);
@@ -24,14 +24,14 @@ export const MobileNavBar = () => {
       >
         <svg
           onClick={() => {
-            fullPageReload("/");
+            fullPageReload("/home");
           }}
           fill="currentColor"
           width="28px"
           height="28px"
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
-          className={currentRoute == "/" ? "text-textGreen" : "text-slate-500"}
+          className={currentRoute == "/home" ? "text-textGreen" : "text-slate-500"}
         >
           <path d="M23,22a1,1,0,0,1-2,0,8.964,8.964,0,0,0-6.3-8.588,1,1,0,1,1,.6-1.908A10.956,10.956,0,0,1,23,22ZM23,4v6a1,1,0,0,1-1,1H18a1,1,0,0,1-1-1V9H13v7a1,1,0,0,1-2,0V13.059A9.01,9.01,0,0,0,3,22a1,1,0,0,1-2,0A11.01,11.01,0,0,1,11,11.051V2a1,1,0,0,1,1-1h6a1,1,0,0,1,1,1V3h3A1,1,0,0,1,23,4ZM17,3H13V7h4Zm4,2H19V9h2ZM10,19a2,2,0,1,0-2,2A2,2,0,0,0,10,19Zm8-1a1,1,0,1,0-1,1A1,1,0,0,0,18,18Z" />
         </svg>
@@ -53,16 +53,6 @@ export const MobileNavBar = () => {
             strokeWidth="1.3"
             d="m11.479 1.712 2.367 4.8a.532.532 0 0 0 .4.292l5.294.769a.534.534 0 0 1 .3.91l-3.83 3.735a.534.534 0 0 0-.154.473l.9 5.272a.535.535 0 0 1-.775.563l-4.734-2.49a.536.536 0 0 0-.5 0l-4.73 2.487a.534.534 0 0 1-.775-.563l.9-5.272a.534.534 0 0 0-.154-.473L2.158 8.48a.534.534 0 0 1 .3-.911l5.294-.77a.532.532 0 0 0 .4-.292l2.367-4.8a.534.534 0 0 1 .96.004Z"
           />
-        </svg>
-
-        <svg onClick={()=>{router.push("/communities")}}
-          width="28px"
-          height="28px"
-          viewBox="0 0 32 32"
-          xmlns="http://www.w3.org/2000/svg"
-          fill={currentRoute == "/communities" || currentRoute == "communities/[community]" ? "rgb(73, 169, 73)" : "gray"}
-        >
-          <path d="M 2 5 L 2 21 L 6 21 L 6 26.09375 L 7.625 24.78125 L 12.34375 21 L 22 21 L 22 5 Z M 4 7 L 20 7 L 20 19 L 11.65625 19 L 11.375 19.21875 L 8 21.90625 L 8 19 L 4 19 Z M 24 9 L 24 11 L 28 11 L 28 23 L 24 23 L 24 25.90625 L 20.34375 23 L 12.84375 23 L 10.34375 25 L 19.65625 25 L 26 30.09375 L 26 25 L 30 25 L 30 9 Z" />
         </svg>
 
         <svg
@@ -87,48 +77,14 @@ export const MobileNavBar = () => {
           <path d="M26,0C11.664,0,0,11.663,0,26s11.664,26,26,26s26-11.663,26-26S40.336,0,26,0z M38.5,28H28v11c0,1.104-0.896,2-2,2 s-2-0.896-2-2V28H13.5c-1.104,0-2-0.896-2-2s0.896-2,2-2H24V14c0-1.104,0.896-2,2-2s2,0.896,2,2v10h10.5c1.104,0,2,0.896,2,2 S39.604,28,38.5,28z" />
         </svg>
 
-        <svg
-          onClick={() => {
-            router.push("/notifications");
-          }}
+        <svg onClick={()=>{router.push("/communities")}}
           width="28px"
           height="28px"
-          viewBox="0 0 24 24"
+          viewBox="0 0 32 32"
           xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          stroke={
-            currentRoute == "/notifications" ? "rgb(73, 169, 73)" : "gray"
-          }
-          strokeWidth="1.4"
-          strokeLinecap="round"
-          strokeLinejoin="miter"
+          fill={currentRoute == "/communities" || currentRoute == "communities/[community]" ? "rgb(73, 169, 73)" : "gray"}
         >
-          <path d="M19,14l2,4H3l2-4V9.29A7.2,7.2,0,0,1,11.78,2,7,7,0,0,1,19,9Z" />
-          <path d="M16,18a4,4,0,1,1-8,0" />
-        </svg>
-
-        <svg
-          onClick={() => {
-            fullPageReload(`/profile/${userData.username}`);
-          }}
-          className="w-[28] h-[28px]"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 14 18"
-        >
-          <path
-            stroke={
-              myProfileRoute &&
-              (currentRoute === "/profile/[user]" || currentRoute === "/edit")
-                ? "rgb(73, 169, 73)"
-                : "gray"
-            }
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="1.1"
-            d="M7 8a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-2 3h4a4 4 0 0 1 4 4v2H1v-2a4 4 0 0 1 4-4Z"
-          />
+          <path d="M 2 5 L 2 21 L 6 21 L 6 26.09375 L 7.625 24.78125 L 12.34375 21 L 22 21 L 22 5 Z M 4 7 L 20 7 L 20 19 L 11.65625 19 L 11.375 19.21875 L 8 21.90625 L 8 19 L 4 19 Z M 24 9 L 24 11 L 28 11 L 28 23 L 24 23 L 24 25.90625 L 20.34375 23 L 12.84375 23 L 10.34375 25 L 19.65625 25 L 26 30.09375 L 26 25 L 30 25 L 30 9 Z" />
         </svg>
 
         <svg onClick={()=>{router.push("/earn")}}
@@ -166,6 +122,10 @@ export const MobileNavBar = () => {
                 strokeWidth="1.8"
               />
             </svg>
+
+        
+
+        
       </div>
     </div>
   );
@@ -175,7 +135,7 @@ const NavBar = () => {
   const { fullPageReload } = PageLoadOptions();
   const { userData, myProfileRoute, NotSignedIn } = useContext(UserContext);
   const router = useRouter();
-  const [currentRoute, setCurrentRoute] = useState("/");
+  const [currentRoute, setCurrentRoute] = useState("/home");
 
   useEffect(() => {
     setCurrentRoute(router.pathname);
@@ -184,8 +144,9 @@ const NavBar = () => {
   return (
     <div className="fixed invisible lg:visible h-screen py-2 flex flex-col">
       <div className="px-6 bg-white w-full h-full rounded-t-xl">
-        <div className="py-4">
-          <DappLogo size={"normal"} />
+        <div className="py-4 flex justify-start items-center">
+          <Image src={animeFontAndImage} alt="anime book colored logo" height={200} width={200}/>
+          
         </div>
         <span className="border-t py-3 cursor-pointer flex justify-start items-center space-x-1">
           {userData && (
@@ -227,10 +188,10 @@ const NavBar = () => {
         <div className="text-sm block font-medium space-y-6 pr-28 py-7 border-y border-gray-200">
           <div
             onClick={() => {
-              fullPageReload("/");
+              fullPageReload("/home");
             }}
             className={
-              currentRoute == "/" || currentRoute == "/create"
+              currentRoute == "/home" || currentRoute == "/create"
                 ? "text-textGreen text-start cursor-pointer flex flex-row space-x-3 items-center"
                 : "text-start cursor-pointer flex flex-row space-x-3 items-center"
             }

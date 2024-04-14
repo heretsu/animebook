@@ -168,7 +168,7 @@ const Explore = () => {
   };
 
   const getSelectedHashTag = (htag) => {
-    console.log(htag[0])
+    console.log(htag[0]);
     if (htag[0] === chosenTag) {
       setChosenTag(null);
       setExplorePosts(originalExplorePosts);
@@ -181,7 +181,7 @@ const Explore = () => {
           post[0].media !== null &&
           post[0].media !== undefined
       );
-      console.log(selectedTag)
+      console.log(selectedTag);
       setExplorePosts(selectedTag);
     }
   };
@@ -391,9 +391,28 @@ const Explore = () => {
       post.media.endsWith("3gp") ||
       post.media.endsWith("3GP")
     ) {
-      setPlayVideo(action);
+      if (videoRef.current) {
+        if (action) {
+          videoRef.current.play();
+        } else {
+          videoRef.current.pause();
+        }
+      }
     }
   };
+
+  const togglePlayPause = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+        setPlayVideo(true);
+      } else {
+        videoRef.current.pause();
+        setPlayVideo(false);
+      }
+    }
+  };
+
   const resetStates = () => {
     setBookmarked(false);
     setBookmarkReentry(false);
@@ -411,10 +430,10 @@ const Explore = () => {
     fetchViews(postInfos.id);
     fetchBookmarkStatus(postInfos.id);
     fetchComments(postInfos.id);
-
-    pauseAndPlayVideo(postInfos, true);
     setCurrentPost(postInfosByNewId);
+
     setOpenExplorer(true);
+    pauseAndPlayVideo(postInfos, true);
   };
 
   useEffect(() => {
@@ -428,8 +447,8 @@ const Explore = () => {
         <NavBar />
         <SmallTopBar middleTab={true} />
         <div className="w-full py-2 space-y-5 px-2 lg:pl-lPostCustom lg:pr-rPostCustom mt-2 lg:mt-20 flex flex-col">
-        <div className="topcont">
-          <LargeTopBar relationship={true} />
+          <div className="topcont">
+            <LargeTopBar relationship={true} />
           </div>
           <div className="text-gray-400 text-sm space-x-2 w-fit flex flex-row">
             {hashtagList !== null &&
@@ -551,7 +570,9 @@ const Explore = () => {
           id={openExplorer ? "explorer-modal" : "invisible"}
           className="text-white relative flex flex-col w-full space-y-5 px-1"
         >
-          <div className="relative w-full h-screen flex justify-center">
+          <div 
+            className="relative w-full h-screen flex justify-center"
+          >
             {currentPost[0].media !== null &&
               currentPost[0].media !== undefined &&
               currentPost[0].media !== "" &&
@@ -563,18 +584,23 @@ const Explore = () => {
               currentPost[0].media.endsWith("3GP") ? (
                 <span
                   id="post-actions"
+                  onClick={() => {
+                    togglePlayPause();
+                  }}
                   onDoubleClick={() => {
                     likePost(currentPost[0].id, currentPost[0].users);
                   }}
                   className="w-full"
                 >
-                  <ReactPlayer
-                    url={currentPost[0].media}
-                    playing={playVideo}
-                    width="100%"
-                    height="100%"
+                  <video
+                    className="relative w-full h-full max-w-[100%] m-auto"
+                    src={currentPost[0].media}
+                    ref={videoRef}
+                    height={500}
+                    width={500}
                     loop
-                  />
+                    autoPlay={playVideo}
+                  ></video>
                 </span>
               ) : (
                 <span
@@ -589,7 +615,7 @@ const Explore = () => {
                     height={500}
                     width={500}
                     className="
-            w-full h-full object-contain"
+            w-full h-full object-contain max-w-[100%] m-auto"
                   />
                 </span>
               ))}

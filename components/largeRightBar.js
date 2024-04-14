@@ -374,7 +374,7 @@ const LargeRightBar = () => {
             />
             <span>Videos</span>
           </span>
-          {router.pathname === "/" && (
+          {router.pathname === "/home" && (
             <span className="flex flex-row items-center justify-start space-x-2">
               <input
                 type="checkbox"
@@ -394,7 +394,7 @@ const LargeRightBar = () => {
               <span>Stories</span>
             </span>
           )}
-          {router.pathname === "/" && (
+          {router.pathname === "/home" && (
             <span className="flex flex-row items-center justify-start space-x-2">
               <input
                 type="checkbox"
