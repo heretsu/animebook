@@ -2,7 +2,7 @@
 const nextConfig = {
   exportPathMap: function () {
     return {
-      '/': { page: 'public/index.html' }, 
+      '/': { page: '/index.html' }, 
     };
   },
   reactStrictMode: true,
