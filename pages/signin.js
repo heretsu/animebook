@@ -7,17 +7,14 @@ const Signin = () => {
   const [note, setNote] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const login = (provider) => {
+const login = (provider) => {
     
     try {
       supabase.auth.signInWithOAuth({
         provider: provider,
-        // options: {
-        //   redirectTo: "http://localhost:3000/home",
-        // },
-        // options: {
-        //   redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
-        // },
+        options: {
+           redirectTo: "https://animebook.io/home",
+         },
       });
     } catch (error) {
       throw "could not sign in";
