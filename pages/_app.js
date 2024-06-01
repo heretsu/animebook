@@ -13,7 +13,6 @@ export default function App({ Component, pageProps }) {
   const { fetchAllPosts } = DbUsers();
   const router = useRouter();
   const [address, setAddress] = useState(null);
-  const { connectToWallet } = ConnectionData();
   const [userData, setUserData] = useState(undefined);
   const [subscribed, setSubscribed] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
@@ -63,35 +62,58 @@ export default function App({ Component, pageProps }) {
   const [openPurchaseModal, setOpenPurchaseModal] = useState(false);
   const [allUserObject, setAllUserObject] = useState(null);
   const [routedUser, setRoutedUser] = useState(null);
-  const [onboarding, setOnboarding] = useState(false)
-  const [allUsers, setAllUsers] = useState(null)
-  const [oauthDetails, setOauthDetails] = useState(null)
+  const [onboarding, setOnboarding] = useState(false);
+  const [allUsers, setAllUsers] = useState(null);
+  const [oauthDetails, setOauthDetails] = useState(null);
+  const [communities, setCommunities] = useState(null);
+
+  const fetchCommunities = async () => {
+    const { data } = await supabase
+      .from("communities")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const members = await supabase.from("community_relationships").select("*");
+
+    if (data) {
+      const communityMembersCountMap = new Map();
+      members.data.forEach((member) => {
+        const communityId = member.communityid;
+        communityMembersCountMap.set(
+          communityId,
+          (communityMembersCountMap.get(communityId) || 0) + 1
+        );
+      });
+      const communitiesWithMembers = data.map((community) => ({
+        ...community,
+        membersLength: communityMembersCountMap.get(community.id) || 0,
+      }));
+      return communitiesWithMembers;
+    }
+  };
 
   const checkIfUserExistsAndUpdateData = async (user) => {
     try {
-      const dbresponse = await supabase
-        .from("users")
-        .select("*")
-        
+      const dbresponse = await supabase.from("users").select("*");
+
       if (dbresponse.error) {
         console.error("ERROR FROM OUTER USER ID CHECK: ", dbresponse.error);
       } else {
-        setAllUsers(dbresponse.data)
-        const data = dbresponse.data.find((u) => u.useruuid === user.id)
+        setAllUsers(dbresponse.data);
+        const data = dbresponse.data.find((u) => u.useruuid === user.id);
         /*
         checking if user exists in db after authentication
         if user does not exist i.e(!data) then add user to db   
       */
 
         if (!data) {
-          const { addr } = await connectToWallet();
-          setAddress(addr);
           if (user.user_metadata.preferred_username) {
             const newUser = {
               useruuid: user.id,
               username: user.user_metadata.preferred_username,
-              avatar: user.user_metadata.picture,
-              address: addr,
+              avatar: user.user_metadata.picture
+                ? user.user_metadata.picture
+                : "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
             };
             const response = await supabase.from("users").insert([newUser]);
 
@@ -111,33 +133,44 @@ export default function App({ Component, pageProps }) {
               setUserNumId(res.data[0].id);
               setUserData({
                 preferred_username: res.data[0].username,
-                picture: user.user_metadata.picture,
+                picture: user.user_metadata.picture
+                  ? user.user_metadata.picture
+                  : "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
                 ...res.data[0],
               });
               if (router.pathname !== "/profile/[user]") {
-                fetchAllPosts().then((result) => {
-                  setOriginalPostValues(result.data);
-                  setPostValues(result.data);
+                fetchAllPosts().then((result1) => {
+                  fetchCommunities().then((result2) => {
+                    setCommunities(result2);
+                    setOriginalPostValues(result1.data);
+                    setPostValues(result1.data);
+                  });
                 });
               }
             } else {
               console.log("ERROR FROM INNER USER ID CHECK: ", res.error);
             }
-          } else{
-            setOnboarding(true)
+          } else {
+            setOnboarding(true);
           }
         } else {
+
           setUserNumId(data.id);
           setAddress(data.address);
           setUserData({
             preferred_username: data.username,
-            picture: user.user_metadata.picture,
+            picture: user.user_metadata.picture
+              ? user.user_metadata.picture
+              : "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
             ...data,
           });
           if (router.pathname !== "/profile/[user]") {
-            fetchAllPosts().then((result) => {
-              setOriginalPostValues(result.data);
-              setPostValues(result.data);
+            fetchAllPosts().then((result1) => {
+              fetchCommunities().then((result2) => {
+                setCommunities(result2);
+                setOriginalPostValues(result1.data);
+                setPostValues(result1.data);
+              });
             });
           }
         }
@@ -159,6 +192,8 @@ export default function App({ Component, pageProps }) {
         "/notifications",
         "/profile/[user]",
         "/comments/[comments]",
+        "/inbox",
+        "/inbox/[message]",
         "/settings",
         "/earn",
         "/create",
@@ -173,14 +208,18 @@ export default function App({ Component, pageProps }) {
             if (session.user === undefined || session.user === null) {
               router.push("/signin");
             } else {
-              setOauthDetails(session.user)
+              setOauthDetails(session.user);
               checkIfUserExistsAndUpdateData(session.user);
             }
           } else {
             if (router.pathname !== "/profile/[user]") {
-              fetchAllPosts().then((result) => {
-                setOriginalPostValues(result.data);
-                setPostValues(result.data);
+              fetchAllPosts().then((result1) => {
+                fetchCommunities().then((result2) => {
+                  setCommunities(result2);
+                  setOriginalPostValues(result1.data);
+                  setPostValues(result1.data);
+                });
+                
               });
             }
             console.log("session expired or account not yet created");
@@ -281,6 +320,8 @@ export default function App({ Component, pageProps }) {
         setNotSignedIn,
         routedUser,
         setRoutedUser,
+        communities,
+        setCommunities,
       }}
     >
       <span className="text-sm sm:text-base">
@@ -291,6 +332,8 @@ export default function App({ Component, pageProps }) {
           "/settings",
           "/earn",
           "/subscriptionplan",
+          "/inbox",
+          "/[message]"
         ].includes(router.pathname) ? (
           authLoading ? (
             <div className="pt-8">
@@ -299,21 +342,7 @@ export default function App({ Component, pageProps }) {
             </div>
           ) : subscribed ? (
             userData ? (
-              address ? (
-                <Component {...pageProps} />
-              ) : (
-                <div className="pt-8">
-                  <DappLogo size={"default"} />
-                  <PopupModal
-                    success={"5"}
-                    messageTopic={""}
-                    moreInfo={""}
-                    username={userData.username}
-                    avatar={userData.avatar}
-                  />
-                  <div id="overlay"></div>
-                </div>
-              )
+              <Component {...pageProps} />
             ) : (
               <div className="pt-8">
                 <DappLogo size={"default"} />
@@ -328,7 +357,9 @@ export default function App({ Component, pageProps }) {
               <div id="overlay"></div>
             </div>
           )
-        ) : (onboarding ? <Onboard allUsers={allUsers} me={oauthDetails} address={address} /> :
+        ) : onboarding ? (
+          <Onboard allUsers={allUsers} me={oauthDetails} />
+        ) : (
           <Component {...pageProps} />
         )}
       </span>

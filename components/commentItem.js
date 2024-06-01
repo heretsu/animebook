@@ -95,7 +95,7 @@ export default function CommentItem({comment}) {
           />
         </span>
 
-          <span className="text-start space-x-1 flex flex-col items-center w-fit rounded-xl py-1 px-2 bg-pastelGreen text-white">
+          <span className="text-start space-x-1 flex flex-col items-center w-fit rounded py-1 px-2 bg-pastelGreen text-white">
             <p className="w-full text-normal font-semibold">
               {comment.users.username}
             </p>

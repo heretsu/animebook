@@ -101,7 +101,7 @@ export default function CommentCard({ openComments }) {
         <span className="relative h-8 w-8 flex">
           {userData &&
             <Image
-              src={userData.picture}
+              src={userData.avatar}
               alt="user profile"
               height={35}
               width={35}

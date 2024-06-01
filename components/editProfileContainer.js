@@ -6,6 +6,7 @@ import { UserContext } from "@/lib/userContext";
 import CloudSvg from "./cloudSvg";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import Spinner from "./spinner";
+import ConnectionData from "@/lib/connectionData";
 
 export const BinSvg = ({ pixels }) => {
   return (
@@ -25,6 +26,7 @@ export const BinSvg = ({ pixels }) => {
   );
 };
 const EditProfileContainer = () => {
+  const { connectToWallet } = ConnectionData();
   const { fullPageReload } = PageLoadOptions();
   const { userNumId, setPostJustMade, address, userData } =
     useContext(UserContext);
@@ -36,7 +38,7 @@ const EditProfileContainer = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [newAddress, setNewAddress] = useState(null);
-  const [changesLoading, setChangesLoading] = useState(false)
+  const [changesLoading, setChangesLoading] = useState(false);
 
   const mediaChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -77,8 +79,13 @@ const EditProfileContainer = () => {
     }
   };
 
+  const updateAddress = async () => {
+    const addr = await connectToWallet();
+    setNewAddress(addr);
+  };
+
   const updateProfile = async () => {
-    setChangesLoading(true)
+    setChangesLoading(true);
     setErrorMsg("");
     let coverUrl = null;
     let avatarUrl = null;
@@ -102,7 +109,7 @@ const EditProfileContainer = () => {
       newAddress === null
     ) {
       setErrorMsg("You made no changes");
-      setChangesLoading(false)
+      setChangesLoading(false);
       return;
     }
 
@@ -289,17 +296,25 @@ const EditProfileContainer = () => {
               </span>
               <span
                 onClick={() => {
-                  setNewAddress(address);
+                  updateAddress();
                 }}
-                className="text-orange-500 cursor-pointer"
+                className="underline text-orange-500 cursor-pointer"
               >
-                change wallet
+                {address ? "change wallet" : "connect"}
               </span>
               <div className="font-semibold">
                 <span className="text-green-700 text-xs pr-1">
                   {"Currently connected:"}
                 </span>
-                <span className="text-sm">{address}</span>
+                {address || newAddress ? (
+                  <span className="text-sm">{address || newAddress}</span>
+                ) : (
+                  <span className="text-sm font-normal">
+                    {
+                      "No address connected yet. Connect your address so you can earn from Animebook"
+                    }
+                  </span>
+                )}
               </div>
             </span>
 

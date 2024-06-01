@@ -239,7 +239,7 @@ export default function Comments({ comments }) {
                   {userData && (
                     
                       <Image
-                        src={userData.picture}
+                        src={userData.avatar}
                         alt="user profile"
                         height={35}
                         width={35}
@@ -247,7 +247,7 @@ export default function Comments({ comments }) {
                       />
                     
                   )}
-                  <div className="border border-green-500 rounded-xl w-full flex flex-row items-center justify-center pr-2">
+                  <div className="border border-slate-200 bg-slate-100 w-full flex flex-row items-center justify-center pr-2">
                     <input
                       ref={inputRef}
                       value={commentMsg}

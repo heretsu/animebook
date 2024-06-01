@@ -13,6 +13,7 @@ import DappLibrary from "@/lib/dappLibrary";
 import Spinner from "@/components/spinner";
 import CommentConfig from "@/components/commentConfig";
 import ReactPlayer from "react-player";
+import SmallPostContainer from "@/components/smallPostContainer";
 
 export default function Home() {
   const [storyUploading, setStoryUploading] = useState(false);
@@ -159,6 +160,8 @@ export default function Home() {
             <LargeTopBar relationship={true} />
           </div>
           {userData && <Stories />}
+          {userData && <SmallPostContainer />}
+          
           <Posts />
         </div>
 
@@ -199,7 +202,7 @@ export default function Home() {
               <span className="cursor-pointer flex justify-start items-center space-x-2">
                 {userData !== undefined && (
                   <Image
-                    src={userData.picture}
+                    src={userData.avatar}
                     alt="user profile"
                     height={35}
                     width={35}

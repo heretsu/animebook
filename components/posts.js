@@ -20,7 +20,7 @@ const Posts = () => {
   } = useContext(UserContext);
 
   return (
-    <div className="space-y-6 pb-2 pt-4">
+    <div className="space-y-2">
       {postValues !== null &&
         postValues !== undefined &&
         (postValues.length > 0 ? (
@@ -44,7 +44,7 @@ const Posts = () => {
               "Search not found. ない!"
             ) : followingPosts ? (
               originalPostValues.length > 0 ? (
-                <div className="space-y-6 pb-2 pt-4">
+                <div className="space-y-2">
                   <span>
                     {
                       "Doesn't seem like you follow anyone who has released a post. We will display all other posts"

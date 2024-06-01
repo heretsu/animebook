@@ -239,9 +239,9 @@ export default function PostCard({
     comments !== null && (
       <div
         ref={ref}
-        className={`${router !== "/comments/[comments]" && "shadow-xl"} ${
+        className={`${router.pathname !== "/comments/[comments]" && "shadow-xl"} ${
           !media && "w-full"
-        } bg-white space-y-3 py-4 px-3 rounded-xl flex flex-col justify-center text-start`}
+        } bg-white space-y-3 py-4 px-3 flex flex-col justify-center text-start`}
       >
         <span className="flex flex-row justify-between items-center">
           <span

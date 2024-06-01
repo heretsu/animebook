@@ -9,7 +9,7 @@ const Settings = () => {
 
   const logOut = async () => {
     try {
-      disconnectWallet()
+      try{disconnectWallet()}catch(e){}
       await supabase.auth.signOut()
       router.push("/signin")
     } catch (error) {

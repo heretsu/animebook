@@ -14,10 +14,10 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 const Communities = () => {
   const { fullPageReload } = PageLoadOptions();
   const router = useRouter();
-  const { userData } = useContext(UserContext);
+  const { userData, communities, setCommunities } = useContext(UserContext);
   const [addCommunity, setAddCommunity] = useState(false);
-  const [communities, setCommunities] = useState(null);
-  const [loading, setLoading] = useState(false);
+  // const [communities, setCommunities] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [requestCommunity, setRequestCommunity] = useState(false);
   const [sentRequest, setSentRequest] = useState(false);
@@ -81,9 +81,10 @@ const Communities = () => {
     if (userData) {
       checkIfAdmin();
     }
-    setLoading(true);
-    fetchCommunities();
-  }, [userData]);
+    if (communities){
+      setLoading(false)
+    }
+  }, [userData, communities]);
   return (
     <main>
       <section className="mb-5 flex flex-row space-x-2 w-full">
@@ -240,21 +241,21 @@ const Communities = () => {
                             `/communities/${community.name}`.replace(" ", "+")
                           );
                         }}
-                        className="cursor-pointer w-full flex flex-row bg-white rounded-lg border border-gray-300"
+                        className="cursor-pointer w-full flex flex-row bg-white rounded border border-gray-300"
                       >
                         <Image
                           src={community.avatar}
                           alt="post"
                           height={80}
                           width={80}
-                          className="rounded-l-lg object-contain"
+                          className="rounded-l-sm object-cover"
                         />
                         <span className="pl-4 flex flex-col py-2 text-sm">
                           <span className="font-bold">
                             {formatGroupName(community.name)}
                           </span>
                           <span className="text-gray-500 text-xs">
-                            {community.bio}
+                            {community.bio.slice(0,110).trim().concat("...")}
                           </span>
                           <span className="text-textGreen text-[0.8rem]">
                             {`${community.membersLength} ${

@@ -1,6 +1,7 @@
 import supabase from "./authenticateUser";
 
 export default function Relationships() {
+
   const fetchFollows = async (userId) => {
     const res = await supabase
       .from("relationships")

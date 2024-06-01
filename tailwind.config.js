@@ -8,8 +8,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        pastelGreen: "#74dc9c",
-        textGreen: "rgb(73, 169, 73)"
+        pastelGreen: "#04dbc4", //74dc9c
+        textGreen: "#04dbc4", //rgb(73, 169, 73)
+        dmGreen: "#D8E9E9" //#EAF6F6
       },
       padding: {
         22: "5.5rem",

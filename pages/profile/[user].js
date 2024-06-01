@@ -27,7 +27,7 @@ export const getServerSideProps = async (context) => {
 };
 
 export default function User({ user }) {
-  const { connectToWallet } = ConnectionData();
+  const { connectToWallet, disconnectWallet } = ConnectionData();
   const { getUsdPrice } = PriceFeedStation();
   const router = useRouter();
   const { fetchAllUsers, fetchAllPosts, fetchUserMangas } = DbUsers();
@@ -53,7 +53,7 @@ export default function User({ user }) {
     setOpenManga,
     setAllUserObject,
     userData,
-    setRoutedUser
+    setRoutedUser,
   } = useContext(UserContext);
 
   const [openPremium, setOpenPremium] = useState(false);
@@ -218,8 +218,20 @@ export default function User({ user }) {
     }
   };
 
+
+  const logOut = async () => {
+    try {
+      try{disconnectWallet()}catch(e){}
+      await supabase.auth.signOut()
+      router.push("/signin")
+    } catch (error) {
+      throw "a problem occurred";
+    }
+  };
+
+
   useEffect(() => {
-    setRoutedUser(user)
+    setRoutedUser(user);
     fetchAllUsers().then((r) => {
       setAllUserObject(r.data);
       if (r.data !== null && r.data !== undefined && r.data.length !== 0) {
@@ -264,7 +276,7 @@ export default function User({ user }) {
     fetchAllPosts().then((result) => {
       if (result.data !== null && result.data !== undefined) {
         userSpecificPosts(result);
-        setOriginalPostValues(result.data)
+        setOriginalPostValues(result.data);
       }
     });
   }, [userNumId]);
@@ -278,8 +290,8 @@ export default function User({ user }) {
           {userBasicInfo !== null && userBasicInfo !== undefined ? (
             <div className="w-full py-2 space-y-5 px-2 lg:pl-lPostCustom lg:pr-rPostCustom mt-2 lg:mt-20 flex flex-col">
               <div className="topcont">
-            <LargeTopBar relationship={true} />
-          </div>
+                <LargeTopBar relationship={true} />
+              </div>
               <div className="flex flex-col space-y-3">
                 <span className="relative flex h-[150px] sm:h-[200px] w-full">
                   {userBasicInfo.cover ? (
@@ -295,13 +307,31 @@ export default function User({ user }) {
                   <span className="text-xs md:text-sm rounded-b-2xl absolute inset-0 flex flex-col justify-between text-white">
                     <span className="w-full flex flex-row justify-end pt-2 pr-4">
                       {itsMe && (
-                        <span
-                          onClick={() => {
-                            router.push("/settings");
-                          }}
-                          className="cursor-pointer bg-pastelGreen font-semibold py-1.5 px-2.5 rounded"
-                        >
-                          Edit profile
+                        <span className="flex flex-col">
+                          <span
+                            onClick={() => {
+                              router.push("/settings");
+                            }}
+                            className="cursor-pointer bg-pastelGreen font-semibold py-1.5 px-2.5 rounded"
+                          >
+                            Edit profile
+                          </span>
+                          <span onClick={()=>{logOut()}} className="underline cursor-pointer pt-2 w-full flex items-center justify-end space-x-1">
+                            <span className="font-semibold">Log out</span>
+                            <svg
+                              width="15px"
+                              height="15px"
+                              viewBox="0 0 15 15"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M13.5 7.5L10.5 10.75M13.5 7.5L10.5 4.5M13.5 7.5L4 7.5M8 13.5H1.5L1.5 1.5L8 1.5"
+                                stroke="white"
+                                strokeWidth="1.5"
+                              />
+                            </svg>
+                          </span>
                         </span>
                       )}
                     </span>

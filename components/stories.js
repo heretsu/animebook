@@ -53,11 +53,11 @@ const Stories = () => {
       <label
         id="stories"
         htmlFor="input-file"
-        className="relative w-[4.5rem] h-28 rounded-[0.9rem] overflow-hidden cursor-pointer"
+        className="relative w-[4.5rem] h-28 overflow-hidden cursor-pointer"
       >
         {userData !== undefined && (
           <Image
-            src={userData.picture}
+            src={userData.avatar}
             alt="Story"
             height={28}
             width={40}
@@ -96,7 +96,7 @@ const Stories = () => {
               }}
               key={story.useruuid}
               id="stories"
-              className="relative w-16 h-28 rounded-[0.9rem] overflow-hidden cursor-pointer"
+              className="relative w-16 h-28 overflow-hidden cursor-pointer"
             >
               {story.stories[0].media.endsWith("mp4") ||
               story.stories[0].media.endsWith("MP4") ||

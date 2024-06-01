@@ -22,15 +22,15 @@ const Earn = () => {
               <span id="anime-book-font" className="pr-4 text-black">
                 Coming
               </span>
-              <span id="anime-book-font" className="text-green-500">
+              <span id="anime-book-font" className="text-pastelGreen">
                 so
               </span>
               <span className="text-invisible text-white">o</span>
-              <span id="anime-book-font" className="text-green-500">
+              <span id="anime-book-font" className="text-pastelGreen">
                 on
               </span>
             </span>
-            <span className="pt-2 pr-0.5 font-bold text-sm text-slate-500">
+            <span className="pt-2 pr-0.5 font-bold text-sm text-black">
               近日公開
             </span>
           </div>
