@@ -18,7 +18,7 @@ export const MobileNavBar = () => {
 
   return (
     <div
-      id="anime-book-font"
+      id=""
       className="lg:invisible fixed text-[#5d6879] text-sm bottom-0 w-full"
     >
       <div
