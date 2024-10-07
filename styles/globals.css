@@ -11,7 +11,7 @@
     font-display:swap; */
 
     font-family: "Long shot";
-    src: url("Long_Shot.ttf");
+    src: url("/animebook/assets/fonts/Long_Shot.ttf") format("truetype");
 }
 @tailwind base;
 @tailwind components;
@@ -52,6 +52,7 @@ body {
     top: 0px;
     z-index: 2;
 }
+
 #navShadow {
   padding-top: 15px;
   padding-bottom: 15px;
@@ -350,4 +351,22 @@ margin-top: 0.5rem !important;
 img {
   max-width: 100%;
   height: 100%;
+}
+#sidebar{
+  position: fixed;
+  top: 0%;
+  left: 0%;
+  z-index: 10;
+  background-color: white;
+  height: 100%;
+  width: 85%;
+}
+
+#sidebar-overlay{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 15, 15, 0.772);
 }

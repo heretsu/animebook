@@ -14,6 +14,7 @@ import Spinner from "@/components/spinner";
 import CommentConfig from "@/components/commentConfig";
 import ReactPlayer from "react-player";
 import SmallPostContainer from "@/components/smallPostContainer";
+import SideBar from "@/components/sideBar";
 
 export default function Home() {
   const [storyUploading, setStoryUploading] = useState(false);
@@ -42,6 +43,7 @@ export default function Home() {
     storyViews,
     playVideo,
     setPlayVideo,
+    sideBarOpened,
   } = useContext(UserContext);
 
   const closeStory = () => {
@@ -149,11 +151,10 @@ export default function Home() {
     <main>
       <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
         <NavBar />
-
         <SmallTopBar middleTab={true} relationship={true} />
         <div
           className={
-            "w-full lg:mt-20 pb-20 lg:pt-0 lg:pb-2 space-y-3 px-2 lg:pl-lPostCustom lg:pr-rPostCustom flex flex-col"
+            "w-full lg:mt-20 pb-20 lg:pt-0 lg:pb-2 space-y-2 px-2 lg:pl-lPostCustom lg:pr-rPostCustom flex flex-col"
           }
         >
           <div className="topcont">
@@ -169,6 +170,9 @@ export default function Home() {
           <LargeRightBar />
         </div>
       </section>
+
+      {sideBarOpened && <SideBar />}
+
       <MobileNavBar />
       {/* Stories presentation with useContext [stories] -> [app] -> [home] */}
       {/* First create your own story preview */}

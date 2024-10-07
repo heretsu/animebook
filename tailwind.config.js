@@ -15,7 +15,7 @@ module.exports = {
       padding: {
         22: "5.5rem",
         rPostCustom: "2rem",
-        lPostCustom: "16.5rem",
+        lPostCustom: "19.5rem",
         rSearchPadding: "20.5rem"
       },
       fontSize: {

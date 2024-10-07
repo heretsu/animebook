@@ -129,7 +129,7 @@ const SmallPostContainer = ({ communityId, community }) => {
       </span>
 
       <span className="w-full p-2 bg-gray-100 relative flex flex-row justify-between items-center space-x-0">
-        <span className="relative h-9 w-9 flex">
+        <span className="relative h-9 w-9 flex flex-shrink-0">
           <Image
             src={userData.avatar}
             alt="user profile"
@@ -144,7 +144,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             setContent(e.target.value);
           }}
           placeholder={`What's on your mind...`}
-          className="bg-transparent text-black border-none focus:outline-none focus:ring-0"
+          className="w-full bg-transparent text-black border-none focus:outline-none focus:ring-0"
         />
         {selectedMedia ? (
           <label onClick={mediaChange} htmlFor="input-post-file">

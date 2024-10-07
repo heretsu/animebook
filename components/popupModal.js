@@ -69,7 +69,6 @@ export default function PopupModal({
   }
 
   const convertToCoin = (usd, coin) => {
-    console.log(prices)
     if (usd !== "" && coin !== "" && !isNaN(usd) && prices) {
       let sendAmount = 0;
       console.log(usd)
@@ -259,7 +258,6 @@ export default function PopupModal({
     setModalVisible(true);
     if (mangaPrice || (success == "6")){
       getUsdPrice().then((res) => {
-        console.log(res)
         setPrices(res);
         convertPriceToCoin("eth", res);
       });

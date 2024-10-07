@@ -186,26 +186,30 @@ const LargeRightBar = () => {
       }
     }
   };
+  
   const fetchYouMayKnow = async () => {
     if (userData) {
       const followResult = await fetchFollowing(userNumId);
       fetchAllUsers().then((res) => {
         let unfollowedUsers = [];
         let i = 0;
-        while (i < res.data.length) {
-          if (userNumId !== res.data[i].id) {
-            if (
-              !!followResult.data.find(
-                (rel) => rel.following_userid === res.data[i].id
-              )
-            ) {
-            } else {
-              unfollowedUsers.push(res.data[i]);
+        if (res.data && res.data.length > 0){
+          while (i < res.data.length) {
+            if (userNumId !== res.data[i].id) {
+              if (
+                !!followResult.data.find(
+                  (rel) => rel.following_userid === res.data[i].id
+                )
+              ) {
+              } else {
+                unfollowedUsers.push(res.data[i]);
+              }
             }
+            i++;
           }
-          i++;
+          setYouMayKnow(unfollowedUsers);
         }
-        setYouMayKnow(unfollowedUsers);
+        
       });
     }
   };
@@ -245,6 +249,7 @@ const LargeRightBar = () => {
           : trendingAllTags,
     });
   };
+  
   const getAllSearchData = () => {
     if (!postValues) {
       fetchAllPosts()
@@ -333,8 +338,8 @@ const LargeRightBar = () => {
   return (
     <div className="h-screen overflow-scroll pb-22 flex">
       <div className="h-full flex flex-col rounded-xl w-72 pb-8 px-6 space-y-2">
-        {router.pathname !== "/explore" && <span className="bg-white flex flex-col justify-center items-center p-2">
-          <span className="p-2 w-full flex flex-row items-center border border-gray-200 bg-gray-100">
+        {router.pathname !== "/explore" && router.pathname !== "/search" && <span className="bg-white flex flex-col justify-center items-center p-2">
+          {<span className="p-2 w-full flex flex-row items-center border border-gray-200 bg-gray-100">
             <svg
               className="w-4 h-4 text-slate-400"
               aria-hidden="true"
@@ -357,7 +362,7 @@ const LargeRightBar = () => {
               className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
               placeholder="Search for users and more..."
             />
-          </span>
+          </span>}
           {(openSuggestions !== null || openUsers !== null) && (
             <span className="w-full flex flex-col">
               {openSuggestions !== null && (
@@ -453,7 +458,7 @@ const LargeRightBar = () => {
             </span>
           )}
         </span>}
-        {router.pathname !== "/profile/[user]" &&
+        {router.pathname !== "/profile/[user]" && router.pathname !== "/search" &&
           hashtagList !== null &&
           hashtagList !== undefined &&
           hashtagList.trending?.length > 0 && (
@@ -494,7 +499,7 @@ const LargeRightBar = () => {
                 id="anime-book-font"
                 className="text-xl text-gray-600 text-start font-semibold"
               >
-                YOU MAY KNOW
+                {router.pathname === "/search" ? "Follow Others" : "YOU MAY KNOW"}
               </p>
 
               <span className="">
@@ -577,7 +582,7 @@ const LargeRightBar = () => {
             </span>
           )}
 
-        <span className="bg-white p-2 text-sm flex flex-col items-start space-y-3">
+        {router.pathname !== "/search" && <span className="bg-white p-2 text-sm flex flex-col items-start space-y-3">
           <p
             id="anime-book-font"
             className="text-xl text-gray-600 text-start font-semibold"
@@ -661,7 +666,7 @@ const LargeRightBar = () => {
               <span>People</span>
             </span>
           )}
-        </span>
+        </span>}
       </div>
     </div>
   );

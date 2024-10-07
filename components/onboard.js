@@ -127,7 +127,7 @@ export default function Onboard({ allUsers, me }) {
       <div className="w-full flex flex-col space-x-1 justify-center items-center text-center text-lg">
         <Image src={animeBcc} alt="anime book logo" width={100} height={100} />
 
-        <span className="font-bold pt-1">Onboarding</span>
+        <span className="font-bold pt-1" id="anime-book-font">Onboarding</span>
         {openConnectWallet ? (
           <>
             <span className="text-base pt-2 font-semibold">

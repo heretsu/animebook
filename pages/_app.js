@@ -8,6 +8,7 @@ import DappLogo from "@/components/dappLogo";
 import ConnectionData from "@/lib/connectionData";
 import DbUsers from "@/hooks/dbUsers";
 import Onboard from "@/components/onboard";
+import Relationships from "@/hooks/relationships";
 
 export default function App({ Component, pageProps }) {
   const { fetchAllPosts } = DbUsers();
@@ -65,7 +66,19 @@ export default function App({ Component, pageProps }) {
   const [onboarding, setOnboarding] = useState(false);
   const [allUsers, setAllUsers] = useState(null);
   const [oauthDetails, setOauthDetails] = useState(null);
+  const [myRelationships, setMyRelationships] = useState(null)
+  const [sideBarOpened, setSideBarOpened] = useState(false)
+
   const [communities, setCommunities] = useState(null);
+  const { fetchFollowing, fetchFollows } = Relationships();
+
+  const fetchFollowingAndFollowers = async (userid) => {
+    const followings = await fetchFollowing(userid);
+
+    const followers = await fetchFollows(userid);
+    setMyRelationships({ followings: followings.data, followers: followers.data })
+    return { followings: followings.data, followers: followers.data }
+  };
 
   const fetchCommunities = async () => {
     const { data } = await supabase
@@ -75,7 +88,13 @@ export default function App({ Component, pageProps }) {
 
     const members = await supabase.from("community_relationships").select("*");
 
-    if (data) {
+    if (
+      data &&
+      members !== undefined &&
+      members !== null &&
+      members.data !== null &&
+      members.data !== undefined
+    ) {
       const communityMembersCountMap = new Map();
       members.data.forEach((member) => {
         const communityId = member.communityid;
@@ -88,9 +107,17 @@ export default function App({ Component, pageProps }) {
         ...community,
         membersLength: communityMembersCountMap.get(community.id) || 0,
       }));
-      return communitiesWithMembers;
+      return { data: communitiesWithMembers };
     }
   };
+
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 
   const checkIfUserExistsAndUpdateData = async (user) => {
     try {
@@ -136,14 +163,16 @@ export default function App({ Component, pageProps }) {
                 picture: user.user_metadata.picture
                   ? user.user_metadata.picture
                   : "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
-                ...res.data[0],
+                ...res.data[0]
               });
               if (router.pathname !== "/profile/[user]") {
                 fetchAllPosts().then((result1) => {
-                  fetchCommunities().then((result2) => {
-                    setCommunities(result2);
-                    setOriginalPostValues(result1.data);
-                    setPostValues(result1.data);
+                  fetchCommunities().then((secondResult) => {
+                    if (secondResult !== undefined && secondResult !== null) {
+                      setCommunities(secondResult.data);
+                      setOriginalPostValues(result1.data);
+                      setPostValues(result1.data);
+                    }
                   });
                 });
               }
@@ -154,7 +183,7 @@ export default function App({ Component, pageProps }) {
             setOnboarding(true);
           }
         } else {
-
+          fetchFollowingAndFollowers(data.id)
           setUserNumId(data.id);
           setAddress(data.address);
           setUserData({
@@ -164,12 +193,15 @@ export default function App({ Component, pageProps }) {
               : "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
             ...data,
           });
+
           if (router.pathname !== "/profile/[user]") {
             fetchAllPosts().then((result1) => {
-              fetchCommunities().then((result2) => {
-                setCommunities(result2);
-                setOriginalPostValues(result1.data);
-                setPostValues(result1.data);
+              fetchCommunities().then((secondResult) => {
+                if (secondResult !== undefined && secondResult !== null) {
+                  setCommunities(secondResult.data);
+                  setOriginalPostValues(result1.data);
+                  setPostValues(result1.data);
+                }
               });
             });
           }
@@ -187,6 +219,7 @@ export default function App({ Component, pageProps }) {
       [
         "/home",
         "/explore",
+        "/search",
         "/communities",
         "/communities/[community]",
         "/notifications",
@@ -214,12 +247,13 @@ export default function App({ Component, pageProps }) {
           } else {
             if (router.pathname !== "/profile/[user]") {
               fetchAllPosts().then((result1) => {
-                fetchCommunities().then((result2) => {
-                  setCommunities(result2);
-                  setOriginalPostValues(result1.data);
-                  setPostValues(result1.data);
+                fetchCommunities().then((secondResult) => {
+                  if (secondResult !== undefined && secondResult !== null) {
+                    setCommunities(secondResult.data);
+                    setOriginalPostValues(result1.data); 
+                    setPostValues(result1.data);
+                  }
                 });
-                
               });
             }
             console.log("session expired or account not yet created");
@@ -322,6 +356,10 @@ export default function App({ Component, pageProps }) {
         setRoutedUser,
         communities,
         setCommunities,
+        myRelationships,
+        setMyRelationships,
+        sideBarOpened,
+        setSideBarOpened
       }}
     >
       <span className="text-sm sm:text-base">
@@ -333,7 +371,7 @@ export default function App({ Component, pageProps }) {
           "/earn",
           "/subscriptionplan",
           "/inbox",
-          "/[message]"
+          "/[message]",
         ].includes(router.pathname) ? (
           authLoading ? (
             <div className="pt-8">
@@ -363,6 +401,7 @@ export default function App({ Component, pageProps }) {
           <Component {...pageProps} />
         )}
       </span>
+      
     </UserContext.Provider>
   );
 }

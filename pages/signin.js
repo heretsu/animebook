@@ -32,8 +32,11 @@ const Signin = () => {
               .signUp({
                 email: manualEmail,
                 password: manualPassword,
+                // options: {
+                //   redirectTo: "https://localhost:3000/home",
+                // },
                 options: {
-                  redirectTo: "https://animebook.io/home",
+                  redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
                 },
               })
               .catch((e) => {
@@ -44,8 +47,11 @@ const Signin = () => {
               .signInWithPassword({
                 email: manualEmail,
                 password: manualPassword,
+                // options: {
+                //   redirectTo: "https://localhost:3000/home",
+                // },
                 options: {
-                  redirectTo: "https://animebook.io/home",
+                  redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
                 },
               })
               .catch((e) => {
@@ -73,7 +79,7 @@ const Signin = () => {
           //   redirectTo: "http://localhost:3000/home",
           // },
           options: {
-            redirectTo: "https://animebook.io/home",
+            redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
           },
         });
       }
@@ -94,7 +100,7 @@ const Signin = () => {
         <span id="anime-book-font" className="pr-2 text-pastelGreen">
           Anime
         </span>
-        <span id="anime-book-font">bo</span>
+        <span id="anime-book-font">Bo</span>
         <span className="text-invisible text-white">o</span>
         <span id="anime-book-font">ok</span>
       </div>
@@ -116,7 +122,7 @@ const Signin = () => {
           <>
             <h2 className="my-3 text-center flex flex-col">
               <span className="font-bold text-lg">
-                {"Connect and sign in:"}
+                {"Connect  and sign in:"}
               </span>
               {note && (
                 <span className="w-full text-center text-sm text-green-500">
@@ -148,12 +154,28 @@ const Signin = () => {
               }
             >
               <span className="font-bold text-base">
-                {address
-                  ? `${address.substr(0, 6)}....${address.substr(
-                      address.length - 4,
-                      address.length
-                    )}`
-                  : "Connect wallet"}
+                {address ? (
+                  `${address.substr(0, 6)}....${address.substr(
+                    address.length - 4,
+                    address.length
+                  )}`
+                ) : (
+                  <span className="flex flex-row items-center space-x-0.5">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                    >
+                      <path
+                        d="M18 3H2v18h18v-4h2V7h-2V3h-2zm0 14v2H4V5h14v2h-8v10h8zm2-2h-8V9h8v6zm-4-4h-2v2h2v-2z"
+                        fill="#334155"
+                      />
+                    </svg>
+                    <span>{"Connect"}</span>
+                    <span>{"(optional)"}</span>
+                  </span>
+                )}
               </span>
             </div>
             <div className="mb-3 border-b border-slate-300"></div>

@@ -11,10 +11,11 @@ import { useContext, useEffect, useState } from "react";
 import NewCommunityContainer from "@/components/newCommunityContainer";
 import { UserContext } from "@/lib/userContext";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import SideBar from "@/components/sideBar";
 const Communities = () => {
   const { fullPageReload } = PageLoadOptions();
   const router = useRouter();
-  const { userData, communities, setCommunities } = useContext(UserContext);
+  const { userData, communities, setCommunities, sideBarOpened} = useContext(UserContext);
   const [addCommunity, setAddCommunity] = useState(false);
   // const [communities, setCommunities] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -278,6 +279,7 @@ const Communities = () => {
           )}
         </div>
       </section>
+      {sideBarOpened && <SideBar />}
       <MobileNavBar />
     </main>
   );

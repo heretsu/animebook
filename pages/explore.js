@@ -10,6 +10,7 @@ import ReactPlayer from "react-player";
 import DappLibrary from "@/lib/dappLibrary";
 import { useRouter } from "next/router";
 import CommentConfig from "@/components/commentConfig";
+import SideBar from "@/components/sideBar";
 
 export const PostActions = ({
   id,
@@ -142,6 +143,7 @@ const Explore = () => {
     videosFilter,
     tagsFilter,
     searchFilter,
+    sideBarOpened,
   } = useContext(UserContext);
   const [openExplorer, setOpenExplorer] = useState(false);
   const [currentPost, setCurrentPost] = useState(null);
@@ -563,6 +565,8 @@ const Explore = () => {
           <LargeRightBar />
         </div>
       </section>
+
+      {sideBarOpened && <SideBar />}
       <MobileNavBar />
 
       {currentPost !== null && (

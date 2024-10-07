@@ -16,6 +16,7 @@ import PriceFeedStation from "@/lib/priceFeedStation";
 import { ethers } from "ethers";
 import ConnectionData from "@/lib/connectionData";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import SideBar from "@/components/sideBar";
 
 export const getServerSideProps = async (context) => {
   const { user } = context.query;
@@ -54,6 +55,7 @@ export default function User({ user }) {
     setAllUserObject,
     userData,
     setRoutedUser,
+    sideBarOpened,
   } = useContext(UserContext);
 
   const [openPremium, setOpenPremium] = useState(false);
@@ -218,7 +220,6 @@ export default function User({ user }) {
     }
   };
 
-
   const logOut = async () => {
     try {
       try{disconnectWallet()}catch(e){}
@@ -228,7 +229,6 @@ export default function User({ user }) {
       throw "a problem occurred";
     }
   };
-
 
   useEffect(() => {
     setRoutedUser(user);
@@ -634,6 +634,7 @@ export default function User({ user }) {
             <LargeRightBar />
           </div>
         </section>
+        {sideBarOpened && <SideBar />}
         <MobileNavBar />
         {mgComic && (
           <div

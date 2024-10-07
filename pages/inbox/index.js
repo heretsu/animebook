@@ -9,11 +9,12 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import Relationships from "@/hooks/relationships";
 import DbUsers from "@/hooks/dbUsers";
 import { useRouter } from "next/router";
+import SideBar from "@/components/sideBar";
 
 const Inbox = () => {
   const router = useRouter();
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, userData, allUserObject, setAllUserObject } =
+  const { userNumId, userData, allUserObject, setAllUserObject, sideBarOpened, setSideBarOpened} =
     useContext(UserContext);
   const [newChat, setNewChat] = useState(false);
   const { fetchAllUsers } = DbUsers();
@@ -22,6 +23,10 @@ const Inbox = () => {
   const [userToSearch, setUserToSearch] = useState("");
   const [foundUsers, setFoundUsers] = useState(null);
   const [allChats, setAllChats] = useState(null);
+  const [originalChats, setOriginalChats] = useState(null);
+  const [messageItem, setMessageItem] = useState("");
+  const [entireMessages, setEntireMessages] = useState(null);
+  const [searchResult, setSearchResult] = useState(null)
 
   const searchForUser = (e) => {
     setUserToSearch(e.target.value);
@@ -33,6 +38,56 @@ const Inbox = () => {
           user.username.toLowerCase().includes(e.target.value.toLowerCase())
         )
       );
+    }
+  };
+
+  const searchForMessage = (e) => {
+    setMessageItem(e.target.value);
+    const text = e.target.value.toLowerCase();
+
+    if (text !== "" && entireMessages) {
+      // Filter messages based on the search text
+      const foundMsg = entireMessages.filter((msg) =>
+        msg.message.toLowerCase().includes(text)
+      );
+
+      setSearchResult(foundMsg);
+
+      // Save original chats if not already saved
+      if (originalChats === null) {
+        console.log("cypher: originalChats");
+        setOriginalChats(allChats);
+      } else {
+        // Collect chat participants whose usernames include the search text
+        const allChatsInConvo = originalChats.reduce((acc, ac) => {
+          const otherUserId =
+            ac.senderid === userNumId ? ac.receiverid : ac.senderid;
+          const username = getUserFromId(otherUserId).username.toLowerCase();
+
+          if (
+            !acc.some((user) => user.id === otherUserId) &&
+            username.includes(text)
+          ) {
+            acc.push({ username: username, id: otherUserId });
+          }
+          return acc;
+        }, []);
+
+        // Filter chats based on the collected user IDs
+        const allFilteredChats = allChatsInConvo.reduce((acc, user) => {
+          const filteredChats = originalChats.filter(
+            (u) =>
+              (u.senderid === userNumId ? u.receiverid : u.senderid) === user.id
+          );
+          return acc.concat(filteredChats);
+        }, []);
+
+        setAllChats(allFilteredChats);
+      }
+    } else if (text === "" && originalChats !== null) {
+      // Reset to original chats if the input is cleared
+      setAllChats(originalChats);
+      setSearchResult(null)
     }
   };
 
@@ -56,10 +111,10 @@ const Inbox = () => {
     const now = new Date();
     const differenceInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
 
-    if (differenceInDays === 0) {
+    if (differenceInDays === 0 && now.getDate() === date.getDate()) {
       return `${formatTime(date)}`;
-    } else if (differenceInDays === 1) {
-      return `Yesterday`;
+    } else if (differenceInDays < 2 && now.getDate() !== date.getDate()) {
+      return `Yesterday` ;
     } else if (differenceInDays < 7) {
       const dayNames = [
         "Sunday",
@@ -100,6 +155,7 @@ const Inbox = () => {
       .order("created_at", { ascending: false });
 
     const messages = response.data;
+    setEntireMessages(messages);
     // Create a map to store the latest message for each conversation
     const latestMessages = new Map();
 
@@ -119,7 +175,11 @@ const Inbox = () => {
 
     const lastChats = Array.from(latestMessages.values());
 
-    return lastChats;
+    return lastChats.filter(
+      (lc) =>
+        (lc.senderid === userNumId && !lc.sdelete) ||
+        (lc.receiverid === userNumId && !lc.rdelete)
+    );
   };
 
   useEffect(() => {
@@ -131,6 +191,7 @@ const Inbox = () => {
               .then((res) => {
                 fetchChats().then((chats) => {
                   setAllChats(chats);
+                  setOriginalChats(chats);
                 });
                 setFollowing(
                   res.data.filter((user) =>
@@ -145,6 +206,7 @@ const Inbox = () => {
           } else {
             fetchChats().then((chats) => {
               setAllChats(chats);
+              setOriginalChats(chats);
             });
             setFollowing(
               allUserObject.filter((user) =>
@@ -161,14 +223,16 @@ const Inbox = () => {
 
   return (
     <main>
-      <section className="mb-5 flex flex-row space-x-2 w-full">
+      <section className="relative mb-5 flex flex-row space-x-2 w-full">
         <NavBar />
-        <div className="w-full pb-2 space-y-8 pl-2 lg:pl-60 pr-4 flex flex-col">
+        <div className="w-full top-0 pb-2 space-y-8 pl-2 lg:pl-60 pr-4 flex flex-col">
           {newChat ? (
             <span className="flex flex-col w-full bg-white min-h-screen h-full mt-2 px-4">
               <span className="border-b border-gray-300 flex flex-row justify-between items-center">
                 <svg
-                onClick={()=>{setNewChat(false)}}
+                  onClick={() => {
+                    setNewChat(false);
+                  }}
                   fill="#000000"
                   width="18px"
                   height="18px"
@@ -219,7 +283,7 @@ const Inbox = () => {
                       <span
                         key={found.id}
                         onClick={() => {
-                          router.push(`/inbox/${fl.username}`);
+                          router.push(`/inbox/${found.username}`);
                         }}
                         className="p-2 space-x-1 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
                       >
@@ -270,175 +334,287 @@ const Inbox = () => {
               </span>
             </span>
           ) : (
-            userData && <span className="flex flex-col w-full">
-              <span
-                id="anime-book-font"
-                className="flex lg:hidden flex-row bg-gray-100 border-b border-gray-200 shadow-xl p-2 justify-between items-center"
-              >
-                <span onClick={()=>{
-                  fullPageReload(`/profile/${userData.username}`)
-                }} className="flex flex-shrink-0">
-                  <Image
-                    src={userData.avatar}
-                    alt="user"
-                    width={35}
-                    height={35}
-                    className="border border-white rounded-full"
-                  />
-                </span>
-                <span className="text-gray-600 font-bold text-xl">
-                 Messages
-                </span>
+            userData && (
+              <span className="flex flex-col w-full">
                 <span
-                  onClick={() => {
-                    setNewChat(true);
-                  }}
-                  className="bg-pastelGreen p-2 rounded-full flex flex-shrink-0 cursor-pointer"
+                  id="anime-book-font"
+                  className="flex lg:hidden flex-row bg-gray-100 border-b border-gray-200 shadow-xl p-2 justify-between items-center"
                 >
-                  <svg
-                    fill="#000000"
-                    width="20px"
-                    height="20px"
-                    viewBox="0 0 24 24"
-                    id="plus"
-                    data-name="Line Color"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="icon line-color"
+                  <span
+                    onClick={() => {
+                      setSideBarOpened(true)
+                    }}
+                    className="cursor-pointer flex flex-shrink-0"
                   >
-                    <path
-                      id="primary"
-                      d="M5,12H19M12,5V19"
-                      style={{
-                        fill: "none",
-                        stroke: "white",
-                        strokeLinecap: "round",
-                        strokeLinejoin: "round",
-                        strokeWidth: 3,
-                      }}
+                    <Image
+                      src={userData.avatar}
+                      alt="user"
+                      width={35}
+                      height={35}
+                      className="border border-white rounded-full"
                     />
-                  </svg>
-                </span>
-              </span>
-
-              <span
-                id="anime-book-font"
-                className="hidden lg:flex flex-row bg-dmGreen p-2 justify-between items-center"
-              >
-                <span className="text-gray-600 font-bold text-xl">
-                  All messages
-                </span>
-                <span
-                  onClick={() => {
-                    setNewChat(true);
-                  }}
-                  className="cursor-pointer bg-pastelGreen text-white font-bold text-lg py-1 px-4"
-                >
-                  New message
-                </span>
-              </span>
-
-              <span className="px-2 w-full bg-white min-h-screen h-full">
-                {allChats !== null &&
-                allChats !== undefined &&
-                allChats.length !== 0 &&
-                allUserObject ? (
-                  allChats.map((singleChat) => {
-                    return (
-                      <span
-                        key={singleChat.id}
-                        className="flex flex-row w-full border-b border-gray-300 items-center py-2"
-                      >
-                        <span
-                          onClick={() => {
-                            fullPageReload(
-                              `profile/${
-                                getUserFromId(
-                                  singleChat.senderid === userNumId
-                                    ? singleChat.receiverid
-                                    : singleChat.senderid
-                                ).username
-                              }`
-                            );
-                          }}
-                          className="flex flex-shrink-0"
-                        >
-                          <Image
-                            src={
-                              getUserFromId(
-                                singleChat.senderid === userNumId
-                                  ? singleChat.receiverid
-                                  : singleChat.senderid
-                              ).avatar
-                            }
-                            alt="post"
-                            height={45}
-                            width={45}
-                            className="cursor-pointer rounded-full object-cover"
-                          />
-                        </span>
-
-                        <span
-                          onClick={() => {
-                            router.push(
-                              `/inbox/${
-                                getUserFromId(
-                                  singleChat.senderid === userNumId
-                                    ? singleChat.receiverid
-                                    : singleChat.senderid
-                                ).username
-                              }`
-                            );
-                          }}
-                          className="w-full pl-1.5 flex flex-col justify-center space-y-0.5 py-2 text-xs"
-                        >
-                          <span className="cursor-default font-bold flex flex-row space-x-2 justify-between items-center">
-                            <span>
-                              {
-                                getUserFromId(
-                                  singleChat.senderid === userNumId
-                                    ? singleChat.receiverid
-                                    : singleChat.senderid
-                                ).username
-                              }
-                            </span>
-                            <span className="text-gray-500">
-                              {formatTimestamp(singleChat.created_at)}
-                            </span>
-                          </span>
-                          <span className="flex flex-row justify-start items-center">
-                            {singleChat.receiverid === userNumId &&
-                              !singleChat.isread && (
-                                <span className="h-1.5 w-1.5 flex flex-shrink-0 mr-1 bg-pastelGreen rounded-full"></span>
-                              )}
-                            <span
-                              className={`cursor-default font-bold flex flex-row text-gray-500 text-[0.77rem] ${
-                                singleChat.receiverid === userNumId &&
-                                !singleChat.isread &&
-                                "font-black"
-                              }`}
-                            >
-                              {singleChat.message.length > 110
-                                ? singleChat.message
-                                    .slice(0, 110)
-                                    .trim()
-                                    .concat("...")
-                                : singleChat.message}
-                            </span>
-                          </span>
-                        </span>
-                      </span>
-                    );
-                  })
-                ) : (
-                  <span className="p-2 text-sm text-gray-500 w-full flex flex-row justify-center">
-                    {"Start a conversation"}
                   </span>
-                )}
+                  <span className="text-gray-600 font-bold text-xl">
+                    Messages
+                  </span>
+                  <span
+                    onClick={() => {
+                      setNewChat(true);
+                    }}
+                    className="bg-pastelGreen p-2 rounded-full flex flex-shrink-0 cursor-pointer"
+                  >
+                    <svg
+                      fill="#000000"
+                      width="20px"
+                      height="20px"
+                      viewBox="0 0 24 24"
+                      id="plus"
+                      data-name="Line Color"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="icon line-color"
+                    >
+                      <path
+                        id="primary"
+                        d="M5,12H19M12,5V19"
+                        style={{
+                          fill: "none",
+                          stroke: "white",
+                          strokeLinecap: "round",
+                          strokeLinejoin: "round",
+                          strokeWidth: 3,
+                        }}
+                      />
+                    </svg>
+                  </span>
+                </span>
+
+                <span
+                  id="anime-book-font"
+                  className="hidden lg:flex flex-row bg-dmGreen p-2 justify-between items-center"
+                >
+                  <span className="text-gray-600 font-bold text-xl">
+                    All messages
+                  </span>
+                  <span
+                    onClick={() => {
+                      setNewChat(true);
+                    }}
+                    className="cursor-pointer bg-pastelGreen text-white font-bold text-lg py-1 px-4"
+                  >
+                    New message
+                  </span>
+                </span>
+
+                <span className="px-2 w-full bg-white min-h-screen h-full">
+                  <span className="mt-2 py-1 pl-4 w-full flex flex-row items-center bg-gray-100 border border-gray-200">
+                    <svg
+                      className="w-4 h-4 text-gray-500"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                      />
+                    </svg>
+                    <input
+                      value={messageItem}
+                      onChange={searchForMessage}
+                      type="search"
+                      className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+                      placeholder="Search for messages and more..."
+                    />
+                  </span>
+
+                  {
+                    searchResult !== null && searchResult !== undefined && searchResult.length > 0 && searchResult.map((sr)=>{
+                      return (
+                        <span
+                          key={sr.id}
+                          className="flex flex-row w-full border-b border-gray-300 items-center py-2"
+                        >
+                          <span
+                            onClick={() => {
+                              fullPageReload(
+                                `profile/${
+                                  getUserFromId(
+                                    sr.senderid === userNumId
+                                      ? sr.receiverid
+                                      : sr.senderid
+                                  ).username
+                                }`
+                              );
+                            }}
+                            className="flex flex-shrink-0"
+                          >
+                            <Image
+                              src={
+                                getUserFromId(
+                                  sr.senderid === userNumId
+                                    ? sr.receiverid
+                                    : sr.senderid
+                                ).avatar
+                              }
+                              alt="post"
+                              height={45}
+                              width={45}
+                              className="cursor-pointer rounded-full object-cover"
+                            />
+                          </span>
+
+                          <span
+                            onClick={() => {
+                              router.push(
+                                `/inbox/${
+                                  getUserFromId(
+                                    sr.senderid === userNumId
+                                      ? sr.receiverid
+                                      : sr.senderid
+                                  ).username
+                                }?search=${messageItem}`
+                              );
+                            }}
+                            className="w-full pl-1.5 flex flex-col justify-center space-y-0.5 py-2 text-xs"
+                          >
+                            <span className="cursor-default font-bold flex flex-row space-x-2 justify-between items-center">
+                              <span>
+                                {
+                                  getUserFromId(
+                                    sr.senderid === userNumId
+                                      ? sr.receiverid
+                                      : sr.senderid
+                                  ).username
+                                }
+                              </span>
+                              <span className="text-gray-500">
+                                {formatTimestamp(sr.created_at)}
+                              </span>
+                            </span>
+                            <span
+                                className={`cursor-default font-bold flex flex-row text-gray-500 text-[0.77rem]`}
+                              >
+                                {sr.message.length > 110
+                                  ? sr.message
+                                      .slice(0, 110)
+                                      .trim()
+                                      .concat("...")
+                                  : sr.message}
+                              </span>
+                          </span>
+                        </span>
+                      )
+                    })
+                  }
+
+                  {allChats !== null &&
+                  allChats !== undefined &&
+                  allChats.length !== 0 &&
+                  allUserObject ? (
+                    allChats.map((singleChat) => {
+                      return (
+                        <span
+                          key={singleChat.id}
+                          className="flex flex-row w-full border-b border-gray-300 items-center py-2"
+                        >
+                          <span
+                            onClick={() => {
+                              fullPageReload(
+                                `profile/${
+                                  getUserFromId(
+                                    singleChat.senderid === userNumId
+                                      ? singleChat.receiverid
+                                      : singleChat.senderid
+                                  ).username
+                                }`
+                              );
+                            }}
+                            className="flex flex-shrink-0"
+                          >
+                            <Image
+                              src={
+                                getUserFromId(
+                                  singleChat.senderid === userNumId
+                                    ? singleChat.receiverid
+                                    : singleChat.senderid
+                                ).avatar
+                              }
+                              alt="post"
+                              height={45}
+                              width={45}
+                              className="cursor-pointer rounded-full object-cover"
+                            />
+                          </span>
+
+                          <span
+                            onClick={() => {
+                              router.push(
+                                `/inbox/${
+                                  getUserFromId(
+                                    singleChat.senderid === userNumId
+                                      ? singleChat.receiverid
+                                      : singleChat.senderid
+                                  ).username
+                                }`
+                              );
+                            }}
+                            className="w-full pl-1.5 flex flex-col justify-center space-y-0.5 py-2 text-xs"
+                          >
+                            <span className="cursor-default font-bold flex flex-row space-x-2 justify-between items-center">
+                              <span>
+                                {
+                                  getUserFromId(
+                                    singleChat.senderid === userNumId
+                                      ? singleChat.receiverid
+                                      : singleChat.senderid
+                                  ).username
+                                }
+                              </span>
+                              <span className="text-gray-500">
+                                {formatTimestamp(singleChat.created_at)}
+                              </span>
+                            </span>
+                            <span className="flex flex-row justify-start items-center">
+                              {singleChat.receiverid === userNumId &&
+                                !singleChat.isread && (
+                                  <span className="h-1.5 w-1.5 flex flex-shrink-0 mr-1 bg-pastelGreen rounded-full"></span>
+                                )}
+                              <span
+                                className={`cursor-default font-bold flex flex-row text-gray-500 text-[0.77rem] ${
+                                  singleChat.receiverid === userNumId &&
+                                  !singleChat.isread &&
+                                  "font-black"
+                                }`}
+                              >
+                                {singleChat.message.length > 110
+                                  ? singleChat.message
+                                      .slice(0, 110)
+                                      .trim()
+                                      .concat("...")
+                                  : singleChat.message}
+                              </span>
+                            </span>
+                          </span>
+                        </span>
+                      );
+                    })
+                  ) : (
+                    !searchResult || searchResult && searchResult.length === 0 && <span className="p-2 text-sm text-gray-500 w-full flex flex-row justify-center">
+                      {"Start a conversation"}
+                    </span>
+                  )}
+                </span>
               </span>
-            </span>
+            )
           )}
         </div>
       </section>
+      {sideBarOpened && <SideBar />}
+      {sideBarOpened && <div onClick={()=>{setSideBarOpened(false)}} id="sidebar-overlay"></div>}
       <MobileNavBar />
     </main>
   );

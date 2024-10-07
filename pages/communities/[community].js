@@ -12,6 +12,7 @@ import { UserContext } from "@/lib/userContext";
 import PostContainer from "@/components/postContainer";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import CommunityCommentItem from "@/components/communityCommentItem";
+import SideBar from "@/components/sideBar";
 
 export const getServerSideProps = async (context) => {
   const { community } = context.query;
@@ -25,7 +26,7 @@ export const getServerSideProps = async (context) => {
 
 const Community = ({ community }) => {
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, communityInputRef } = useContext(UserContext);
+  const { userNumId, communityInputRef, sideBarOpened} = useContext(UserContext);
   const [reentry, setReentry] = useState(false);
   const [joined, setJoined] = useState(false);
   const [comments, setComments] = useState([]);
@@ -494,6 +495,7 @@ const Community = ({ community }) => {
           )} community...`}</span>
         )}
       </section>
+      {sideBarOpened && <SideBar />}
       <MobileNavBar />
     </main>
   );
