@@ -67,7 +67,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             await supabase.from("community_posts").insert({
               userid: userNumId,
               media: mediaUrl,
-              content: mediaContent,
+              content: content.trim() !== '' ? content.trim() : null,
               communityid: parseInt(communityId),
             });
             fullPageReload(`/communities/${community}`);
@@ -75,14 +75,14 @@ const SmallPostContainer = ({ communityId, community }) => {
             await supabase.from("posts").insert({
               userid: userNumId,
               media: mediaUrl,
-              content: mediaContent,
+              content: content.trim() !== '' ? content.trim() : null,
             });
             fullPageReload("/home");
           }
         }
       }
     } else {
-      if (content !== "") {
+      if (content.trim() !== "") {
         if (communityId) {
           await supabase.from("community_posts").insert({
             userid: userNumId,
@@ -95,7 +95,7 @@ const SmallPostContainer = ({ communityId, community }) => {
           await supabase.from("posts").insert({
             userid: userNumId,
             media: null,
-            content: content,
+            content: content.trim(),
           });
           fullPageReload("/home");
         }
@@ -226,7 +226,7 @@ const SmallPostContainer = ({ communityId, community }) => {
         )}
       </span>
 
-      {(mediaFile || content !== "") && <span className="flex flex-col">
+      {(mediaFile || content.trim() !== "") && <span className="flex flex-col">
         {postLoading ? (
           <span className="mx-auto">
             <Spinner spinnerSize={"medium"} />

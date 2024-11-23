@@ -455,7 +455,7 @@ const Explore = () => {
           <div className="text-gray-400 text-sm space-x-2 w-fit flex flex-row">
             {hashtagList !== null &&
               hashtagList !== undefined &&
-              hashtagList.trending?.slice(0, 4).map((tag, index) => {
+              hashtagList.trending?.slice(0, 3).map((tag, index) => {
                 return (
                   <span
                     key={index}
@@ -468,7 +468,8 @@ const Explore = () => {
                         : "border border-gray-300 py-2 px-3.5 rounded-3xl cursor-pointer"
                     }
                   >
-                    {tag[0]}
+                    {tag[0].length > 10 ? tag[0].slice(0, 5).concat('...') : tag[0]}
+                    
                   </span>
                 );
               })}

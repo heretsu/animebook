@@ -68,7 +68,7 @@ const PostContainer = ({communityId, community}) => {
               await supabase.from("community_posts").insert({
                 userid: userNumId,
                 media: mediaUrl,
-                content: mediaContent,
+                content: mediaContent.trim(),
                 communityid: parseInt(communityId)
               });
               fullPageReload(`/communities/${community}`)
@@ -77,7 +77,7 @@ const PostContainer = ({communityId, community}) => {
               await supabase.from("posts").insert({
                 userid: userNumId,
                 media: mediaUrl,
-                content: mediaContent,
+                content: mediaContent.trim(),
               });
               fullPageReload("/home");
             }
@@ -90,7 +90,7 @@ const PostContainer = ({communityId, community}) => {
         );
       }
     } else {
-      if (content !== "") {
+      if (content.trim() !== "") {
         if (communityId){
           await supabase.from("community_posts").insert({
             userid: userNumId,
@@ -104,13 +104,13 @@ const PostContainer = ({communityId, community}) => {
           await supabase.from("posts").insert({
             userid: userNumId,
             media: null,
-            content: content,
+            content: content.trim(),
           });
           fullPageReload("/home");
         }
         
       } else {
-        setPostLoading(true);
+        setPostLoading(false);
         setErrorMsg("Failed to post. Post is empty");
       }
     }
@@ -271,7 +271,7 @@ const PostContainer = ({communityId, community}) => {
         />
       )}
       <span className="pb-2 flex flex-col">
-        {postLoading ? (
+        {postLoading && (!mediaPost && content.trim() !== '') ? (
           <span className="mx-auto">
             <Spinner spinnerSize={"medium"} />
           </span>

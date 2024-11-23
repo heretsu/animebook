@@ -57,13 +57,13 @@ export const MobileNavBar = () => {
               </g>
             </g>
           </svg>
-          <span
+          {/* <span
             className={`${
               currentRoute === "/home" ? "text-pastelGreen" : "text-[#5d6879]"
             }`}
           >
             Home
-          </span>
+          </span> */}
         </span>
 
         <span
@@ -92,7 +92,7 @@ export const MobileNavBar = () => {
               />
             </g>
           </svg>
-          <span
+          {/* <span
             className={`${
               currentRoute === "/explore"
                 ? "text-pastelGreen"
@@ -100,7 +100,7 @@ export const MobileNavBar = () => {
             }`}
           >
             Explore
-          </span>
+          </span> */}
         </span>
 
         <span
@@ -127,7 +127,7 @@ export const MobileNavBar = () => {
               />
             </svg>
 
-          <span
+          {/* <span
             className={`${
               currentRoute === "/search"
                 ? "text-pastelGreen"
@@ -135,7 +135,7 @@ export const MobileNavBar = () => {
             }`}
           >
             Search
-          </span>
+          </span> */}
         </span>
 
         <span
@@ -357,7 +357,7 @@ export const MobileNavBar = () => {
               />
             </g>
           </svg>
-          <span
+          {/* <span
             className={`${
               currentRoute === "/communities" ||
               currentRoute === "/communities/[community]"
@@ -366,7 +366,7 @@ export const MobileNavBar = () => {
             }`}
           >
             Communites
-          </span>
+          </span> */}
         </span>
 
         <span
@@ -389,7 +389,7 @@ export const MobileNavBar = () => {
             />
           </svg>
 
-          <span
+          {/* <span
             className={`${
               currentRoute === "/notifications"
                 ? "text-pastelGreen"
@@ -397,7 +397,7 @@ export const MobileNavBar = () => {
             }`}
           >
             Notifications
-          </span>
+          </span> */}
         </span>
 
         <span
@@ -472,7 +472,7 @@ export const MobileNavBar = () => {
               />
             </g>
           </svg>
-          <span
+          {/* <span
             className={`${
               currentRoute === "/inbox" || currentRoute === "/inbox/[message]"
                 ? "text-pastelGreen"
@@ -480,7 +480,7 @@ export const MobileNavBar = () => {
             }`}
           >
             Messages
-          </span>
+          </span> */}
         </span>
       </div>
     </div>

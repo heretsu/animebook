@@ -41,7 +41,7 @@ export default function PopupModal({
     setOpenPurchaseModal,
     
   } = useContext(UserContext);
-  const { connectToWallet } = ConnectionData();
+  const { address: detectedAddress, connectToWallet, provider } = ConnectionData();
   const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
   const [currency, setCurrency] = useState("eth");
@@ -51,6 +51,9 @@ export default function PopupModal({
   const [weiValue, setWeiValue] = useState("");
   const [tipMessage, setTipMessage] = useState("");
   const [err, setErr] = useState(null);
+  const [closeEffect, setCloseEffect] = useState(false)
+
+  
 
   const toggleCurrency = (coin) => {
     setErr("");
@@ -67,11 +70,10 @@ export default function PopupModal({
       return number.toFixed(5).replace(/(\.\d*?[1-9])0+$|\.$/, "$1");
     }
   }
-
+  
   const convertToCoin = (usd, coin) => {
     if (usd !== "" && coin !== "" && !isNaN(usd) && prices) {
       let sendAmount = 0;
-      console.log(usd)
 
       if (coin === "luffy") {
         sendAmount = parseFloat(usd) / prices.tokenPrice;
@@ -89,7 +91,7 @@ export default function PopupModal({
       setCoinAmount("");
     }
   };
-
+  
   const convertPriceToCoin = (coin, prs) => {
     if (success == "6" && usdValue === ""){
       return;
@@ -111,37 +113,42 @@ export default function PopupModal({
   const sendTip = async () => {
     if (weiValue !== "") {
       try {
-        const amt = coinAmount;
-        const coin = currency;
-        const { provider } = await connectToWallet();
-        let transactionResponse = null;
-
-        if (currency === "luffy") {
-          const tokenContract = new ethers.Contract(
-            "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
-            ercABI,
-            provider.getSigner()
+        if (destinationAddress){
+          const amt = coinAmount;
+          const coin = currency;
+          
+          let transactionResponse = null;
+          
+          if (currency === "luffy") {
+            const tokenContract = new ethers.Contract(
+              "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
+              ercABI,
+              provider.getSigner()
+            );
+            transactionResponse = await tokenContract.transfer(
+              destinationAddress,
+              weiValue
+            );
+          } else {
+            transactionResponse = await provider.getSigner().sendTransaction({
+              to: destinationAddress,
+              value: weiValue,
+            });
+          }
+          const receipt = await transactionResponse.wait();
+          setTipMessage(`Tipped ${username} $${amt} in ${coin}`);
+          setCoinAmount("");
+          sendNotification(
+            "tip",
+            userDestinationId,
+            0,
+            0,
+            `tipped you ${amt} ${coin}`
           );
-          transactionResponse = await tokenContract.transfer(
-            destinationAddress,
-            weiValue
-          );
-        } else {
-          transactionResponse = await provider.getSigner().sendTransaction({
-            to: destinationAddress,
-            value: weiValue,
-          });
+        } else{
+          setErr(`No wallet address found. Ask ${username} to add one in the settings of their Animebook account`)
         }
-        const receipt = await transactionResponse.wait();
-        setTipMessage(`Tipped ${username} $${amt} in ${coin}`);
-        setCoinAmount("");
-        sendNotification(
-          "tip",
-          userDestinationId,
-          0,
-          0,
-          `tipped you ${amt} ${coin}`
-        );
+       
       } catch (e) {
         console.log(e.message);
         if (
@@ -162,7 +169,6 @@ export default function PopupModal({
   const purchaseManga = async () => {
     setActivateSpinner(true);
     try {
-      const { provider } = await connectToWallet();
       let transactionResponse = null;
 
       if (currency === "luffy") {
@@ -253,16 +259,22 @@ export default function PopupModal({
     }
     setDeletePost(null);
   };
-
+  
   useEffect(() => {
     setModalVisible(true);
+
     if (mangaPrice || (success == "6")){
-      getUsdPrice().then((res) => {
-        setPrices(res);
-        convertPriceToCoin("eth", res);
-      });
+      connectToWallet()
+      if (detectedAddress && !closeEffect){
+        getUsdPrice().then((res) => {
+          setCloseEffect(true)
+          setPrices(res);
+          convertPriceToCoin("eth", res);
+        });
+      }
+      
     }
-  }, []);
+  }, [detectedAddress, provider]);
   return (
     <div
       id={
@@ -441,10 +453,13 @@ export default function PopupModal({
               <span className="text-3xl pl-2 font-medium">{"$"}</span>
               <input
                 onChange={(e) => {
+                  
                   setUsdValue(
                     !isNaN(e.target.value) ? e.target.value : usdValue
                   );
-                  convertToCoin(e.target.value, currency);
+                  if (detectedAddress){
+                    convertToCoin(e.target.value, currency);
+                  }
                 }}
                 value={usdValue}
                 className="w-full text-3xl text-black bg-black h-fit bg-transparent border-none focus:outline-none focus:ring-0"
@@ -519,13 +534,18 @@ export default function PopupModal({
           ) : (
             <span
               onClick={() => {
-                setErr("");
-                setActivateSpinner(true);
-                sendTip();
+                if (detectedAddress){
+                  setErr("");
+                  setActivateSpinner(true);
+                  sendTip();
+                }
+                else{
+                  connectToWallet()
+                }
               }}
               className="text-lg w-full text-white text-center cursor-pointer font-bold bg-pastelGreen py-2 px-4 rounded-xl"
             >
-              Tip
+              {detectedAddress ? "Tip" : "Connect Wallet"}
             </span>
           )}
           {err ? (

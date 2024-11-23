@@ -598,7 +598,8 @@ export default function User({ user }) {
                       )}
 
                       {itsMe && (
-                        <span className="space-x-2 border border-black bg-white border-dashed rounded-lg p-4 flex justify-center items-center">
+                        userData.address ?
+                         <span className="space-x-2 border border-black bg-white border-dashed rounded-lg p-4 flex justify-center items-center">
                           <span
                             onClick={() => {
                               router.push("/publishmanga");
@@ -614,8 +615,8 @@ export default function User({ user }) {
                             className="text-pastelGreen font-semibold bg-transparent border-2 border-pastelGreen py-2.5 px-4 cursor-pointer rounded-xl"
                           >
                             Edit subscription plan
-                          </span>
-                        </span>
+                          </span> 
+                        </span> : <span className="text-center w-full text-[0.8rem] font-semibold text-gray-700">Go to settings and add a payout wallet address first</span>
                       )}
                     </span>
                   )
