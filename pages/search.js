@@ -35,7 +35,7 @@ const Search = () => {
     const allTagsCount = {};
 
     originalPostValues.forEach((post) => {
-      const tags = post.content.match(/#\w+/g) || [];
+      const tags = post.content ? (post.content.match(/#\w+/g) || []) : [];
       const uniqueTags = [...new Set(tags)];
 
       // Count hashtags for all posts

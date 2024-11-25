@@ -220,7 +220,8 @@ const LargeRightBar = () => {
     const tagsWithMediaCount = {};
 
     originalPostValues.forEach((post) => {
-      const tags = post.content.match(/#\w+/g) || [];
+      
+      const tags = post.content ? (post.content.match(/#\w+/g) || []) : [];
       const uniqueTags = [...new Set(tags)];
 
       // Count hashtags for all posts
@@ -274,7 +275,6 @@ const LargeRightBar = () => {
       if (!postValues || !allUserObject || !originalPostValues) {
         getAllSearchData();
       }
-
       const foundPosts =
         router.pathname === "/profile/[user]"
           ? originalPostValues
@@ -289,7 +289,7 @@ const LargeRightBar = () => {
               })
             : []
           : originalPostValues
-          ? originalPostValues.filter((post) =>
+          ? originalPostValues.filter((post) => 
               post.content.toLowerCase().includes(e.target.value.toLowerCase())
             )
           : [];

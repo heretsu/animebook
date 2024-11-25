@@ -67,7 +67,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             await supabase.from("community_posts").insert({
               userid: userNumId,
               media: mediaUrl,
-              content: content.trim() !== '' ? content.trim() : null,
+              content: content.trim() !== '' ? content.trim() : '',
               communityid: parseInt(communityId),
             });
             fullPageReload(`/communities/${community}`);
@@ -75,7 +75,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             await supabase.from("posts").insert({
               userid: userNumId,
               media: mediaUrl,
-              content: content.trim() !== '' ? content.trim() : null,
+              content: content.trim() !== '' ? content.trim() : '',
             });
             fullPageReload("/home");
           }

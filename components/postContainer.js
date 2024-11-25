@@ -68,7 +68,7 @@ const PostContainer = ({communityId, community}) => {
               await supabase.from("community_posts").insert({
                 userid: userNumId,
                 media: mediaUrl,
-                content: mediaContent.trim(),
+                content: !mediaContent ? '' : mediaContent.trim(),
                 communityid: parseInt(communityId)
               });
               fullPageReload(`/communities/${community}`)
@@ -77,7 +77,7 @@ const PostContainer = ({communityId, community}) => {
               await supabase.from("posts").insert({
                 userid: userNumId,
                 media: mediaUrl,
-                content: mediaContent.trim(),
+                content: !mediaContent ? '' : mediaContent.trim(),
               });
               fullPageReload("/home");
             }
