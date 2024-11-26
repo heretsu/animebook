@@ -38,6 +38,9 @@ const Signin = () => {
                 // options: {
                 //   redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
                 // },
+                options: {
+                  redirectTo: "https://animebook.io/home",
+                },
               })
               .catch((e) => {
                 console.log(e);
@@ -53,6 +56,9 @@ const Signin = () => {
                 // options: {
                 //   redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
                 // },
+                options: {
+                  redirectTo: "https://animebook.io/home",
+                },
               })
               .catch((e) => {
                 console.log(e);
@@ -81,6 +87,9 @@ const Signin = () => {
           // options: {
           //   redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
           // },
+          options: {
+            redirectTo: "https://animebook.io/home",
+          },
         });
       }
     } catch (error) {
