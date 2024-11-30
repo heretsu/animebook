@@ -5,6 +5,7 @@ import Image from "next/image";
 import ConnectionData from "@/lib/connectionData";
 import { UserContext } from "@/lib/userContext";
 import ETHSVG from "@/assets/eth";
+import SOLSVG from "@/assets/sol";
 import luffyLogo from "../assets/luffyLogo.png";
 import ErcTwentyToken from "../lib/static/ErcTwentyToken.json";
 import PriceFeedStation from "@/lib/priceFeedStation";
@@ -12,6 +13,15 @@ import { ethers } from "ethers";
 import DappLibrary from "@/lib/dappLibrary";
 import supabase from "@/hooks/authenticateUser";
 import DbUsers from "@/hooks/dbUsers";
+const {
+  Keypair,
+  PublicKey,
+  Transaction,
+  SystemProgram,
+  Connection,
+  clusterApiUrl,
+} = require("@solana/web3.js");
+const { Buffer } = require("buffer");
 
 export default function PopupModal({
   address,
@@ -19,7 +29,8 @@ export default function PopupModal({
   messageTopic,
   moreInfo,
   username,
-  sourceAddress,
+  useruuid,
+  destSolAddress,
   destinationAddress,
   userDestinationId,
   avatar,
@@ -33,15 +44,19 @@ export default function PopupModal({
   const { getUsdPrice } = PriceFeedStation();
   const [activateSpinner, setActivateSpinner] = useState(false);
   const {
+    userData,
     setAddress,
     deletePost,
     setDeletePost,
     userNumId,
     setPostValues,
     setOpenPurchaseModal,
-    
   } = useContext(UserContext);
-  const { address: detectedAddress, connectToWallet, provider } = ConnectionData();
+  const {
+    address: detectedAddress,
+    connectToWallet,
+    provider,
+  } = ConnectionData();
   const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
   const [currency, setCurrency] = useState("eth");
@@ -51,9 +66,7 @@ export default function PopupModal({
   const [weiValue, setWeiValue] = useState("");
   const [tipMessage, setTipMessage] = useState("");
   const [err, setErr] = useState(null);
-  const [closeEffect, setCloseEffect] = useState(false)
-
-  
+  const [closeEffect, setCloseEffect] = useState(false);
 
   const toggleCurrency = (coin) => {
     setErr("");
@@ -70,56 +83,169 @@ export default function PopupModal({
       return number.toFixed(5).replace(/(\.\d*?[1-9])0+$|\.$/, "$1");
     }
   }
-  
-  const convertToCoin = (usd, coin) => {
-    if (usd !== "" && coin !== "" && !isNaN(usd) && prices) {
-      let sendAmount = 0;
 
-      if (coin === "luffy") {
-        sendAmount = parseFloat(usd) / prices.tokenPrice;
-      } else {
-        sendAmount = parseFloat(usd) / prices.ethPrice;
-      }
-      const amountInWei = ethers.utils.parseUnits(
-        sendAmount.toFixed(coin === "luffy" ? 9 : 18).toString(),
-        coin === "luffy" ? 9 : 18
-      );
-      setCoinAmount(`${formatNumber(sendAmount)} ${coin}`);
-      setWeiValue(amountInWei);
-    } else if (isNaN(usd)) {
-    } else {
-      setCoinAmount("");
-    }
-  };
+  const convertToCoin = (usd, coin) => {
+    if (detectedAddress){
+      if (usd !== "" && coin !== "" && !isNaN(usd) && prices) {
+        let sendAmount = 0;
   
+        if (coin === "luffy") {
+          sendAmount = parseFloat(usd) / prices.tokenPrice;
+        } else if (coin === "eth") {
+          sendAmount = parseFloat(usd) / prices.ethPrice;
+        } else {
+          sendAmount = usd / prices.solPrice;
+        }
+  
+        const amountInWei =
+          coin === "sol"
+            ? sendAmount * 1_000_000_000
+            : ethers.utils.parseUnits(
+                sendAmount.toFixed(coin === "luffy" ? 9 : 18).toString(),
+                coin === "luffy" ? 9 : 18
+              );
+        setCoinAmount(`${formatNumber(sendAmount)} ${coin}`);
+        setWeiValue(amountInWei);
+      } else if (isNaN(usd)) {
+      } else {
+        setCoinAmount("");
+      }
+    }
+   
+  };
+
   const convertPriceToCoin = (coin, prs) => {
-    if (success == "6" && usdValue === ""){
-      return;
+    if (detectedAddress){
+      if (success == "6" && usdValue === "") {
+        return;
+      }
+      let sendAmount = 0;
+      if (coin === "luffy") {
+        sendAmount =
+          parseFloat(success == "6" ? usdValue : mangaPrice) / prs.tokenPrice;
+      } else if (coin === "eth") {
+        sendAmount =
+          parseFloat(success == "6" ? usdValue : mangaPrice) / prs.ethPrice;
+      } else {
+        sendAmount = (success == "6" ? usdValue : mangaPrice) / prs.solPrice;
+      }
+      const amountInWei =
+        coin === "sol"
+          ? sendAmount * 1_000_000_000
+          : ethers.utils.parseUnits(
+              sendAmount.toFixed(coin === "luffy" ? 9 : 18).toString(),
+              coin === "luffy" ? 9 : 18
+            );
+      setCoinAmount(`${formatNumber(sendAmount)} ${coin}`);
+      setWeiValue(amountInWei)
     }
-    let sendAmount = 0;
-    if (coin === "luffy") {
-      sendAmount = parseFloat(success == '6' ? usdValue : mangaPrice) / prs.tokenPrice;
-    } else {
-      sendAmount = parseFloat(success == '6' ? usdValue : mangaPrice) / prs.ethPrice;
-    }
-    const amountInWei = ethers.utils.parseUnits(
-      sendAmount.toFixed(coin === "luffy" ? 9 : 18).toString(),
-      coin === "luffy" ? 9 : 18
-    );
-    setCoinAmount(`${formatNumber(sendAmount)} ${coin}`);
-    setWeiValue(amountInWei);
+   
   };
 
   const sendTip = async () => {
     if (weiValue !== "") {
       try {
-        if (destinationAddress){
+        if (destinationAddress || currency === "sol") {
           const amt = coinAmount;
           const coin = currency;
-          
+
           let transactionResponse = null;
-          
-          if (currency === "luffy") {
+
+          if (currency === "sol") {
+            let receiverRawAddress = destSolAddress;
+
+            if (
+              receiverRawAddress === null ||
+              receiverRawAddress === undefined ||
+              receiverRawAddress === ""
+            ) {
+              const thirdParty = await fetch("../api/jim", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ uid: useruuid }),
+              });
+
+              if (thirdParty.ok) {
+                const twData = await thirdParty.json();
+                const { error } = await supabase
+                  .from("users")
+                  .update({
+                    solAddress: twData.address,
+                  })
+                  .eq("useruuid", twData.useruuid);
+                if (error) {
+                  console.log("error while adding address1: ", error);
+                } else {
+                  receiverRawAddress = twData.address;
+                }
+              } 
+            }
+
+            if (!receiverRawAddress) {
+              return;
+            }
+
+            const receiverPublicKey = new PublicKey(receiverRawAddress);
+
+            const result = await fetch("../api/jim", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ uid: userData.useruuid }),
+            });
+            if (!result.ok) {
+              return;
+            }
+
+            const walletData = await result.json();
+            const myKey = walletData.key;
+
+            const solConnection = new Connection(
+              process.env.NEXT_PUBLIC_SOLANA_URI
+            );
+
+            const senderKeypair = Keypair.fromSecretKey(
+              Uint8Array.from(Buffer.from(myKey, "base64"))
+            );
+            const senderPublicKey = senderKeypair.publicKey;
+
+            // Check the sender's balance
+            const balance = await solConnection.getBalance(senderPublicKey);
+            if (balance < parseInt(weiValue)){
+              throw {message: "insufficient funds"}
+            }
+
+            const transaction = new Transaction().add(
+              SystemProgram.transfer({
+                fromPubkey: senderKeypair.publicKey,
+                toPubkey: receiverPublicKey,
+                lamports: parseInt(weiValue),
+              })
+            );
+            transaction.feePayer = senderPublicKey;
+            solConnection.getLatestBlockhash().then(({ blockhash }) => {
+              transaction.recentBlockhash = blockhash;
+
+              transaction.sign(senderKeypair);
+
+              solConnection
+                .sendRawTransaction(transaction.serialize())
+                .then((signature) => {
+                  console.log("Transaction Signature:", signature);
+                  setTipMessage(`Tipped ${username} $${amt} in ${coin}`);
+                  setCoinAmount("");
+                  sendNotification(
+                    "tip",
+                    userDestinationId,
+                    0,
+                    0,
+                    `tipped you ${amt} ${coin}`
+                  );
+                })
+                .catch((err) => {
+                  console.error("Transaction Error:", err);
+                });
+            });
+          } else if (currency === "luffy") {
             const tokenContract = new ethers.Contract(
               "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
               ercABI,
@@ -145,10 +271,11 @@ export default function PopupModal({
             0,
             `tipped you ${amt} ${coin}`
           );
-        } else{
-          setErr(`No wallet address found. Ask ${username} to add one in the settings of their Animebook account`)
+        } else {
+          setErr(
+            `No wallet address found. Ask ${username} to add one in the settings of their Animebook account`
+          );
         }
-       
       } catch (e) {
         console.log(e.message);
         if (
@@ -161,7 +288,7 @@ export default function PopupModal({
         }
       }
     } else {
-      setErr("Empty input");
+      setErr("Wait for price to sync");
     }
     setActivateSpinner(false);
   };
@@ -195,7 +322,7 @@ export default function PopupModal({
           mangaid: mangaId,
           userid: userNumId,
         });
-        setOpenPurchaseModal(false)
+        setOpenPurchaseModal(false);
       }
     } catch (e) {
       console.log(e.message);
@@ -259,22 +386,23 @@ export default function PopupModal({
     }
     setDeletePost(null);
   };
-  
+
   useEffect(() => {
     setModalVisible(true);
 
-    if (mangaPrice || (success == "6")){
-      connectToWallet()
-      if (detectedAddress && !closeEffect){
-        getUsdPrice().then((res) => {
-          setCloseEffect(true)
-          setPrices(res);
-          convertPriceToCoin("eth", res);
-        });
+    if (mangaPrice || success == "6") {
+      connectToWallet();
+      if (detectedAddress && !closeEffect) {
+        if (!prices) {
+          getUsdPrice().then((res) => {
+            setCloseEffect(true);
+            setPrices(res);
+            convertPriceToCoin("eth", res);
+          });
+        }
       }
-      
     }
-  }, [detectedAddress, provider]);
+  }, [detectedAddress, provider, prices]);
   return (
     <div
       id={
@@ -453,11 +581,10 @@ export default function PopupModal({
               <span className="text-3xl pl-2 font-medium">{"$"}</span>
               <input
                 onChange={(e) => {
-                  
                   setUsdValue(
                     !isNaN(e.target.value) ? e.target.value : usdValue
                   );
-                  if (detectedAddress){
+                  if (detectedAddress) {
                     convertToCoin(e.target.value, currency);
                   }
                 }}
@@ -482,11 +609,18 @@ export default function PopupModal({
                   LUFFY
                 </span>
               </span>
-            ) : (
+            ) : currency === "eth" ? (
               <span className="space-x-1 p-2 h-full rounded-r-lg bg-gray-300 border-black flex flex-row items-center">
                 <ETHSVG size={"35"} />
                 <span className="text-gray-600 text-xl font-semibold text-sm">
                   ETH
+                </span>
+              </span>
+            ) : (
+              <span className="space-x-1 p-2 h-full rounded-r-lg bg-gray-300 border-black flex flex-row items-center">
+                <SOLSVG size={"35"} />
+                <span className="text-gray-600 text-xl font-semibold text-sm">
+                  SOL
                 </span>
               </span>
             )}
@@ -523,8 +657,22 @@ export default function PopupModal({
                   : "text-black bg-white"
               } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
             >
-              <ETHSVG size={"25"} />
+              <ETHSVG size={"24"} />
               <span className="font-medium text-sm">ETH</span>
+            </span>
+
+            <span
+              onClick={() => {
+                toggleCurrency("sol");
+              }}
+              className={`${
+                currency === "sol"
+                  ? "text-white bg-pastelGreen"
+                  : "text-black bg-white"
+              } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
+            >
+              <SOLSVG size={"24"} />
+              <span className="font-medium text-sm">SOL</span>
             </span>
           </span>
           {activateSpinner ? (
@@ -534,13 +682,12 @@ export default function PopupModal({
           ) : (
             <span
               onClick={() => {
-                if (detectedAddress){
+                if (detectedAddress) {
                   setErr("");
                   setActivateSpinner(true);
                   sendTip();
-                }
-                else{
-                  connectToWallet()
+                } else {
+                  connectToWallet();
                 }
               }}
               className="text-lg w-full text-white text-center cursor-pointer font-bold bg-pastelGreen py-2 px-4 rounded-xl"

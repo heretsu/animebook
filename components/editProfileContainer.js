@@ -280,16 +280,16 @@ const EditProfileContainer = () => {
               />
             </span>
 
-            <span className="text-start font-medium w-full flex-row space-x-1">
+            <span className="text-start text-sm font-medium w-full flex-row space-x-1">
               <span>Payout wallet</span>
               <span className="text-xs">{"(ERC-20)"}</span>
               <input
                 // value=""
                 disabled
                 value={newAddress ? newAddress : userData.address}
-                className="px-4 cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className="px-4 text-sm text-center cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
               />
-              <span className="text-xs">
+              <span className="text-[0.75rem]">
                 {
                   "For safety: If you wish to change your payout wallet, reconnect to a preferred address and click on: "
                 }
@@ -316,6 +316,19 @@ const EditProfileContainer = () => {
                   </span>
                 )}
               </div>
+            </span>
+
+            <span className="text-start text-sm font-medium w-full flex-row space-x-1">
+              <span>Payout wallet 2</span>
+              <span className="text-xs">{"(Solana)"}</span>
+              <input
+                // value=""
+                disabled
+                value={newAddress ? newAddress : userData.solAddress}
+                className="px-4 text-center text-sm cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+              />
+              
+              
             </span>
 
             <span className="pt-2 pb-3 flex flex-col">

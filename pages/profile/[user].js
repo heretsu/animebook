@@ -696,8 +696,9 @@ export default function User({ user }) {
             <PopupModal
               success={"6"}
               username={userBasicInfo.username}
+              useruuid={userBasicInfo.useruuid}
+              destSolAddress={userBasicInfo.solAddress ? userBasicInfo.solAddress : null}
               avatar={userBasicInfo.avatar}
-              sourceAddress={userNumId}
               destinationAddress={userBasicInfo.address}
               userDestinationId={userBasicInfo.id}
             />

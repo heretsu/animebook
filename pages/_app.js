@@ -66,8 +66,8 @@ export default function App({ Component, pageProps }) {
   const [onboarding, setOnboarding] = useState(false);
   const [allUsers, setAllUsers] = useState(null);
   const [oauthDetails, setOauthDetails] = useState(null);
-  const [myRelationships, setMyRelationships] = useState(null)
-  const [sideBarOpened, setSideBarOpened] = useState(false)
+  const [myRelationships, setMyRelationships] = useState(null);
+  const [sideBarOpened, setSideBarOpened] = useState(false);
 
   const [communities, setCommunities] = useState(null);
   const { fetchFollowing, fetchFollows } = Relationships();
@@ -76,8 +76,11 @@ export default function App({ Component, pageProps }) {
     const followings = await fetchFollowing(userid);
 
     const followers = await fetchFollows(userid);
-    setMyRelationships({ followings: followings.data, followers: followers.data })
-    return { followings: followings.data, followers: followers.data }
+    setMyRelationships({
+      followings: followings.data,
+      followers: followers.data,
+    });
+    return { followings: followings.data, followers: followers.data };
   };
 
   const fetchCommunities = async () => {
@@ -113,11 +116,11 @@ export default function App({ Component, pageProps }) {
 
   function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
-}
+  }
 
   const checkIfUserExistsAndUpdateData = async (user) => {
     try {
@@ -140,7 +143,7 @@ export default function App({ Component, pageProps }) {
               username: user.user_metadata.preferred_username,
               avatar: user.user_metadata.picture
                 ? user.user_metadata.picture
-                : "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+                : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
             };
             const response = await supabase.from("users").insert([newUser]);
 
@@ -157,14 +160,43 @@ export default function App({ Component, pageProps }) {
               .select("*")
               .eq("useruuid", user.id);
             if (res.data.length !== 0) {
+              if (
+                res.data[0].solAddress === null ||
+                res.data[0].solAddress === undefined ||
+                res.data[0].solAddress === ""
+              ) {
+                const uid = res.data[0].useruuid;
+                const result = await fetch("/api/jim", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ uid }),
+                });
+                if (result.ok) {
+                  const walletData = await result.json();
+
+                  const { error } = await supabase
+                    .from("users")
+                    .update({
+                      solAddress: walletData.address,
+                    })
+                    .eq("useruuid", walletData.useruuid);
+                  if (error) {
+                    console.log("error while adding address1: ", error);
+                  }
+                } else {
+                  console.log("Error fetching livestream data");
+                }
+              }
+
               setUserNumId(res.data[0].id);
               setUserData({
                 preferred_username: res.data[0].username,
                 picture: user.user_metadata.picture
                   ? user.user_metadata.picture
-                  : "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
-                ...res.data[0]
+                  : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+                ...res.data[0],
               });
+
               if (router.pathname !== "/profile/[user]") {
                 fetchAllPosts().then((result1) => {
                   fetchCommunities().then((secondResult) => {
@@ -183,14 +215,14 @@ export default function App({ Component, pageProps }) {
             setOnboarding(true);
           }
         } else {
-          fetchFollowingAndFollowers(data.id)
+          fetchFollowingAndFollowers(data.id);
           setUserNumId(data.id);
           setAddress(data.address);
           setUserData({
             preferred_username: data.username,
             picture: user.user_metadata.picture
               ? user.user_metadata.picture
-              : "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+              : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
             ...data,
           });
 
@@ -204,6 +236,34 @@ export default function App({ Component, pageProps }) {
                 }
               });
             });
+          }
+          if (
+            data.solAddress === null ||
+            data.solAddress === undefined ||
+            data.solAddress === ""
+          ) {
+            const uid = data.useruuid;
+            const result = await fetch("/api/jim", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ uid }),
+            });
+
+            if (result.ok) {
+              const walletData = await result.json();
+
+              const { error } = await supabase
+                .from("users")
+                .update({
+                  solAddress: walletData.address,
+                })
+                .eq("useruuid", walletData.useruuid);
+              if (error) {
+                console.log("error while adding address2: ", error);
+              }
+            } else {
+              console.log("Error fetching livestream data");
+            }
           }
         }
         setSubscribed(true);
@@ -250,12 +310,13 @@ export default function App({ Component, pageProps }) {
                 fetchCommunities().then((secondResult) => {
                   if (secondResult !== undefined && secondResult !== null) {
                     setCommunities(secondResult.data);
-                    setOriginalPostValues(result1.data); 
+                    setOriginalPostValues(result1.data);
                     setPostValues(result1.data);
                   }
                 });
               });
             }
+
             console.log("session expired or account not yet created");
             setAuthLoading(false);
             setNotSignedIn(true);
@@ -359,7 +420,7 @@ export default function App({ Component, pageProps }) {
         myRelationships,
         setMyRelationships,
         sideBarOpened,
-        setSideBarOpened
+        setSideBarOpened,
       }}
     >
       <span className="text-sm sm:text-base">
@@ -401,7 +462,6 @@ export default function App({ Component, pageProps }) {
           <Component {...pageProps} />
         )}
       </span>
-      
     </UserContext.Provider>
   );
 }

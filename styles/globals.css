@@ -10,8 +10,8 @@
     font-style:normal;
     font-display:swap; */
 
-    font-family: "Long shot";
-    src: url("/animebook/assets/fonts/Long_Shot.ttf") format("truetype");
+    font-family: "longshot";
+    src: url("/assets/Long_Shot.ttf") format("truetype");
 }
 @tailwind base;
 @tailwind components;
@@ -60,11 +60,11 @@ body {
 }
 
 #anime-book-font {
-  font-family: 'Long shot', sans-serif;
+  font-family: 'longshot', 'rabikiso';
 }
 
 #anime-book-font-v0 {
-  font-family: 'CCVengeanceIsMineBody', sans-serif;
+  font-family: 'CCVengeanceIsMineBody', 'rabikiso';
 }
 
 #navShadow {

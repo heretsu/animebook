@@ -695,7 +695,7 @@ const Message = ({ message }) => {
                     </span>
                   )}
                 </span>
-                <span className="sticky bottom-0 left-0 right-0 w-full">
+                <span className="sticky bottom-5 md:bottom-0 left-0 right-0 w-full">
                   <MessageContext.Provider
                     value={{
                       chatsObject,

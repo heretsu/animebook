@@ -100,7 +100,7 @@ export default function Onboard({ allUsers, me }) {
         const newUser = {
           useruuid: me.id,
           username: username,
-          avatar: imageUrl ? imageUrl : "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+          avatar: imageUrl ? imageUrl : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
           address: addr ? addr : null,
         };
         const { data, error } = await supabase.from("users").insert([newUser]);
