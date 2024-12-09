@@ -10,6 +10,8 @@ import DappLibrary from "@/lib/dappLibrary";
 import { useRouter } from "next/router";
 import ReactPlayer from "react-player";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import Lottie from "lottie-react";
+import animationData from "@/assets/kianimation.json";
 
 export const BinSvg = ({ pixels }) => {
   return (
@@ -37,7 +39,7 @@ export default function PostCard({
   users,
   myProfileId,
 }) {
-  const videoRef = useRef(null)
+  const videoRef = useRef(null);
   const router = useRouter();
   const { sendNotification, postTimeAgo } = DappLibrary();
   const [alreadyFollowed, setAlreadyFollowed] = useState(null);
@@ -61,7 +63,7 @@ export default function PostCard({
   const [viewed, setViewed] = useState(false);
   const [viewReentry, setViewReentry] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [playVideo, setPlayVideo] = useState(false)
+  const [playVideo, setPlayVideo] = useState(false);
 
   const [ref, isBeingViewed] = PostInViewport({
     threshold: 0.5,
@@ -116,16 +118,42 @@ export default function PostCard({
           .delete()
           .eq("postid", id)
           .eq("userid", myProfileId)
-          .then(() => {
+          .then(async () => {
             fetchLikes();
+            await supabase
+              .from("users")
+              .update({
+                ki:
+                  parseFloat(userData.ki) !== 0
+                    ? parseFloat(userData.ki) - 0.1
+                    : 0,
+              })
+              .eq("id", myProfileId);
+
+            await supabase
+              .from("users")
+              .update({
+                ki: parseFloat(users.ki) !== 0 ? parseFloat(users.ki) - 0.8 : 0,
+              })
+              .eq("id", users.id)
           });
       } else {
         supabase
           .from("likes")
           .insert({ postid: id, userid: myProfileId })
-          .then(() => {
+          .then(async () => {
             fetchLikes();
             sendNotification("likepost", users.id, likes, id);
+
+            await supabase
+              .from("users")
+              .update({ ki: parseFloat(userData.ki) + 0.1 })
+              .eq("id", myProfileId);
+
+            await supabase
+              .from("users")
+              .update({ ki: parseFloat(users.ki) + 0.8 })
+              .eq("id", users.id);
           });
       }
     }
@@ -144,6 +172,7 @@ export default function PostCard({
         }
       });
   };
+
   const addView = () => {
     if (viewReentry) {
       setViewReentry(false);
@@ -203,10 +232,10 @@ export default function PostCard({
     if (videoRef.current) {
       if (videoRef.current.paused) {
         videoRef.current.play();
-        setPlayVideo(true)
+        setPlayVideo(true);
       } else {
         videoRef.current.pause();
-        setPlayVideo(false)
+        setPlayVideo(false);
       }
     }
   };
@@ -239,7 +268,9 @@ export default function PostCard({
     comments !== null && (
       <div
         ref={ref}
-        className={`${router.pathname !== "/comments/[comments]" && "shadow-xl"} ${
+        className={`${
+          router.pathname !== "/comments/[comments]" && "shadow-xl"
+        } ${
           !media && "w-full"
         } bg-white space-y-3 py-4 px-3 flex flex-col justify-center text-start`}
       >
@@ -259,15 +290,28 @@ export default function PostCard({
                 className="rounded-full object"
               />
             </span>
-            <span className="pl-2 pr-1 font-semibold">{users.username}</span>
-            <span className="text-[0.7rem] text-gray-400">
-              {postTimeAgo(created_at)}
+            <span className="flex flex-col">
+              <span className="flex flex-row">
+                <span className="pl-2 pr-1 font-semibold">
+                  {users.username}
+                </span>
+                <span className="text-[0.7rem] text-gray-400">
+                  {postTimeAgo(created_at)}
+                </span>
+              </span>
+              <span className="flex flex-row items-center">
+                <span className="h-6 w-8">
+                  <Lottie animationData={animationData} />
+                </span>
+                <span className="absolute pl-6 text-xs font-bold text-blue-400">
+                  {users.ki}
+                </span>
+              </span>
             </span>
           </span>
 
           {userData &&
-            (router.pathname === "/profile/[user]" &&
-            users.id === myProfileId ? (
+            (users.id === myProfileId ? (
               <span onClick={deleteAction} className="cursor-pointer">
                 <BinSvg pixels={"20px"} />
               </span>
@@ -310,13 +354,13 @@ export default function PostCard({
                   if (router.pathname !== "/comments/[comments]") {
                     router.push(`/comments/${id}`);
                   } else {
-                    togglePlayPause()
+                    togglePlayPause();
                   }
                 }}
                 className="relative cursor-pointer flex justify-center items-center bg-black w-full"
               >
                 <video
-                className="relative max-h-[600px]"
+                  className="relative max-h-[600px]"
                   src={media}
                   ref={videoRef}
                   height={600}
@@ -326,23 +370,25 @@ export default function PostCard({
                     loadVideoSnippet(e);
                   }}
                 ></video>
-                {!playVideo && <svg
-                  fill="white"
-                  width="70px"
-                  height="70px"
-                  viewBox="0 0 36 36"
-                  preserveAspectRatio="xMidYMid meet"
-                  xmlns="http://www.w3.org/2000/svg"
-                  xmlnsXlink="http://www.w3.org/1999/xlink"
-                  className="absolute m-auto bg-black bg-opacity-20 p-2 rounded-full"
-                >
-                  <title>{"play-solid"}</title>
-                  <path
-                    className="clr-i-solid clr-i-solid-path-1"
-                    d="M32.16,16.08,8.94,4.47A2.07,2.07,0,0,0,6,6.32V29.53a2.06,2.06,0,0,0,3,1.85L32.16,19.77a2.07,2.07,0,0,0,0-3.7Z"
-                  />
-                  <rect x={0} y={0} width={36} height={36} fillOpacity={0} />
-                </svg>}
+                {!playVideo && (
+                  <svg
+                    fill="white"
+                    width="70px"
+                    height="70px"
+                    viewBox="0 0 36 36"
+                    preserveAspectRatio="xMidYMid meet"
+                    xmlns="http://www.w3.org/2000/svg"
+                    xmlnsXlink="http://www.w3.org/1999/xlink"
+                    className="absolute m-auto bg-black bg-opacity-20 p-2 rounded-full"
+                  >
+                    <title>{"play-solid"}</title>
+                    <path
+                      className="clr-i-solid clr-i-solid-path-1"
+                      d="M32.16,16.08,8.94,4.47A2.07,2.07,0,0,0,6,6.32V29.53a2.06,2.06,0,0,0,3,1.85L32.16,19.77a2.07,2.07,0,0,0,0-3.7Z"
+                    />
+                    <rect x={0} y={0} width={36} height={36} fillOpacity={0} />
+                  </svg>
+                )}
               </span>
             ) : (
               <span

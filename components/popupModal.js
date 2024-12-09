@@ -13,6 +13,7 @@ import { ethers } from "ethers";
 import DappLibrary from "@/lib/dappLibrary";
 import supabase from "@/hooks/authenticateUser";
 import DbUsers from "@/hooks/dbUsers";
+import SAITAMALOGO from "@/assets/saitama";
 const {
   Keypair,
   PublicKey,
@@ -72,8 +73,12 @@ export default function PopupModal({
     setErr("");
     setTipMessage("");
     setCurrency(coin);
-    convertToCoin(usdValue, coin);
-    convertPriceToCoin(coin, prices);
+    if (usdValue !== "") {
+      convertToCoin(usdValue, coin);
+    }
+    if (prices) {
+      convertPriceToCoin(coin, prices);
+    }
   };
 
   function formatNumber(number) {
@@ -85,37 +90,41 @@ export default function PopupModal({
   }
 
   const convertToCoin = (usd, coin) => {
-    if (detectedAddress){
+    if (detectedAddress) {
       if (usd !== "" && coin !== "" && !isNaN(usd) && prices) {
         let sendAmount = 0;
-  
+
         if (coin === "luffy") {
           sendAmount = parseFloat(usd) / prices.tokenPrice;
         } else if (coin === "eth") {
           sendAmount = parseFloat(usd) / prices.ethPrice;
+        } else if (coin === "sai") {
+          sendAmount = parseFloat(usd) / prices.saiPrice;
         } else {
           sendAmount = usd / prices.solPrice;
         }
-  
+
         const amountInWei =
           coin === "sol"
             ? sendAmount * 1_000_000_000
             : ethers.utils.parseUnits(
-                sendAmount.toFixed(coin === "luffy" ? 9 : 18).toString(),
-                coin === "luffy" ? 9 : 18
+                sendAmount.toFixed(coin === "eth" ? 18 : 9).toString(),
+                coin === "eth" ? 18 : 9
               );
-        setCoinAmount(`${formatNumber(sendAmount)} ${coin}`);
+        setCoinAmount(
+          `${formatNumber(sendAmount)} ${coin === "sai" ? "saitama inu" : coin}`
+        );
         setWeiValue(amountInWei);
+        console.log(amountInWei);
       } else if (isNaN(usd)) {
       } else {
         setCoinAmount("");
       }
     }
-   
   };
 
   const convertPriceToCoin = (coin, prs) => {
-    if (detectedAddress){
+    if (detectedAddress) {
       if (success == "6" && usdValue === "") {
         return;
       }
@@ -126,6 +135,9 @@ export default function PopupModal({
       } else if (coin === "eth") {
         sendAmount =
           parseFloat(success == "6" ? usdValue : mangaPrice) / prs.ethPrice;
+      } else if (coin === "sai") {
+        sendAmount =
+          parseFloat(success == "6" ? usdValue : mangaPrice) / prs.saiPrice;
       } else {
         sendAmount = (success == "6" ? usdValue : mangaPrice) / prs.solPrice;
       }
@@ -133,13 +145,14 @@ export default function PopupModal({
         coin === "sol"
           ? sendAmount * 1_000_000_000
           : ethers.utils.parseUnits(
-              sendAmount.toFixed(coin === "luffy" ? 9 : 18).toString(),
-              coin === "luffy" ? 9 : 18
+              sendAmount.toFixed(coin === "eth" ? 18 : 9).toString(),
+              coin === "eth" ? 18 : 9
             );
-      setCoinAmount(`${formatNumber(sendAmount)} ${coin}`);
-      setWeiValue(amountInWei)
+      setCoinAmount(
+        `${formatNumber(sendAmount)} ${coin === "sai" ? "saitama inu" : coin}`
+      );
+      setWeiValue(amountInWei);
     }
-   
   };
 
   const sendTip = async () => {
@@ -178,7 +191,7 @@ export default function PopupModal({
                 } else {
                   receiverRawAddress = twData.address;
                 }
-              } 
+              }
             }
 
             if (!receiverRawAddress) {
@@ -210,8 +223,8 @@ export default function PopupModal({
 
             // Check the sender's balance
             const balance = await solConnection.getBalance(senderPublicKey);
-            if (balance < parseInt(weiValue)){
-              throw {message: "insufficient funds"}
+            if (balance < parseInt(weiValue)) {
+              throw { message: "insufficient funds" };
             }
 
             const transaction = new Transaction().add(
@@ -255,6 +268,17 @@ export default function PopupModal({
               destinationAddress,
               weiValue
             );
+          } else if (currency === "sai") {
+            const tokenContract = new ethers.Contract(
+              "0x0000e3705d8735ee724a76f3440c0a7ea721ed00",
+              ercABI,
+              provider.getSigner()
+            );
+            console.log(weiValue);
+            transactionResponse = await tokenContract.transfer(
+              destinationAddress,
+              weiValue
+            );
           } else {
             transactionResponse = await provider.getSigner().sendTransaction({
               to: destinationAddress,
@@ -280,9 +304,12 @@ export default function PopupModal({
         console.log(e.message);
         if (
           (e.message && e.message.includes("insufficient funds")) ||
-          e.message.includes("ERC20: transfer amount exceeds balance")
+          e.message.includes("ERC20: transfer amount exceeds balance") ||
+          e.message.includes("subtraction overflow")
         ) {
-          setErr(`Insufficient ${currency} balance`);
+          setErr(
+            `Insufficient ${currency === "sai" ? "saitama" : currency} balance`
+          );
         } else {
           setErr(e.message.slice(0, 25).concat("..."));
         }
@@ -328,7 +355,8 @@ export default function PopupModal({
       console.log(e.message);
       if (
         (e.message && e.message.includes("insufficient funds")) ||
-        e.message.includes("ERC20: transfer amount exceeds balance")
+        e.message.includes("ERC20: transfer amount exceeds balance") ||
+        e.message.includes("subtraction overflow")
       ) {
         setErr(`Insufficient ${currency} balance`);
       } else {
@@ -340,18 +368,54 @@ export default function PopupModal({
 
   const deletePostViaId = async () => {
     if (deletePost.media !== null && deletePost.media !== undefined) {
-      const { data, error } = await supabase.storage
-        .from("mediastore")
-        .remove([deletePost.media.split("public/mediastore/")[1]]);
-      console.log(data, error);
-      if (data.length !== 0) {
-        supabase
-          .from("posts")
-          .delete()
-          .eq("id", deletePost.postid)
-          .eq("userid", userNumId)
-          .then((response) => {
-            console.log("response: ", response);
+      supabase
+        .from("deleted_media")
+        .insert({
+          url: deletePost.media,
+          postid: deletePost.postid,
+        })
+        .then((response) => {
+          if (response && response.status === 201) {
+            supabase
+              .from("posts")
+              .delete()
+              .eq("id", deletePost.postid)
+              .eq("userid", userNumId)
+              .then(() => {
+                if (router.pathname === "/profile/[user]") {
+                  DbUsers()
+                    .fetchAllSingleUserPosts(userNumId)
+                    .then(({ data }) => {
+                      if (data) {
+                        setPostValues(data);
+                      }
+                    });
+                } else {
+                  DbUsers()
+                    .fetchAllPosts()
+                    .then(({ data }) => {
+                      if (data) {
+                        setPostValues(data);
+                      }
+                    });
+                }
+              })
+              .catch((e) => {
+                console.log("error in post deletion for media: ", e);
+              });
+          }
+        })
+        .catch((e) => {
+          console.log("error in outer deletion media: ", e);
+        });
+    } else {
+      supabase
+        .from("posts")
+        .delete()
+        .eq("id", deletePost.postid)
+        .eq("userid", userNumId)
+        .then(() => {
+          if (router.pathname === "/profile/[user]") {
             DbUsers()
               .fetchAllSingleUserPosts(userNumId)
               .then(({ data }) => {
@@ -359,26 +423,15 @@ export default function PopupModal({
                   setPostValues(data);
                 }
               });
-          })
-          .catch((e) => {
-            console.log("error: ", e);
-          });
-      }
-    } else {
-      supabase
-        .from("posts")
-        .delete()
-        .eq("id", deletePost.postid)
-        .eq("userid", userNumId)
-        .then((response) => {
-          console.log("response: ", response);
-          DbUsers()
-            .fetchAllSingleUserPosts(userNumId)
-            .then(({ data }) => {
-              if (data) {
-                setPostValues(data);
-              }
-            });
+          } else {
+            DbUsers()
+              .fetchAllPosts()
+              .then(({ data }) => {
+                if (data) {
+                  setPostValues(data);
+                }
+              });
+          }
         })
         .catch((e) => {
           console.log("error: ", e);
@@ -395,9 +448,11 @@ export default function PopupModal({
       if (detectedAddress && !closeEffect) {
         if (!prices) {
           getUsdPrice().then((res) => {
-            setCloseEffect(true);
-            setPrices(res);
-            convertPriceToCoin("eth", res);
+            if (res.ethPrice !== null && res.ethPrice !== undefined) {
+              setCloseEffect(true);
+              setPrices(res);
+              convertPriceToCoin("eth", res);
+            }
           });
         }
       }
@@ -616,63 +671,89 @@ export default function PopupModal({
                   ETH
                 </span>
               </span>
-            ) : (
+            ) : currency === "sol" ? (
               <span className="space-x-1 p-2 h-full rounded-r-lg bg-gray-300 border-black flex flex-row items-center">
                 <SOLSVG size={"35"} />
                 <span className="text-gray-600 text-xl font-semibold text-sm">
                   SOL
                 </span>
               </span>
+            ) : (
+              <span className="space-x-1 w-fit p-2 h-full rounded-r-lg bg-gray-300 border-2 border-gray-300 flex flex-row items-center">
+                <span className="w-[30px]">
+                  <SAITAMALOGO w={35} h={30} />
+                </span>
+                <span className="text-gray-600 text-l font-bold text-sm">
+                  SAITAMA
+                </span>
+              </span>
             )}
           </span>
           <span className="text-slate-700">{coinAmount}</span>
-          <span className="py-5 flex flex-row justify-center w-fit mx-auto rounded-lg space-x-4">
-            <span
-              onClick={() => {
-                toggleCurrency("luffy");
-              }}
-              className={`${
-                currency === "luffy"
-                  ? "text-white bg-pastelGreen"
-                  : "text-black bg-white"
-              } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
-            >
-              <Image
-                src={luffyLogo}
-                alt="luffy logo"
-                height={25}
-                width={25}
-                className="rounded-full"
-              />
-              <span className="font-semibold text-sm">LUFFY</span>
-            </span>
+          <span className="mx-auto pt-2 pb-3 flex flex-col justify-center w-fit">
+            <span className="flex flex-row justify-center w-fit mx-auto rounded-lg space-x-4">
+              <span
+                onClick={() => {
+                  toggleCurrency("luffy");
+                }}
+                className={`${
+                  currency === "luffy"
+                    ? "text-white bg-pastelGreen"
+                    : "text-black bg-white"
+                } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
+              >
+                <Image
+                  src={luffyLogo}
+                  alt="luffy logo"
+                  height={25}
+                  width={25}
+                  className="rounded-full"
+                />
+                <span className="font-semibold text-sm">LUFFY</span>
+              </span>
 
-            <span
-              onClick={() => {
-                toggleCurrency("eth");
-              }}
-              className={`${
-                currency === "eth"
-                  ? "text-white bg-pastelGreen"
-                  : "text-black bg-white"
-              } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
-            >
-              <ETHSVG size={"24"} />
-              <span className="font-medium text-sm">ETH</span>
-            </span>
+              <span
+                onClick={() => {
+                  toggleCurrency("eth");
+                }}
+                className={`${
+                  currency === "eth"
+                    ? "text-white bg-pastelGreen"
+                    : "text-black bg-white"
+                } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
+              >
+                <ETHSVG size={"24"} />
+                <span className="font-medium text-sm">ETH</span>
+              </span>
 
+              <span
+                onClick={() => {
+                  toggleCurrency("sol");
+                }}
+                className={`${
+                  currency === "sol"
+                    ? "text-white bg-pastelGreen"
+                    : "text-black bg-white"
+                } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
+              >
+                <SOLSVG size={"24"} />
+                <span className="font-medium text-sm">SOL</span>
+              </span>
+            </span>
             <span
               onClick={() => {
-                toggleCurrency("sol");
+                toggleCurrency("sai");
               }}
               className={`${
-                currency === "sol"
+                currency === "sai"
                   ? "text-white bg-pastelGreen"
                   : "text-black bg-white"
-              } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
+              } space-x-1 mt-2 w-fit mx-auto cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
             >
-              <SOLSVG size={"24"} />
-              <span className="font-medium text-sm">SOL</span>
+              <span className="">
+                <SAITAMALOGO w={25} h={20} />
+              </span>
+              <span className="font-medium text-sm">SAITAMA</span>
             </span>
           </span>
           {activateSpinner ? (

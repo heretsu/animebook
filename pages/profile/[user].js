@@ -17,6 +17,9 @@ import { ethers } from "ethers";
 import ConnectionData from "@/lib/connectionData";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import SideBar from "@/components/sideBar";
+import Lottie from "lottie-react";
+import animationData from "@/assets/kianimation.json";
+
 
 export const getServerSideProps = async (context) => {
   const { user } = context.query;
@@ -222,9 +225,11 @@ export default function User({ user }) {
 
   const logOut = async () => {
     try {
-      try{disconnectWallet()}catch(e){}
-      await supabase.auth.signOut()
-      router.push("/signin")
+      try {
+        disconnectWallet();
+      } catch (e) {}
+      await supabase.auth.signOut();
+      router.push("/signin");
     } catch (error) {
       throw "a problem occurred";
     }
@@ -305,6 +310,14 @@ export default function User({ user }) {
                     <div className="h-full w-full bg-slate-900 rounded-2xl"></div>
                   )}
                   <span className="text-xs md:text-sm rounded-b-2xl absolute inset-0 flex flex-col justify-between text-white">
+                    <span className="absolute border border-gray-500 ml-2 mt-2 flex flex-row items-center justify-center rounded-2xl w-fit px-2 py-1 bg-gray-800 bg-opacity-70">
+                      <span className="-ml-2 h-6 w-8">
+                        <Lottie animationData={animationData} />
+                      </span>
+                      <span className="-ml-2 text-sm font-bold text-white">
+                        {userBasicInfo.ki}
+                      </span>
+                    </span>
                     <span className="w-full flex flex-row justify-end pt-2 pr-4">
                       {itsMe && (
                         <span className="flex flex-col">
@@ -316,7 +329,12 @@ export default function User({ user }) {
                           >
                             Edit profile
                           </span>
-                          <span onClick={()=>{logOut()}} className="underline cursor-pointer pt-2 w-full flex items-center justify-end space-x-1">
+                          <span
+                            onClick={() => {
+                              logOut();
+                            }}
+                            className="underline cursor-pointer pt-2 w-full flex items-center justify-end space-x-1"
+                          >
                             <span className="font-semibold">Log out</span>
                             <svg
                               width="15px"
@@ -597,27 +615,31 @@ export default function User({ user }) {
                         </span>
                       )}
 
-                      {itsMe && (
-                        userData.address ?
-                         <span className="space-x-2 border border-black bg-white border-dashed rounded-lg p-4 flex justify-center items-center">
-                          <span
-                            onClick={() => {
-                              router.push("/publishmanga");
-                            }}
-                            className="text-white font-semibold bg-pastelGreen py-3 px-5 cursor-pointer rounded-xl"
-                          >
-                            Publish
+                      {itsMe &&
+                        (userData.address ? (
+                          <span className="space-x-2 border border-black bg-white border-dashed rounded-lg p-4 flex justify-center items-center">
+                            <span
+                              onClick={() => {
+                                router.push("/publishmanga");
+                              }}
+                              className="text-white font-semibold bg-pastelGreen py-3 px-5 cursor-pointer rounded-xl"
+                            >
+                              Publish
+                            </span>
+                            <span
+                              onClick={() => {
+                                router.push("/subscriptionplan");
+                              }}
+                              className="text-pastelGreen font-semibold bg-transparent border-2 border-pastelGreen py-2.5 px-4 cursor-pointer rounded-xl"
+                            >
+                              Edit subscription plan
+                            </span>
                           </span>
-                          <span
-                            onClick={() => {
-                              router.push("/subscriptionplan");
-                            }}
-                            className="text-pastelGreen font-semibold bg-transparent border-2 border-pastelGreen py-2.5 px-4 cursor-pointer rounded-xl"
-                          >
-                            Edit subscription plan
-                          </span> 
-                        </span> : <span className="text-center w-full text-[0.8rem] font-semibold text-gray-700">Go to settings and add a payout wallet address first</span>
-                      )}
+                        ) : (
+                          <span className="text-center w-full text-[0.8rem] font-semibold text-gray-700">
+                            Go to settings and add a payout wallet address first
+                          </span>
+                        ))}
                     </span>
                   )
                 ) : (
@@ -697,7 +719,9 @@ export default function User({ user }) {
               success={"6"}
               username={userBasicInfo.username}
               useruuid={userBasicInfo.useruuid}
-              destSolAddress={userBasicInfo.solAddress ? userBasicInfo.solAddress : null}
+              destSolAddress={
+                userBasicInfo.solAddress ? userBasicInfo.solAddress : null
+              }
               avatar={userBasicInfo.avatar}
               destinationAddress={userBasicInfo.address}
               userDestinationId={userBasicInfo.id}

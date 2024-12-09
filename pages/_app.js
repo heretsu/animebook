@@ -68,6 +68,7 @@ export default function App({ Component, pageProps }) {
   const [oauthDetails, setOauthDetails] = useState(null);
   const [myRelationships, setMyRelationships] = useState(null);
   const [sideBarOpened, setSideBarOpened] = useState(false);
+  const [notifyUserObject, setNotifyUserObject] = useState(null);
 
   const [communities, setCommunities] = useState(null);
   const { fetchFollowing, fetchFollows } = Relationships();
@@ -421,6 +422,8 @@ export default function App({ Component, pageProps }) {
         setMyRelationships,
         sideBarOpened,
         setSideBarOpened,
+        notifyUserObject,
+        setNotifyUserObject
       }}
     >
       <span className="text-sm sm:text-base">

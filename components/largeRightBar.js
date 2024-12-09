@@ -190,7 +190,8 @@ const LargeRightBar = () => {
   const fetchYouMayKnow = async () => {
     if (userData) {
       const followResult = await fetchFollowing(userNumId);
-      fetchAllUsers().then((res) => {
+      if (followResult.data){
+        fetchAllUsers().then((res) => {
         let unfollowedUsers = [];
         let i = 0;
         if (res.data && res.data.length > 0){
@@ -211,6 +212,7 @@ const LargeRightBar = () => {
         }
         
       });
+    }
     }
   };
 

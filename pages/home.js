@@ -15,6 +15,7 @@ import CommentConfig from "@/components/commentConfig";
 import ReactPlayer from "react-player";
 import SmallPostContainer from "@/components/smallPostContainer";
 import SideBar from "@/components/sideBar";
+import PopupModal from "@/components/popupModal";
 
 export default function Home() {
   const [storyUploading, setStoryUploading] = useState(false);
@@ -44,6 +45,8 @@ export default function Home() {
     playVideo,
     setPlayVideo,
     sideBarOpened,
+    deletePost,
+    setDeletePost,
   } = useContext(UserContext);
 
   const closeStory = () => {
@@ -398,6 +401,21 @@ export default function Home() {
           ></div>
         </>
       )}
+
+       {deletePost !== null && (
+          <>
+            <PopupModal
+              success={"7"}
+            />
+            <div
+              onClick={() => {
+                setDeletePost(null);
+              }}
+              id="overlay"
+              className="bg-black bg-opacity-80"
+            ></div>
+          </>
+        )}
     </main>
   );
 }
