@@ -315,7 +315,7 @@ export default function User({ user }) {
                         <Lottie animationData={animationData} />
                       </span>
                       <span className="-ml-2 text-sm font-bold text-white">
-                        {userBasicInfo.ki}
+                        {parseFloat(parseFloat(userBasicInfo.ki).toFixed(2))}
                       </span>
                     </span>
                     <span className="w-full flex flex-row justify-end pt-2 pr-4">

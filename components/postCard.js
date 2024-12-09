@@ -304,7 +304,7 @@ export default function PostCard({
                   <Lottie animationData={animationData} />
                 </span>
                 <span className="absolute pl-6 text-xs font-bold text-blue-400">
-                  {users.ki}
+                  {parseFloat(parseFloat(users.ki).toFixed(2))}
                 </span>
               </span>
             </span>
