@@ -145,6 +145,7 @@ export default function App({ Component, pageProps }) {
               avatar: user.user_metadata.picture
                 ? user.user_metadata.picture
                 : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+              ki: 0,
             };
             const response = await supabase.from("users").insert([newUser]);
 
@@ -213,7 +214,7 @@ export default function App({ Component, pageProps }) {
               console.log("ERROR FROM INNER USER ID CHECK: ", res.error);
             }
           } else {
-            console.log(user)
+            console.log(user);
             setOnboarding(true);
           }
         } else {
@@ -424,7 +425,7 @@ export default function App({ Component, pageProps }) {
         sideBarOpened,
         setSideBarOpened,
         notifyUserObject,
-        setNotifyUserObject
+        setNotifyUserObject,
       }}
     >
       <span className="text-sm sm:text-base">
