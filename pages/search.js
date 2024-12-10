@@ -31,19 +31,16 @@ const Search = () => {
   };
 
   const fetchAllHashTags = () => {
-    // Initialize counters for all hashtags and hashtags with media
     const allTagsCount = {};
 
     originalPostValues.forEach((post) => {
-      const tags = post.content ? (post.content.match(/#\w+/g) || []) : [];
+      const tags = post.content ? (post.content.toLowerCase().match(/#\w+/g) || []) : [];
       const uniqueTags = [...new Set(tags)];
 
-      // Count hashtags for all posts
       uniqueTags.forEach((tag) => {
         allTagsCount[tag] = (allTagsCount[tag] || 0) + 1;
       });
     });
-    // console.log(allTagsCount)
 
     const trendingAllTags = Object.entries(allTagsCount).sort(
       (a, b) => b[1] - a[1]

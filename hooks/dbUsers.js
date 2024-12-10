@@ -4,7 +4,7 @@ export default function DbUsers() {
     const res = await supabase
       .from("posts")
       .select(
-        "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio)"
+        "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio, ki)"
       )
       .order("created_at", { ascending: false });
     return res;
@@ -14,7 +14,7 @@ export default function DbUsers() {
     const res = await supabase
       .from("posts")
       .select(
-        "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio)"
+        "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio, ki)"
       ).eq("id", postid)
     return res;
   }
@@ -23,7 +23,7 @@ export default function DbUsers() {
     const res = await supabase
       .from("posts")
       .select(
-        "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio)"
+        "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio, ki)"
       ).eq("userid", userid).order("created_at", { ascending: false });
       
     return res;
@@ -33,7 +33,7 @@ export default function DbUsers() {
     const res = await supabase
       .from("mangas")
       .select(
-        "id, created_at, name, description, price, cover, pages, filepaths, users(id, avatar, username)"
+        "id, created_at, name, description, price, cover, pages, filepaths, users(id, avatar, username, ki)"
       )
       .eq("userid", userid)
       .order("created_at", { ascending: false });

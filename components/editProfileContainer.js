@@ -7,6 +7,18 @@ import CloudSvg from "./cloudSvg";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import Spinner from "./spinner";
 import ConnectionData from "@/lib/connectionData";
+import { ethers } from "ethers";
+import { formatUnits } from "ethers/lib/utils";
+import ErcTwentyToken from "@/lib/static/ErcTwentyToken.json";
+
+const {
+  Keypair,
+  PublicKey,
+  Transaction,
+  SystemProgram,
+  Connection,
+  clusterApiUrl,
+} = require("@solana/web3.js");
 
 export const BinSvg = ({ pixels }) => {
   return (
@@ -26,6 +38,7 @@ export const BinSvg = ({ pixels }) => {
   );
 };
 const EditProfileContainer = () => {
+  const ercABI = ErcTwentyToken.abi;
   const { connectToWallet } = ConnectionData();
   const { fullPageReload } = PageLoadOptions();
   const { userNumId, setPostJustMade, address, userData } =
@@ -39,6 +52,9 @@ const EditProfileContainer = () => {
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [newAddress, setNewAddress] = useState(null);
   const [changesLoading, setChangesLoading] = useState(false);
+  const [solBalance, setSolBalance] = useState(null)
+  const [ethBalance, setEthBalance] = useState(null)
+  const [luffyBalance, setLuffyBalance] = useState(null)
 
   const mediaChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -133,14 +149,73 @@ const EditProfileContainer = () => {
     fullPageReload(`/profile/${userData.username}`);
   };
 
+  const getBalances = async () => {
+    if (!userData.address){
+      return
+    }
+    try{
+    const solConnection = new Connection(
+      process.env.NEXT_PUBLIC_SOLANA_URI
+    );
+    const publicKey = new PublicKey(userData.solAddress)
+    const balance = await solConnection.getBalance(publicKey);
+
+    const provider = new ethers.providers.JsonRpcProvider(`https://mainnet.infura.io/v3/fb06beef2e9f4ca39af4ec33291d626f`);
+    const ethBal = await provider.getBalance(userData.address);
+    const formattedBal = parseFloat(parseFloat(formatUnits(ethBal, 18)).toFixed(4))
+
+    const tokenContract = new ethers.Contract(
+      "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
+      ercABI,
+      provider
+    );
+
+    const luffyBal = await tokenContract.balanceOf(
+      userData.address
+    );
+    const formattedLuffyBal = parseFloat(parseFloat(formatUnits(luffyBal, 9)).toFixed(4))
+    const luffyReadableBalance = (numberFormatter(formattedLuffyBal))
+    setLuffyBalance(luffyReadableBalance ? luffyReadableBalance : 0)
+    setEthBalance(formattedBal)
+    setSolBalance(balance)}
+
+    catch(error){
+      console.log(error)
+      setEthBalance(0)
+      setSolBalance(0)
+    }
+  }
+
+  function numberFormatter(number) {
+    if (number >= 1_000_000_000_000) {
+      return `${Math.floor(number / 1_000_000_000_000 * 10) / 10}T`;
+    } else if (number >= 1_000_000_000) {
+      return `${Math.floor(number / 1_000_000_000 * 10) / 10}B`;
+    } else if (number >= 1_000_000) {
+      return `${Math.floor(number / 1_000_000 * 10) / 10}M`;
+    } else if (number >= 1_000) {
+      return `${Math.floor(number / 1_000 * 10) / 10}K`;
+    } else {
+      return number.toString();
+    }
+  }
+  const [conAddress, setConAddress] = useState(null)
+
   useEffect(() => {
+    connectToWallet().then((addr)=>{
+      setConAddress(addr)
+    })
+    if (!solBalance){
+      getBalances()
+    }
+    
     // Media blob revoked after component is unmounted. Doing this to prevent memory leaks
     return () => {
       if (selectedMedia) {
         URL.revokeObjectURL(selectedMedia);
       }
     };
-  }, [selectedMedia]);
+  }, [selectedMedia, solBalance]);
   return (
     <>
       {userData !== null && userData !== undefined && (
@@ -280,34 +355,41 @@ const EditProfileContainer = () => {
               />
             </span>
 
-            <span className="text-start font-medium w-full flex-row space-x-1">
+            <span className="text-start text-sm font-medium w-full flex-row space-x-1">
               <span>Payout wallet</span>
               <span className="text-xs">{"(ERC-20)"}</span>
+              <span className="text-xs ml-2 bg-pastelGreen text-white py-0.5 px-1 rounded">{"Balance: "} {luffyBalance ? luffyBalance : 0} Luffy {ethBalance ? ethBalance : 0} Eth</span>
               <input
                 // value=""
                 disabled
                 value={newAddress ? newAddress : userData.address}
-                className="px-4 cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className=" mt-1 px-4 text-sm text-center cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
               />
-              <span className="text-xs">
+              <span className="text-[0.75rem]">
                 {
                   "For safety: If you wish to change your payout wallet, reconnect to a preferred address and click on: "
                 }
               </span>
-              <span
+              <div
                 onClick={() => {
                   updateAddress();
                 }}
-                className="underline text-orange-500 cursor-pointer"
+                className="w-full pb-2 text-center underline text-orange-500 cursor-pointer"
               >
                 {address ? "change wallet" : "connect"}
-              </span>
+              </div>
               <div className="font-semibold">
                 <span className="text-green-700 text-xs pr-1">
                   {"Currently connected:"}
                 </span>
                 {address || newAddress ? (
-                  <span className="text-sm">{address || newAddress}</span>
+                  <span className="text-sm">
+                    {conAddress &&
+                        conAddress
+                          .slice(0, 7)
+                          .concat("...")
+                          .concat(conAddress.slice(37, 42))}
+                  </span>
                 ) : (
                   <span className="text-sm font-normal">
                     {
@@ -316,6 +398,18 @@ const EditProfileContainer = () => {
                   </span>
                 )}
               </div>
+            </span>
+
+            <span className="text-start text-sm font-medium w-full flex-row space-x-1">
+              <span>Payout wallet 2</span>
+              <span className="text-xs">{"(Solana)"}</span>
+              <span className="text-xs ml-2 bg-pastelGreen text-white py-0.5 px-1 rounded">{"Balance: "} {solBalance}</span>
+              <input
+                // value=""
+                disabled
+                value={userData.solAddress}
+                className="mt-1 px-4 text-center text-sm cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+              />
             </span>
 
             <span className="pt-2 pb-3 flex flex-col">

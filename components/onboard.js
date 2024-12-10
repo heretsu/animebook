@@ -84,7 +84,7 @@ export default function Onboard({ allUsers, me }) {
   };
 
   const updateUserInfo = async (addr) => {
-    console.log(addr)
+    
     if (reentry) {
       setReentry(false);
 
@@ -100,12 +100,14 @@ export default function Onboard({ allUsers, me }) {
         const newUser = {
           useruuid: me.id,
           username: username,
-          avatar: imageUrl ? imageUrl : "https://farewavhxjlfhkfjkkoj.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+          avatar: imageUrl ? imageUrl : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
           address: addr ? addr : null,
+          ki: 0
         };
         const { data, error } = await supabase.from("users").insert([newUser]);
         if (error) {
           setErrorMsg(error);
+          return
         }
         fullPageReload("/home");
       } else {

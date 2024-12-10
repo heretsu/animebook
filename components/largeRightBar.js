@@ -190,7 +190,8 @@ const LargeRightBar = () => {
   const fetchYouMayKnow = async () => {
     if (userData) {
       const followResult = await fetchFollowing(userNumId);
-      fetchAllUsers().then((res) => {
+      if (followResult.data){
+        fetchAllUsers().then((res) => {
         let unfollowedUsers = [];
         let i = 0;
         if (res.data && res.data.length > 0){
@@ -212,6 +213,7 @@ const LargeRightBar = () => {
         
       });
     }
+    }
   };
 
   const fetchAllHashTags = () => {
@@ -221,7 +223,7 @@ const LargeRightBar = () => {
 
     originalPostValues.forEach((post) => {
       
-      const tags = post.content ? (post.content.match(/#\w+/g) || []) : [];
+      const tags = post.content ? (post.content.toLowerCase().match(/#\w+/g) || []) : [];
       const uniqueTags = [...new Set(tags)];
 
       // Count hashtags for all posts

@@ -5,16 +5,214 @@ import { UserContext } from "@/lib/userContext";
 import DappLogo from "./dappLogo";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import navLogo from "@/assets/navLogo.png";
+import supabase from "@/hooks/authenticateUser";
+import X from "./x";
+import Telegram from "./telegram";
+
+const NavBarDependencies = () => {
+  const {
+    userData,
+    myProfileRoute,
+    NotSignedIn,
+    notifyUserObject,
+    setNotifyUserObject,
+    userNumId,
+  } = useContext(UserContext);
+  const [unreadCount, setUnreadCount] = useState(null);
+  const [currentRoute, setCurrentRoute] = useState("/home");
+  const router = useRouter();
+
+  const fetchNotifications = () => {
+    supabase
+      .from("notifications")
+      .select(
+        "*, users!public_notifications_actorid_fkey(id, username, avatar)"
+      )
+      .eq("userid", userNumId)
+      .order("created_at", { ascending: false })
+      .then((result) => {
+        if (result.data !== null && result.data !== undefined) {
+          let noteObject = {};
+          result.data.forEach((note) => {
+            const period = getNotificationPeriod(note.created_at);
+            if (!noteObject[period]) {
+              noteObject[period] = [];
+            }
+            // Create a unique identifier for each note
+            const noteIdentifier = `${note.type}-${note.content}-${note.users.id}-${note.postid}`;
+            // Check if this note already exists in the array
+            const isNoteAlreadyAdded = noteObject[period].some(
+              (existingNote) =>
+                `${existingNote.type}-${existingNote.content}-${existingNote.userid}-${existingNote.postid}` ===
+                noteIdentifier
+            );
+            if (!isNoteAlreadyAdded) {
+              noteObject[period].push({
+                type: note.type,
+                created_at: note.created_at,
+                content: note.content,
+                avatar: note.users.avatar,
+                username: note.users.username,
+                userid: note.users.id,
+                postid: note.postid,
+              });
+            }
+          });
+          setNotifyUserObject(noteObject);
+        }
+      });
+  };
+
+  const getNotificationPeriod = (dateStr) => {
+    const now = new Date();
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const notificationDate = new Date(dateStr);
+
+    // Adjust for time zone differences if necessary
+    const notificationDateStart = new Date(
+      notificationDate.getFullYear(),
+      notificationDate.getMonth(),
+      notificationDate.getDate()
+    );
+
+    // Calculate the difference in days
+    const diffTime = todayStart - notificationDateStart;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+    if (diffDays < 1) {
+      return "Today";
+    } else if (diffDays < 2) {
+      return "Yesterday";
+    } else if (diffDays <= 7) {
+      return "Past 7 days";
+    } else if (diffDays <= 30) {
+      return "Past 30 days";
+    } else {
+      return "Older";
+    }
+  };
+
+  const lastReadDate =
+    userData && userData.lastreadnotification
+      ? new Date(userData.lastreadnotification)
+      : null;
+
+  // Loop through notifications and check timestamps
+  const getUnreadNotifications = async () => {
+    let urc = 0;
+
+    if (notifyUserObject && userData.lastreadnotification !== null) {
+      if (notifyUserObject.Older) {
+        notifyUserObject.Older.forEach((notification) => {
+          const notificationDate = new Date(notification.created_at);
+          if (notificationDate > lastReadDate) {
+            urc++;
+          }
+        });
+      }
+      if (notifyUserObject.Yesterday) {
+        notifyUserObject.Yesterday.forEach((notification) => {
+          const notificationDate = new Date(notification.created_at);
+          if (notificationDate > lastReadDate) {
+            urc++;
+          }
+        });
+      }
+      if (notifyUserObject.Today) {
+        notifyUserObject.Today.forEach((notification) => {
+          const notificationDate = new Date(notification.created_at);
+          if (notificationDate > lastReadDate) {
+            urc++;
+          }
+        });
+      }
+      if (notifyUserObject["Past 7 days"]) {
+        notifyUserObject["Past 7 days"].forEach((notification) => {
+          const notificationDate = new Date(notification.created_at);
+          if (notificationDate > lastReadDate) {
+            urc++;
+          }
+        });
+      }
+      if (notifyUserObject["Past 30 days"]) {
+        notifyUserObject["Past 30 days"].forEach((notification) => {
+          const notificationDate = new Date(notification.created_at);
+          if (notificationDate > lastReadDate) {
+            urc++;
+          }
+        });
+      }
+      setUnreadCount(numberFormatter(urc));
+    } else if (notifyUserObject && userData.lastreadnotification === null) {
+      if (notifyUserObject.Older) {
+        urc += notifyUserObject.Older.length;
+      }
+      if (notifyUserObject.Yesterday) {
+        urc += notifyUserObject.Yesterday.length;
+      }
+      if (notifyUserObject.Today) {
+        urc += notifyUserObject.Today.length;
+      }
+      if (notifyUserObject["Past 7 days"]) {
+        urc += notifyUserObject["Past 7 days"].length;
+      }
+      if (notifyUserObject["Past 30 days"]) {
+        urc += notifyUserObject["Past 30 days"].length;
+      }
+      setUnreadCount(numberFormatter(urc));
+    } else {
+      setUnreadCount(null);
+    }
+  };
+
+  function numberFormatter(number) {
+    if (number >= 1_000_000_000_000) {
+      return `${Math.floor((number / 1_000_000_000_000) * 10) / 10}T`;
+    } else if (number >= 1_000_000_000) {
+      return `${Math.floor((number / 1_000_000_000) * 10) / 10}B`;
+    } else if (number >= 1_000_000) {
+      return `${Math.floor((number / 1_000_000) * 10) / 10}M`;
+    } else if (number >= 1_000) {
+      return `${Math.floor((number / 1_000) * 10) / 10}K`;
+    } else {
+      return number.toString();
+    }
+  }
+
+  useEffect(() => {
+    setCurrentRoute(router.pathname);
+    fetchNotifications();
+    if (notifyUserObject && notifyUserObject.Older) {
+      getUnreadNotifications();
+    }
+    if (notifyUserObject === null) {
+      setUnreadCount(null);
+    }
+    getUnreadNotifications();
+  }, [router.pathname, notifyUserObject, userData]);
+
+  return {
+    userData,
+    myProfileRoute,
+    NotSignedIn,
+    notifyUserObject,
+    setNotifyUserObject,
+    userNumId,
+    unreadCount,
+    router,
+    currentRoute,
+    setCurrentRoute,
+  };
+};
 
 export const MobileNavBar = () => {
   // For dev: This is mobile nav.
   const { fullPageReload } = PageLoadOptions();
-  const router = useRouter();
-  const [currentRoute, setCurrentRoute] = useState("/home");
-
-  useEffect(() => {
-    setCurrentRoute(router.pathname);
-  }, [router.pathname]);
+  const { unreadCount, currentRoute, router } = NavBarDependencies();
 
   return (
     <div
@@ -110,22 +308,22 @@ export const MobileNavBar = () => {
           className="flex flex-col justify-center items-center"
         >
           <svg
-              className="text-[#5d6879] rotate-12"
-              width="19.858"
-              height="20.987"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                stroke={`${currentRoute === "/search" ? "#04dbc4" : "#5d6879"}`}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.5"
-                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-              />
-            </svg>
+            className="text-[#5d6879] rotate-12"
+            width="19.858"
+            height="20.987"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 20 20"
+          >
+            <path
+              stroke={`${currentRoute === "/search" ? "#04dbc4" : "#5d6879"}`}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.5"
+              d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+            />
+          </svg>
 
           {/* <span
             className={`${
@@ -371,7 +569,7 @@ export const MobileNavBar = () => {
 
         <span
           onClick={() => {
-            fullPageReload("/notifications");
+            router.push("/notifications");
           }}
           className={"flex flex-col justify-center items-center"}
         >
@@ -388,6 +586,11 @@ export const MobileNavBar = () => {
               fill="#5d6879"
             />
           </svg>
+          <span className="absolute bg-pastelGreen text-xs h-fit font-semibold text-white px-1.5 bottom-8 rounded-md">
+            {router.pathname !== "/notifications" &&
+              unreadCount != 0 &&
+              unreadCount}
+          </span>
 
           {/* <span
             className={`${
@@ -402,7 +605,7 @@ export const MobileNavBar = () => {
 
         <span
           onClick={() => {
-            fullPageReload("/inbox");
+            router.push("/inbox");
           }}
           className={"flex flex-col justify-center items-center"}
         >
@@ -489,18 +692,24 @@ export const MobileNavBar = () => {
 
 const NavBar = () => {
   const { fullPageReload } = PageLoadOptions();
-  const { userData, myProfileRoute, NotSignedIn } = useContext(UserContext);
-  const router = useRouter();
-  const [currentRoute, setCurrentRoute] = useState("/home");
-
-  useEffect(() => {
-    setCurrentRoute(router.pathname);
-  }, [router.pathname]);
+  const {
+    userData,
+    myProfileRoute,
+    NotSignedIn,
+    unreadCount,
+    currentRoute,
+    router,
+  } = NavBarDependencies();
 
   return (
     <div className="fixed invisible lg:visible h-screen py-2 flex flex-col">
       <div className="bg-white w-full h-full">
-        <div className="flex justify-start items-center">
+        <div
+          onClick={() => {
+            fullPageReload("/home");
+          }}
+          className="flex justify-start items-center"
+        >
           <Image
             src={navLogo}
             alt="anime book colored logo"
@@ -754,7 +963,7 @@ const NavBar = () => {
 
           <div
             onClick={() => {
-              fullPageReload("/notifications");
+              router.push("/notifications");
             }}
             className={
               currentRoute == "/notifications"
@@ -776,12 +985,19 @@ const NavBar = () => {
               />
             </svg>
 
-            <span>Notifications</span>
+            <span className="flex w-full justify-between items-center">
+              <span>Notifications</span>
+              <span className="bg-pastelGreen text-[0.77rem] h-fit font-bold text-white px-1.5 rounded-md">
+                {router.pathname !== "/notifications" &&
+                  unreadCount != 0 &&
+                  unreadCount}
+              </span>
+            </span>
           </div>
 
           <div
             onClick={() => {
-              fullPageReload("/inbox");
+              router.push("/inbox");
             }}
             className={
               currentRoute == "/inbox" || currentRoute == "/inbox/[message]"
@@ -998,14 +1214,15 @@ const NavBar = () => {
           </span>
         </div>
       </div>
-      <div className="bg-white pl-3 pb-3 text-xs flex flex-row justify-between">
-        <span className="py-3 cursor-pointer flex justify-start items-center space-x-1">
+
+      <div className="bg-white pb-4 text-xs flex flex-row justify-between">
+        <span className="w-full py-3 cursor-pointer flex justify-start items-center space-x-1">
           {userData && (
             <span
               onClick={() => {
                 fullPageReload(`/profile/${userData.username}`);
               }}
-              className="relative flex flex-shrink-0"
+              className="pl-3 relative flex flex-shrink-0"
             >
               <Image
                 src={userData.avatar}
@@ -1033,16 +1250,34 @@ const NavBar = () => {
                 onClick={() => {
                   fullPageReload("/signin");
                 }}
-                className="cursor-pointer w-full bg-pastelGreen px-8 py-2 text-center text-white font-bold rounded-xl"
+                className="cursor-pointer w-fit mx-auto bg-pastelGreen px-8 mb-2 py-2 text-center text-white font-bold rounded-xl"
               >
                 Login
               </span>
             )
           )}
         </span>
+
         {/* <span className="cursor-pointer underline">Terms of Service</span>
         <span className="cursor-pointer underline">Privacy Policy</span> */}
       </div>
+      <span className="bottom-1 absolute w-full space-x-2 flex flex-row bg-transparent justify-center items-center pb-2 px-4">
+        <span className="cursor-pointer"
+          onClick={() => {
+            fullPageReload("https://x.com/luffyinutoken", "_blank");
+          }}
+        >
+          <X width={4} height={4} />
+        </span>
+        <span className="cursor-pointer"
+          onClick={() => {
+            fullPageReload("https://t.me/LUFFYTOKEN_OFFICIAL", "_blank");
+          }}
+        >
+          <Telegram width={6} height={6} />
+        </span>
+      </span>
+      <span></span>
     </div>
   );
 };
