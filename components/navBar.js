@@ -23,6 +23,7 @@ const NavBarDependencies = () => {
   const router = useRouter();
 
   const fetchNotifications = () => {
+    return
     supabase
       .from("notifications")
       .select(

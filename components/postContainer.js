@@ -46,7 +46,7 @@ const PostContainer = ({communityId, community}) => {
     if (!userNumId){
       fullPageReload('/signin')
       return;
-    }
+    }    
     setPostLoading(true);
     if (mediaPost) {
       if (mediaFile !== null) {
@@ -71,7 +71,7 @@ const PostContainer = ({communityId, community}) => {
                 content: !mediaContent ? '' : mediaContent.trim(),
                 communityid: parseInt(communityId)
               });
-              fullPageReload(`/communities/${community}`)
+              fullPageReload(`/communities/${community.replace(/&.*/, "")}`)
 
             } else {
               await supabase.from("posts").insert({
@@ -98,7 +98,7 @@ const PostContainer = ({communityId, community}) => {
             content: content,
             communityid: parseInt(communityId)
           });
-          fullPageReload(`/communities/${community}`)
+          fullPageReload(`/communities/${community.replace(/&.*/, "")}`)
         }
         else{
           await supabase.from("posts").insert({
@@ -118,9 +118,7 @@ const PostContainer = ({communityId, community}) => {
   };
 
   useEffect(() => {
-    if (community){
-      setMediaPost(false)
-    }
+    
     // Media blob revoked after component is unmounted. Doing this to prevent memory leaks
     return () => {
       if (selectedMedia) {
@@ -134,6 +132,7 @@ const PostContainer = ({communityId, community}) => {
         <span
           onClick={() => {
             setErrorMsg("");
+            setPostLoading(false)
             setMediaPost(true);
           }}
           className={`cursor-pointer rounded py-1 px-2 text-center ${
@@ -147,6 +146,7 @@ const PostContainer = ({communityId, community}) => {
         <span
           onClick={() => {
             setErrorMsg("");
+            setPostLoading(false)
             setMediaPost(false);
           }}
           className={`cursor-pointer rounded py-1 px-2 text-center ${
@@ -271,7 +271,7 @@ const PostContainer = ({communityId, community}) => {
         />
       )}
       <span className="pb-2 flex flex-col">
-        {postLoading && (!mediaPost && content.trim() !== '') ? (
+        {postLoading && (selectedMedia || content.trim() !== '') ? (
           <span className="mx-auto">
             <Spinner spinnerSize={"medium"} />
           </span>

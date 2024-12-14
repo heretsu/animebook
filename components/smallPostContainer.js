@@ -138,14 +138,16 @@ const SmallPostContainer = ({ communityId, community }) => {
             className="rounded-full object"
           />
         </span>
-        <input
+        <textarea
           value={content}
           onChange={(e) => {
             setContent(e.target.value);
+            
           }}
+          
           placeholder={`What's on your mind...`}
-          className="w-full bg-transparent text-black border-none focus:outline-none focus:ring-0"
-        />
+          className="text-sm resize-none w-full bg-transparent text-black border-none focus:outline-none focus:ring-0"
+        ></textarea>
         {selectedMedia ? (
           <label onClick={mediaChange} htmlFor="input-post-file">
             {isImage ? (

@@ -11,8 +11,11 @@ import Onboard from "@/components/onboard";
 import Relationships from "@/hooks/relationships";
 
 export default function App({ Component, pageProps }) {
-  const { fetchAllPosts } = DbUsers();
+  const { fetchAllPosts, fetchAllReposts } = DbUsers();
   const router = useRouter();
+  const [youMayKnow, setYouMayKnow] = useState(null);
+  const [newPeople, setNewPeople] = useState(null);
+
   const [address, setAddress] = useState(null);
   const [userData, setUserData] = useState(undefined);
   const [subscribed, setSubscribed] = useState(false);
@@ -200,15 +203,89 @@ export default function App({ Component, pageProps }) {
               });
 
               if (router.pathname !== "/profile/[user]") {
-                fetchAllPosts().then((result1) => {
-                  fetchCommunities().then((secondResult) => {
-                    if (secondResult !== undefined && secondResult !== null) {
-                      setCommunities(secondResult.data);
-                      setOriginalPostValues(result1.data);
-                      setPostValues(result1.data);
-                    }
+                fetchAllReposts().then((reposts)=>{
+                  fetchAllPosts().then((result1) => {
+                    fetchCommunities().then((secondResult) => {
+                      if (secondResult !== undefined && secondResult !== null) {
+                        setCommunities(secondResult.data);
+                        setOriginalPostValues(
+                          reposts
+                            .map((repost) => {
+                              const originalPost = result1.data.find(
+                                (post) => post.id === repost.postid
+                              );
+    
+                              if (originalPost) {
+                                return {
+                                  ...originalPost,
+                                  repostAuthor: repost.users,
+                                  repostQuote: repost.quote,
+                                  repostCreatedAt: repost.created_at,
+                                };
+                              }
+                              return null;
+                            })
+                            .filter(Boolean)
+                            .concat(
+                              result1.data.filter(
+                                (post) =>
+                                  !reposts.some(
+                                    (repost) => repost.postid === post.id
+                                  )
+                              )
+                            )
+                            .sort((a, b) => {
+                              const dateA = new Date(
+                                a.repostCreatedAt || a.created_at
+                              );
+                              const dateB = new Date(
+                                b.repostCreatedAt || b.created_at
+                              );
+                              return dateB - dateA;
+                            })
+                        );
+                        setPostValues(
+                          reposts
+                            .map((repost) => {
+                              const originalPost = result1.data.find(
+                                (post) => post.id === repost.postid
+                              );
+    
+                              if (originalPost) {
+                                return {
+                                  ...originalPost,
+                                  repostAuthor: repost.users,
+                                  repostQuote: repost.quote,
+                                  repostCreatedAt: repost.created_at,
+                                };
+                              }
+                              return null;
+                            })
+                            .filter(Boolean)
+                            .concat(
+                              result1.data.filter(
+                                (post) =>
+                                  !reposts.some(
+                                    (repost) => repost.postid === post.id
+                                  )
+                              )
+                            )
+                            .sort((a, b) => {
+                              const dateA = new Date(
+                                a.repostCreatedAt || a.created_at
+                              );
+                              const dateB = new Date(
+                                b.repostCreatedAt || b.created_at
+                              );
+                              return dateB - dateA;
+                            })
+                        );
+                      }
+                    });
                   });
-                });
+                })
+                
+                
               }
             } else {
               console.log("ERROR FROM INNER USER ID CHECK: ", res.error);
@@ -230,13 +307,85 @@ export default function App({ Component, pageProps }) {
           });
 
           if (router.pathname !== "/profile/[user]") {
-            fetchAllPosts().then((result1) => {
-              fetchCommunities().then((secondResult) => {
-                if (secondResult !== undefined && secondResult !== null) {
-                  setCommunities(secondResult.data);
-                  setOriginalPostValues(result1.data);
-                  setPostValues(result1.data);
-                }
+            fetchAllReposts().then((reposts) => {
+              fetchAllPosts().then((result1) => {
+                fetchCommunities().then((secondResult) => {
+                  if (secondResult !== undefined && secondResult !== null) {
+                    setCommunities(secondResult.data);
+                    setOriginalPostValues(
+                      reposts
+                        .map((repost) => {
+                          const originalPost = result1.data.find(
+                            (post) => post.id === repost.postid
+                          );
+
+                          if (originalPost) {
+                            return {
+                              ...originalPost,
+                              repostAuthor: repost.users,
+                              repostQuote: repost.quote,
+                              repostCreatedAt: repost.created_at,
+                            };
+                          }
+                          return null;
+                        })
+                        .filter(Boolean)
+                        .concat(
+                          result1.data.filter(
+                            (post) =>
+                              !reposts.some(
+                                (repost) => repost.postid === post.id
+                              )
+                          )
+                        )
+                        .sort((a, b) => {
+                          const dateA = new Date(
+                            a.repostCreatedAt || a.created_at
+                          );
+                          const dateB = new Date(
+                            b.repostCreatedAt || b.created_at
+                          );
+                          return dateB - dateA;
+                        })
+                    );
+                    setPostValues(
+                      reposts
+                        .map((repost) => {
+                          const originalPost = result1.data.find(
+                            (post) => post.id === repost.postid
+                          );
+
+                          if (originalPost) {
+                            return {
+                              ...originalPost,
+                              repostAuthor: repost.users,
+                              repostQuote: repost.quote,
+                              repostCreatedAt: repost.created_at,
+                            };
+                          }
+                          return null;
+                        })
+                        .filter(Boolean)
+                        .concat(
+                          result1.data.filter(
+                            (post) =>
+                              !reposts.some(
+                                (repost) => repost.postid === post.id
+                              )
+                          )
+                        )
+                        .sort((a, b) => {
+                          const dateA = new Date(
+                            a.repostCreatedAt || a.created_at
+                          );
+                          const dateB = new Date(
+                            b.repostCreatedAt || b.created_at
+                          );
+                          return dateB - dateA;
+                        })
+                    );
+                  }
+                });
               });
             });
           }
@@ -309,13 +458,85 @@ export default function App({ Component, pageProps }) {
             }
           } else {
             if (router.pathname !== "/profile/[user]") {
-              fetchAllPosts().then((result1) => {
-                fetchCommunities().then((secondResult) => {
-                  if (secondResult !== undefined && secondResult !== null) {
-                    setCommunities(secondResult.data);
-                    setOriginalPostValues(result1.data);
-                    setPostValues(result1.data);
-                  }
+              fetchAllReposts().then((reposts) => {
+                fetchAllPosts().then((result1) => {
+                  fetchCommunities().then((secondResult) => {
+                    if (secondResult !== undefined && secondResult !== null) {
+                      setCommunities(secondResult.data);
+                      setOriginalPostValues(
+                        reposts
+                          .map((repost) => {
+                            const originalPost = result1.data.find(
+                              (post) => post.id === repost.postid
+                            );
+
+                            if (originalPost) {
+                              return {
+                                ...originalPost,
+                                repostAuthor: repost.users,
+                                repostQuote: repost.quote,
+                                repostCreatedAt: repost.created_at,
+                              };
+                            }
+                            return null;
+                          })
+                          .filter(Boolean)
+                          .concat(
+                            result1.data.filter(
+                              (post) =>
+                                !reposts.some(
+                                  (repost) => repost.postid === post.id
+                                )
+                            )
+                          )
+                          .sort((a, b) => {
+                            const dateA = new Date(
+                              a.repostCreatedAt || a.created_at
+                            );
+                            const dateB = new Date(
+                              b.repostCreatedAt || b.created_at
+                            );
+                            return dateB - dateA;
+                          })
+                      );
+                      setPostValues(
+                        reposts
+                          .map((repost) => {
+                            const originalPost = result1.data.find(
+                              (post) => post.id === repost.postid
+                            );
+
+                            if (originalPost) {
+                              return {
+                                ...originalPost,
+                                repostAuthor: repost.users,
+                                repostQuote: repost.quote,
+                                repostCreatedAt: repost.created_at,
+                              };
+                            }
+                            return null;
+                          })
+                          .filter(Boolean)
+                          .concat(
+                            result1.data.filter(
+                              (post) =>
+                                !reposts.some(
+                                  (repost) => repost.postid === post.id
+                                )
+                            )
+                          )
+                          .sort((a, b) => {
+                            const dateA = new Date(
+                              a.repostCreatedAt || a.created_at
+                            );
+                            const dateB = new Date(
+                              b.repostCreatedAt || b.created_at
+                            );
+                            return dateB - dateA;
+                          })
+                      );
+                    }
+                  });
                 });
               });
             }
@@ -333,6 +554,11 @@ export default function App({ Component, pageProps }) {
   return (
     <UserContext.Provider
       value={{
+        allUsers,
+        youMayKnow,
+        setYouMayKnow,
+        newPeople,
+        setNewPeople,
         address,
         userData,
         setUserData,

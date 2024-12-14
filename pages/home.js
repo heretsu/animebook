@@ -122,7 +122,11 @@ export default function Home() {
         const n = storyValues.find((ns) => {
           return ns.newIndex === currentStory.newIndex + 1;
         });
-        console.log(n);
+        if (n === undefined){
+          console.log('end')
+          return
+        }
+        setStoryIndex(0)
         fetchViews(n.stories[0].dbIndex);
         setCurrentStory(n);
       }
@@ -135,7 +139,11 @@ export default function Home() {
         const ln = storyValues.find((ls) => {
           return ls.newIndex === currentStory.newIndex - 1;
         });
-        console.log(ln);
+        if (ln === undefined){
+          console.log('start')
+          return
+        }
+        setStoryIndex(ln.stories.length - 1)
         fetchViews(ln.stories[0].dbIndex);
         setCurrentStory(ln);
       }
@@ -153,8 +161,8 @@ export default function Home() {
   return (
     <main>
       <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
-        <NavBar />
-        <SmallTopBar middleTab={true} relationship={true} />
+        {!openStories && <NavBar />}
+        {!openStories && <SmallTopBar middleTab={true} relationship={true} />}
         <div
           className={
             "w-full lg:mt-20 pb-20 lg:pt-0 lg:pb-2 space-y-2 px-2 lg:pl-lPostCustom lg:pr-rPostCustom flex flex-col"
@@ -231,7 +239,7 @@ export default function Home() {
           className="text-white relative flex flex-col w-full space-y-5 pb-16 px-1"
         >
           <div className="relative w-full h-screen flex justify-center">
-            {storyToView.media !== null &&
+            {storyToView && storyToView.media !== null &&
               (storyToView.media.endsWith("mp4") ||
               storyToView.media.endsWith("MP4") ||
               storyToView.media.endsWith("mov") ||
@@ -270,14 +278,14 @@ export default function Home() {
                   />
                   <span className="font-semibold">{currentStory.username}</span>
                   <span className="text-sm">
-                    {timeAgo(storyToView.created_at)}
+                    {storyToView && timeAgo(storyToView.created_at)}
                   </span>
                 </span>
               </span>
               <span className="flex flex-row text-base w-full justify-center text-start">
                 <span className="flex flex-col space-y-2 items-center">
                   <span className="bg-black px-2">
-                    {storyToView.content !== null && (
+                    {storyToView && storyToView.content !== null && (
                       <CommentConfig text={storyToView.content} tags={true} />
                     )}
                   </span>

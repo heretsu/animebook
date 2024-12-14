@@ -7,8 +7,24 @@ export default function DbUsers() {
         "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio, ki)"
       )
       .order("created_at", { ascending: false });
+      
     return res;
   };
+
+  const fetchAllReposts = async () => {
+    const res = await supabase
+      .from("reposts")
+      .select(
+        "id, created_at, postid, users(id, avatar, username, created_at, cover, bio, ki), quote"
+      )
+      .order("created_at", { ascending: false });
+      // console.log(res)
+      if (res.status === 200 && res.data){
+        return res.data
+      } else {
+        return []
+      }
+  }
 
   const fetchPost = async (postid) => {
     const res = await supabase
@@ -53,5 +69,5 @@ export default function DbUsers() {
 
     return res;
   };
-  return { fetchAllPosts, fetchPost, fetchAllUsers, fetchMyUserInfo, fetchUserMangas, fetchAllSingleUserPosts };
+  return { fetchAllPosts, fetchPost, fetchAllReposts, fetchAllUsers, fetchMyUserInfo, fetchUserMangas, fetchAllSingleUserPosts };
 }

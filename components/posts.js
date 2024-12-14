@@ -3,9 +3,17 @@ import { UserContext } from "@/lib/userContext";
 import PostCard from "./postCard";
 import DbUsers from "@/hooks/dbUsers";
 import Spinner from "./spinner";
+import PlusIcon from "./plusIcon";
+import Image from "next/image";
+import PageLoadOptions from "@/hooks/pageLoadOptions";
+import Lottie from "lottie-react";
+import loadscreen from "@/assets/loadscreen.json";
 
 const Posts = () => {
   const {
+    youMayKnow,
+    setYouMayKnow,
+    newPeople, setNewPeople,
     originalPostValues,
     setOriginalPostValues,
     postValues,
@@ -18,13 +26,27 @@ const Posts = () => {
     searchFilter,
     followingPosts,
   } = useContext(UserContext);
+  const [alreadyFollowed, setAlreadyFollowed] = useState(false);
+  const { fullPageReload } = PageLoadOptions();
+  const [currentFollowedUser, setCurrentFollowedUser] = useState(null);
+
+  const unfollowsWithPosts = () => {
+    const usersWithPosts = youMayKnow.filter((user) => {
+      return originalPostValues.some((og) => og.users.id === user.id);
+    });
+    setNewPeople(usersWithPosts);
+  };
 
   const [visiblePosts, setVisiblePosts] = useState([]); // Posts currently visible
   const [chunkSize] = useState(10); // Number of posts to load at a time
   const [currentChunk, setCurrentChunk] = useState(1); // Tracks the chunk to load
+  const [ran, setRan] = useState(false);
 
   const loadMorePosts = useCallback(() => {
-    const nextChunk = (postValues || originalPostValues).slice(0, currentChunk * chunkSize);
+    const nextChunk = (postValues || originalPostValues).slice(
+      0,
+      currentChunk * chunkSize
+    );
     setVisiblePosts(nextChunk);
   }, [postValues, originalPostValues, currentChunk, chunkSize]);
 
@@ -46,27 +68,30 @@ const Posts = () => {
 
   // Updating visible posts when currentChunk changes
   useEffect(() => {
+    if (youMayKnow && originalPostValues && !ran) {
+      unfollowsWithPosts();
+      setRan(true);
+      console.log(postValues)
+    }
     loadMorePosts();
-  }, [currentChunk, loadMorePosts]);
+  }, [ran, youMayKnow, originalPostValues, currentChunk, loadMorePosts]);
 
   return (
     <div className="space-y-2">
       {postValues !== null &&
         postValues !== undefined &&
-        (postValues.length > 0 ? 
-          (
+        (postValues.length > 0 ? (
           <>
             {visiblePosts.map((post) => (
-              <PostCard key={post.id} {...post} myProfileId={userNumId} />
+              <PostCard key={post.id} {...post} myProfileId={userNumId}/>
             ))}
             {visiblePosts.length < postValues.length && (
-              <div style={{ textAlign: "center", margin: "20px 0" }}>
-                <p>Loading more posts...</p>
-              </div>
+              <span>
+                <Lottie animationData={loadscreen} />
+              </span>
             )}
           </>
         ) : (
-          
           <div className="w-full text-center text-slate-800">
             {storiesFilter ? (
               ""
@@ -82,28 +107,66 @@ const Posts = () => {
             ) : searchFilter ? (
               "Search not found. ない!"
             ) : followingPosts ? (
-              originalPostValues.length > 0 ? (
-                <div className="space-y-2">
-                  <span>
-                    {
-                      "Doesn't seem like you follow anyone who has released a post. We will display all other posts"
-                    }
+              <div className="flex flex-col px-8">
+                <span className="font-medium text-sm">
+                  {"You don't follow anyone with a post"}
+                </span>
+                <span className="font-medium text-sm">
+                  {"Follow new creators:"}
+                </span>
+                <span className="">
+                  <span className="">
+                    {newPeople &&
+                      newPeople
+                        .slice(0, newPeople.length - 1)
+                        .map((thisUser) => {
+                          return (
+                            <span
+                              key={thisUser.id}
+                              className="py-1.5 border-b border-gray-200 flex flex-row justify-between items-center"
+                            >
+                              <span
+                                onClick={() => {
+                                  fullPageReload(
+                                    `/profile/${thisUser.username}`
+                                  );
+                                }}
+                                className="cursor-pointer flex justify-start items-center space-x-2"
+                              >
+                                <span className="relative h-8 w-8 flex">
+                                  <Image
+                                    alt="user profile"
+                                    src={thisUser.avatar}
+                                    height={35}
+                                    width={35}
+                                    className="rounded-full"
+                                  />
+                                </span>
+                                <span className="text-sm font-semibold">
+                                  {thisUser.username}
+                                </span>
+                              </span>
+
+                              <PlusIcon
+                                sideBar={true}
+                                alreadyFollowed={alreadyFollowed}
+                                setAlreadyFollowed={setAlreadyFollowed}
+                                followerUserId={userNumId}
+                                followingUserId={thisUser.id}
+                                size={"19"}
+                                color={"default"}
+                                
+                              />
+                            </span>
+                          );
+                        })}
+                    {/* <span className="text-xs underline text-textGreen">{"Show more..."}</span> */}
                   </span>
-                  {visiblePosts.map((post) => (
-                    <PostCard key={post.id} {...post} myProfileId={userNumId} />
-                  ))}
-                  {visiblePosts.length < originalPostValues.length && (
-                    <div style={{ textAlign: "center", margin: "20px 0" }}>
-                      <p>Loading more posts...</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                "Doesn't seem like you follow anyone who has released a post"
-              )
+                </span>
+              </div>
             ) : (
-              <span className="text-gray-500 w-full mx-auto">
-                {"Nanimonai! No posts found"}
+              <span className="h-screen">
+                <Lottie animationData={loadscreen} />
               </span>
             )}
           </div>

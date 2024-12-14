@@ -23,8 +23,9 @@ const LargeRightBar = () => {
 
   const { fetchAllUsers, fetchAllPosts } = DbUsers();
   const { fetchFollowing } = Relationships();
-  const [youMayKnow, setYouMayKnow] = useState(null);
   const {
+    youMayKnow,
+    setYouMayKnow,
     originalPostValues,
     allUserObject,
     setAllUserObject,
@@ -186,33 +187,32 @@ const LargeRightBar = () => {
       }
     }
   };
-  
+
   const fetchYouMayKnow = async () => {
     if (userData) {
       const followResult = await fetchFollowing(userNumId);
-      if (followResult.data){
+      if (followResult.data) {
         fetchAllUsers().then((res) => {
-        let unfollowedUsers = [];
-        let i = 0;
-        if (res.data && res.data.length > 0){
-          while (i < res.data.length) {
-            if (userNumId !== res.data[i].id) {
-              if (
-                !!followResult.data.find(
-                  (rel) => rel.following_userid === res.data[i].id
-                )
-              ) {
-              } else {
-                unfollowedUsers.push(res.data[i]);
+          let unfollowedUsers = [];
+          let i = 0;
+          if (res.data && res.data.length > 0) {
+            while (i < res.data.length) {
+              if (userNumId !== res.data[i].id) {
+                if (
+                  !!followResult.data.find(
+                    (rel) => rel.following_userid === res.data[i].id
+                  )
+                ) {
+                } else {
+                  unfollowedUsers.push(res.data[i]);
+                }
               }
+              i++;
             }
-            i++;
+            setYouMayKnow(unfollowedUsers);
           }
-          setYouMayKnow(unfollowedUsers);
-        }
-        
-      });
-    }
+        });
+      }
     }
   };
 
@@ -222,8 +222,9 @@ const LargeRightBar = () => {
     const tagsWithMediaCount = {};
 
     originalPostValues.forEach((post) => {
-      
-      const tags = post.content ? (post.content.toLowerCase().match(/#\w+/g) || []) : [];
+      const tags = post.content
+        ? post.content.toLowerCase().match(/#\w+/g) || []
+        : [];
       const uniqueTags = [...new Set(tags)];
 
       // Count hashtags for all posts
@@ -252,7 +253,7 @@ const LargeRightBar = () => {
           : trendingAllTags,
     });
   };
-  
+
   const getAllSearchData = () => {
     if (!postValues) {
       fetchAllPosts()
@@ -291,7 +292,7 @@ const LargeRightBar = () => {
               })
             : []
           : originalPostValues
-          ? originalPostValues.filter((post) => 
+          ? originalPostValues.filter((post) =>
               post.content.toLowerCase().includes(e.target.value.toLowerCase())
             )
           : [];
@@ -340,127 +341,132 @@ const LargeRightBar = () => {
   return (
     <div className="h-screen overflow-scroll pb-22 flex">
       <div className="h-full flex flex-col rounded-xl w-72 pb-8 px-6 space-y-2">
-        {router.pathname !== "/explore" && router.pathname !== "/search" && <span className="bg-white flex flex-col justify-center items-center p-2">
-          {<span className="p-2 w-full flex flex-row items-center border border-gray-200 bg-gray-100">
-            <svg
-              className="w-4 h-4 text-slate-400"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-              />
-            </svg>
-            <input
-              onChange={searchForItem}
-              onClick={getAllSearchData}
-              type="search"
-              className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
-              placeholder="Search for users and more..."
-            />
-          </span>}
-          {(openSuggestions !== null || openUsers !== null) && (
-            <span className="w-full flex flex-col">
-              {openSuggestions !== null && (
-                <span className="w-full flex flex-col">
-                  <span
-                    onClick={() => {
-                      if (
-                        router.pathname !== "/explore" &&
-                        openSuggestions.foundPosts &&
-                        openSuggestions.foundPosts.length === 0
-                      ) {
-                        return;
-                      } else {
-                        setPostValues(openSuggestions.foundPosts);
-                      }
-                      if (
-                        router.pathname === "/explore" &&
-                        openSuggestions.foundExplorePosts &&
-                        openSuggestions.foundExplorePosts.length === 0
-                      ) {
-                        return;
-                      } else {
-                        setExplorePosts(openSuggestions.foundExplorePosts);
-                      }
-
-                      setOpenSuggestions(null);
-                    }}
-                    className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
-                  >
-                    {`${
-                      router.pathname === "/explore"
-                        ? openSuggestions.foundExplorePosts.length
-                        : openSuggestions.foundPosts.length
-                    } posts found`}
-                  </span>
-                  <span
-                    onClick={() => {
-                      if (
-                        openSuggestions.foundUsers &&
-                        openSuggestions.foundUsers.length === 0
-                      ) {
-                        return;
-                      }
-                      const users = openSuggestions.foundUsers;
-                      setOpenSuggestions(null);
-                      setOpenUsers(users);
-                    }}
-                    className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
-                  >
-                    {`${openSuggestions.foundUsers.length} users found`}
-                  </span>
-                </span>
-              )}
-              {openUsers !== null && openUsers.length !== 0 && (
-                <span>
-                  <span className="py-1 w-full flex justify-end">
+        {router.pathname !== "/explore" && router.pathname !== "/search" && (
+          <span className="bg-white flex flex-col justify-center items-center p-2">
+            {
+              <span className="p-2 w-full flex flex-row items-center border border-gray-200 bg-gray-100">
+                <svg
+                  className="w-4 h-4 text-slate-400"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                  />
+                </svg>
+                <input
+                  onChange={searchForItem}
+                  onClick={getAllSearchData}
+                  type="search"
+                  className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+                  placeholder="Search for users and more..."
+                />
+              </span>
+            }
+            {(openSuggestions !== null || openUsers !== null) && (
+              <span className="w-full flex flex-col">
+                {openSuggestions !== null && (
+                  <span className="w-full flex flex-col">
                     <span
                       onClick={() => {
-                        setOpenUsers(null);
+                        if (
+                          router.pathname !== "/explore" &&
+                          openSuggestions.foundPosts &&
+                          openSuggestions.foundPosts.length === 0
+                        ) {
+                          return;
+                        } else {
+                          setPostValues(openSuggestions.foundPosts);
+                        }
+                        if (
+                          router.pathname === "/explore" &&
+                          openSuggestions.foundExplorePosts &&
+                          openSuggestions.foundExplorePosts.length === 0
+                        ) {
+                          return;
+                        } else {
+                          setExplorePosts(openSuggestions.foundExplorePosts);
+                        }
+
+                        setOpenSuggestions(null);
                       }}
-                      className="cursor-pointer text-sm text-slate-400 hover:text-pastelGreen border border-gray-200 bg-gray-100 py-0.5 px-1.5 rounded-2xl"
+                      className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
                     >
-                      {"clear"}
+                      {`${
+                        router.pathname === "/explore"
+                          ? openSuggestions.foundExplorePosts.length
+                          : openSuggestions.foundPosts.length
+                      } posts found`}
+                    </span>
+                    <span
+                      onClick={() => {
+                        if (
+                          openSuggestions.foundUsers &&
+                          openSuggestions.foundUsers.length === 0
+                        ) {
+                          return;
+                        }
+                        const users = openSuggestions.foundUsers;
+                        setOpenSuggestions(null);
+                        setOpenUsers(users);
+                      }}
+                      className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                    >
+                      {`${openSuggestions.foundUsers.length} users found`}
                     </span>
                   </span>
-
+                )}
+                {openUsers !== null && openUsers.length !== 0 && (
                   <span>
-                    {openUsers.slice(0, 8).map((os) => {
-                      return (
-                        <span
-                          key={os.id}
-                          onClick={() => {
-                            fullPageReload(`/profile/${os.username}`);
-                          }}
-                          className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
-                        >
-                          <span className="relative h-8 w-8 flex">
-                            <Image
-                              src={os.avatar}
-                              alt="user"
-                              width={30}
-                              height={30}
-                              className="border border-white rounded-full"
-                            />
+                    <span className="py-1 w-full flex justify-end">
+                      <span
+                        onClick={() => {
+                          setOpenUsers(null);
+                        }}
+                        className="cursor-pointer text-sm text-slate-400 hover:text-pastelGreen border border-gray-200 bg-gray-100 py-0.5 px-1.5 rounded-2xl"
+                      >
+                        {"clear"}
+                      </span>
+                    </span>
+
+                    <span>
+                      {openUsers.slice(0, 8).map((os) => {
+                        return (
+                          <span
+                            key={os.id}
+                            onClick={() => {
+                              fullPageReload(`/profile/${os.username}`);
+                            }}
+                            className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                          >
+                            <span className="relative h-8 w-8 flex">
+                              <Image
+                                src={os.avatar}
+                                alt="user"
+                                width={30}
+                                height={30}
+                                className="border border-white rounded-full"
+                              />
+                            </span>
+                            <span>{os.username}</span>
                           </span>
-                          <span>{os.username}</span>
-                        </span>
-                      );
-                    })}
+                        );
+                      })}
+                    </span>
                   </span>
-                </span>
-              )}
-            </span>
-          )}
-        </span>}
-        {router.pathname !== "/profile/[user]" && router.pathname !== "/search" &&
+                )}
+              </span>
+            )}
+          </span>
+        )}
+        {router.pathname !== "/profile/[user]" &&
+          router.pathname !== "/search" &&
           hashtagList !== null &&
           hashtagList !== undefined &&
           hashtagList.trending?.length > 0 && (
@@ -501,7 +507,9 @@ const LargeRightBar = () => {
                 id="anime-book-font"
                 className="text-xl text-gray-600 text-start font-semibold"
               >
-                {router.pathname === "/search" ? "Follow Others" : "YOU MAY KNOW"}
+                {router.pathname === "/search"
+                  ? "Follow Others"
+                  : "YOU MAY KNOW"}
               </p>
 
               <span className="">
@@ -584,51 +592,15 @@ const LargeRightBar = () => {
             </span>
           )}
 
-        {router.pathname !== "/search" && <span className="bg-white p-2 text-sm flex flex-col items-start space-y-3">
-          <p
-            id="anime-book-font"
-            className="text-xl text-gray-600 text-start font-semibold"
-          >
-            CONTENT PREFERENCES
-          </p>
+        {router.pathname !== "/search" && (
+          <span className="bg-white p-2 text-sm flex flex-col items-start space-y-3">
+            <p
+              id="anime-book-font"
+              className="text-xl text-gray-600 text-start font-semibold"
+            >
+              CONTENT PREFERENCES
+            </p>
 
-          <span className="flex flex-row items-center justify-start space-x-2">
-            <input
-              type="checkbox"
-              value=""
-              onChange={(e) => {
-                const newState = {
-                  ...displayContent,
-                  images: e.target.checked,
-                };
-
-                setDisplayContent(newState);
-
-                toggleContentFilter(newState);
-              }}
-              className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
-            />
-            <span>Images</span>
-          </span>
-          <span className="flex flex-row items-center justify-start space-x-2">
-            <input
-              type="checkbox"
-              value=""
-              onChange={(e) => {
-                const newState = {
-                  ...displayContent,
-                  videos: e.target.checked,
-                };
-
-                setDisplayContent(newState);
-
-                toggleContentFilter(newState);
-              }}
-              className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
-            />
-            <span>Videos</span>
-          </span>
-          {router.pathname === "/home" && (
             <span className="flex flex-row items-center justify-start space-x-2">
               <input
                 type="checkbox"
@@ -636,7 +608,7 @@ const LargeRightBar = () => {
                 onChange={(e) => {
                   const newState = {
                     ...displayContent,
-                    stories: e.target.checked,
+                    images: e.target.checked,
                   };
 
                   setDisplayContent(newState);
@@ -645,10 +617,8 @@ const LargeRightBar = () => {
                 }}
                 className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
               />
-              <span>Stories</span>
+              <span>Images</span>
             </span>
-          )}
-          {router.pathname === "/home" && (
             <span className="flex flex-row items-center justify-start space-x-2">
               <input
                 type="checkbox"
@@ -656,7 +626,7 @@ const LargeRightBar = () => {
                 onChange={(e) => {
                   const newState = {
                     ...displayContent,
-                    people: e.target.checked,
+                    videos: e.target.checked,
                   };
 
                   setDisplayContent(newState);
@@ -665,10 +635,50 @@ const LargeRightBar = () => {
                 }}
                 className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
               />
-              <span>People</span>
+              <span>Videos</span>
             </span>
-          )}
-        </span>}
+            {router.pathname === "/home" && (
+              <span className="flex flex-row items-center justify-start space-x-2">
+                <input
+                  type="checkbox"
+                  value=""
+                  onChange={(e) => {
+                    const newState = {
+                      ...displayContent,
+                      stories: e.target.checked,
+                    };
+
+                    setDisplayContent(newState);
+
+                    toggleContentFilter(newState);
+                  }}
+                  className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
+                />
+                <span>Stories</span>
+              </span>
+            )}
+            {router.pathname === "/home" && (
+              <span className="flex flex-row items-center justify-start space-x-2">
+                <input
+                  type="checkbox"
+                  value=""
+                  onChange={(e) => {
+                    const newState = {
+                      ...displayContent,
+                      people: e.target.checked,
+                    };
+
+                    setDisplayContent(newState);
+
+                    toggleContentFilter(newState);
+                  }}
+                  className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
+                />
+                <span>People</span>
+              </span>
+            )}
+          </span>
+        )}
       </div>
     </div>
   );

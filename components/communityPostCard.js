@@ -371,6 +371,7 @@ export default function CommunityPostCard({
             onClick={() => {
               fullPageReload(`/communities/${community.split("&")[0]}&${id}`);
             }}
+            style={{ whiteSpace: "pre-wrap" }}
           >
             <CommentConfig text={content} tags={true} />
           </span>
