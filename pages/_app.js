@@ -236,10 +236,10 @@ export default function App({ Component, pageProps }) {
                             )
                             .sort((a, b) => {
                               const dateA = new Date(
-                                a.repostCreatedAt || a.created_at
+                                a.repostQuote ? a.repostCreatedAt : a.created_at
                               );
                               const dateB = new Date(
-                                b.repostCreatedAt || b.created_at
+                                b.repostQuote ? b.repostCreatedAt : b.created_at
                               );
                               return dateB - dateA;
                             })
@@ -272,10 +272,10 @@ export default function App({ Component, pageProps }) {
                             )
                             .sort((a, b) => {
                               const dateA = new Date(
-                                a.repostCreatedAt || a.created_at
+                                a.repostQuote ? a.repostCreatedAt : a.created_at
                               );
                               const dateB = new Date(
-                                b.repostCreatedAt || b.created_at
+                                b.repostQuote ? b.repostCreatedAt : b.created_at
                               );
                               return dateB - dateA;
                             })
@@ -340,10 +340,10 @@ export default function App({ Component, pageProps }) {
                         )
                         .sort((a, b) => {
                           const dateA = new Date(
-                            a.repostCreatedAt || a.created_at
+                            a.repostQuote ? a.repostCreatedAt : a.created_at
                           );
                           const dateB = new Date(
-                            b.repostCreatedAt || b.created_at
+                            b.repostQuote ? b.repostCreatedAt : b.created_at
                           );
                           return dateB - dateA;
                         })
@@ -376,10 +376,10 @@ export default function App({ Component, pageProps }) {
                         )
                         .sort((a, b) => {
                           const dateA = new Date(
-                            a.repostCreatedAt || a.created_at
+                            a.repostQuote ? a.repostCreatedAt : a.created_at
                           );
                           const dateB = new Date(
-                            b.repostCreatedAt || b.created_at
+                            b.repostQuote ? b.repostCreatedAt : b.created_at
                           );
                           return dateB - dateA;
                         })
@@ -491,10 +491,10 @@ export default function App({ Component, pageProps }) {
                           )
                           .sort((a, b) => {
                             const dateA = new Date(
-                              a.repostCreatedAt || a.created_at
+                              a.repostQuote ? a.repostCreatedAt : a.created_at
                             );
                             const dateB = new Date(
-                              b.repostCreatedAt || b.created_at
+                              b.repostQuote ? b.repostCreatedAt : b.created_at
                             );
                             return dateB - dateA;
                           })
@@ -527,10 +527,10 @@ export default function App({ Component, pageProps }) {
                           )
                           .sort((a, b) => {
                             const dateA = new Date(
-                              a.repostCreatedAt || a.created_at
+                              a.repostQuote ? a.repostCreatedAt : a.created_at
                             );
                             const dateB = new Date(
-                              b.repostCreatedAt || b.created_at
+                              b.repostQuote ? b.repostCreatedAt : b.created_at
                             );
                             return dateB - dateA;
                           })

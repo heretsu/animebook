@@ -81,7 +81,10 @@ const CommentConfig = ({ text, tags }) => {
   };
 
   const words = text.split(/(\s+)/).map(renderWord);
-  return <span>{words}</span>;
+  return <span 
+  className="break-all whitespace-pre-wrap" 
+  style={{ wordBreak: "break-word", whiteSpace: "pre-wrap" }}
+>{words}</span>;
 };
 
 export default CommentConfig;

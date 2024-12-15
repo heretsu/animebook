@@ -13,7 +13,8 @@ const Posts = () => {
   const {
     youMayKnow,
     setYouMayKnow,
-    newPeople, setNewPeople,
+    newPeople,
+    setNewPeople,
     originalPostValues,
     setOriginalPostValues,
     postValues,
@@ -71,7 +72,6 @@ const Posts = () => {
     if (youMayKnow && originalPostValues && !ran) {
       unfollowsWithPosts();
       setRan(true);
-      console.log(postValues)
     }
     loadMorePosts();
   }, [ran, youMayKnow, originalPostValues, currentChunk, loadMorePosts]);
@@ -83,7 +83,7 @@ const Posts = () => {
         (postValues.length > 0 ? (
           <>
             {visiblePosts.map((post) => (
-              <PostCard key={post.id} {...post} myProfileId={userNumId}/>
+              <PostCard key={post.id} {...post} myProfileId={userNumId} />
             ))}
             {visiblePosts.length < postValues.length && (
               <span>
@@ -155,7 +155,6 @@ const Posts = () => {
                                 followingUserId={thisUser.id}
                                 size={"19"}
                                 color={"default"}
-                                
                               />
                             </span>
                           );
@@ -164,6 +163,8 @@ const Posts = () => {
                   </span>
                 </span>
               </div>
+            ) : postValues.length && postValues.length === 0 ? (
+              <span className="text-gray-600">Nanimonai! No posts found</span>
             ) : (
               <span className="h-screen">
                 <Lottie animationData={loadscreen} />

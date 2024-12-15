@@ -642,8 +642,9 @@ export default function User({ user }) {
                         ))}
                     </span>
                   )
-                ) : (
-                  <Posts />
+                ) : (  
+                    userPostValues && userPostValues.length > 0 ? <Posts /> : <span className="w-full text-gray-600 text-center">{"Nanimonai! No posts found"}</span>
+                  
                 )}
               </div>
             </div>

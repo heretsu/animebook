@@ -134,6 +134,7 @@ export const TopBarObjects = () => {
       PageLoadOptions().fullPageReload("/signin");
       return;
     }
+    setFollowingPosts(true);
     fetchFollowing(userNumId).then((res) => {
       let followingPosts = false;
       let followingPostsArray = []
@@ -161,7 +162,7 @@ export const TopBarObjects = () => {
         }
       }
       setPostValues(followingPostsArray);
-      setFollowingPosts(true);
+      
     });
   };
 

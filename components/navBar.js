@@ -23,7 +23,6 @@ const NavBarDependencies = () => {
   const router = useRouter();
 
   const fetchNotifications = () => {
-    return
     supabase
       .from("notifications")
       .select(
@@ -73,7 +72,6 @@ const NavBarDependencies = () => {
     );
     const notificationDate = new Date(dateStr);
 
-    // Adjust for time zone differences if necessary
     const notificationDateStart = new Date(
       notificationDate.getFullYear(),
       notificationDate.getMonth(),
@@ -587,7 +585,7 @@ export const MobileNavBar = () => {
               fill="#5d6879"
             />
           </svg>
-          <span className="absolute bg-pastelGreen text-xs h-fit font-semibold text-white px-1.5 bottom-8 rounded-md">
+          <span className="absolute bg-pastelGreen text-xs h-fit font-semibold text-white px-1.5 bottom-6 rounded-md">
             {router.pathname !== "/notifications" &&
               unreadCount != 0 &&
               unreadCount}
@@ -1263,14 +1261,16 @@ const NavBar = () => {
         <span className="cursor-pointer underline">Privacy Policy</span> */}
       </div>
       <span className="bottom-1 absolute w-full space-x-2 flex flex-row bg-transparent justify-center items-center pb-2 px-4">
-        <span className="cursor-pointer"
+        <span
+          className="cursor-pointer"
           onClick={() => {
             fullPageReload("https://x.com/luffyinutoken", "_blank");
           }}
         >
           <X width={4} height={4} />
         </span>
-        <span className="cursor-pointer"
+        <span
+          className="cursor-pointer"
           onClick={() => {
             fullPageReload("https://t.me/LUFFYTOKEN_OFFICIAL", "_blank");
           }}
