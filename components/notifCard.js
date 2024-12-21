@@ -3,6 +3,7 @@ import Relationships from "@/hooks/relationships";
 import Image from "next/image";
 import PlusIcon from "./plusIcon";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import UnfollowButton from "./unfollowButton";
 export default function NotifCard({ note, myProfileId, typeOfNotif }) {
   const {fullPageReload} = PageLoadOptions()
   const { fetchFollows } = Relationships();
@@ -47,8 +48,8 @@ export default function NotifCard({ note, myProfileId, typeOfNotif }) {
             />
           </span>
         )}
-        <span className="" onClick={()=>{performAction()}}>
-          {note.username} {note.content}
+        <span className="">
+          <span className="text-normal font-medium text-blue-400" onClick={()=>{fullPageReload(`/profile/${note.username} `);}}>{`${note.username}`}</span> <span onClick={()=>{performAction()}}>{note.content}</span>
         </span>
       </span>
 
@@ -57,7 +58,8 @@ export default function NotifCard({ note, myProfileId, typeOfNotif }) {
       ) : typeOfNotif === "newfollower" && alreadyFollowed === null ? (
         ""
       ) : alreadyFollowed ? (
-        <span className="text-slate-600 text-sm">Following</span>
+        <UnfollowButton followerUserId={myProfileId}
+        followingUserId={note.userid}/>
       ) : (
         <PlusIcon
           alreadyFollowed={alreadyFollowed}

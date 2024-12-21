@@ -12,26 +12,42 @@ import NewCommunityContainer from "@/components/newCommunityContainer";
 import { UserContext } from "@/lib/userContext";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import SideBar from "@/components/sideBar";
+import DappLibrary from "@/lib/dappLibrary";
+import Lottie from "lottie-react";
+import loadscreen from "@/assets/loadscreen.json";
+
 const Communities = () => {
+  const { getUserFromId } = DappLibrary();
   const { fullPageReload } = PageLoadOptions();
   const router = useRouter();
-  const { userData, communities, setCommunities, sideBarOpened} = useContext(UserContext);
+  const { userData, communities, setCommunities, sideBarOpened } =
+    useContext(UserContext);
   const [addCommunity, setAddCommunity] = useState(false);
-  // const [communities, setCommunities] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [requestCommunity, setRequestCommunity] = useState(false);
-  const [sentRequest, setSentRequest] = useState(false);
+  const [openRequests, setOpenRequests] = useState(false);
+  const [communityRequests, setCommunityRequests] = useState(null);
 
-  const [suggestionName, setSuggestionName] = useState("");
-  const [suggestionDescription, setSuggestionDescription] = useState("");
+  const fetchCommunityRequests = async () => {
+    const { data } = await supabase
+      .from("community_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    setCommunityRequests(data);
+  };
 
   const checkIfAdmin = () => {
     if (
       userData.useruuid === "69436932-d1e0-43a6-92bb-1ee4644331b2" ||
       userData.useruuid === "6db1f631-b204-499e-a1e2-fcf77647e14f" ||
       userData.useruuid === "222a3ecf-d715-43ba-9aec-ee97a8b8bed6" ||
-      userData.useruuid === "e58cd906-1a25-43fc-bffb-67e3c1689c26"
+      userData.useruuid === "e58cd906-1a25-43fc-bffb-67e3c1689c26" ||
+      userData.useruuid === "7adc69a6-84ea-4893-a74f-4977d060a235" ||
+      userData.useruuid === "a5ad109b-e701-4752-9fa8-47a6ec913e37" || 
+      userData.useruuid === "222a3ecf-d715-43ba-9aec-ee97a8b8bed6" ||
+      userData.useruuid === "e58cd906-1a25-43fc-bffb-67e3c1689c26" ||
+      userData.useruuid === "881ee2e4-3edc-4a75-82e5-a55972ce09a8"
     ) {
       setIsAdmin(true);
       return "admin";
@@ -39,6 +55,80 @@ const Communities = () => {
       setIsAdmin(false);
       return "not admin";
     }
+  };
+
+  // const uploadToBucket = async (file, storagePath) => {
+  //   const newName = Date.now() + file.name;
+  //   try {
+  //     const result = await supabase.storage
+  //       .from("mediastore")
+  //       .upload(storagePath + newName, file);
+
+  //     if (result.error) {
+  //       throw result.error;
+  //     }
+
+  //     return (
+  //       process.env.NEXT_PUBLIC_SUPABASE_URL +
+  //       "/storage/v1/object/public/mediastore/" +
+  //       result.data.path
+  //     ); // Adjust according to the actual result data structure
+  //   } catch (err) {
+  //     console.log(err.message);
+  //     console.error(err);
+  //     throw err;
+  //   }
+  // };
+
+  const approveCommunity = async (
+    coverFile,
+    avatarFile,
+    bio,
+    owner,
+    animeName,
+    id
+  ) => {
+    let coverUrl = coverFile;
+    let avatarUrl = avatarFile;
+
+    if (coverUrl === null || avatarUrl === null) {
+      return;
+    }
+
+    const { error } = await supabase.from("communities").insert({
+      cover: coverUrl,
+      avatar: avatarUrl,
+      bio: bio,
+      owner: owner,
+      name: animeName
+        .trim()
+        .toLowerCase()
+        .replace(/\s+(?!\s*$)/g, "+"),
+    });
+
+    if (!error) {
+      setCommunityRequests(
+        communityRequests.filter((cr) => {
+          return cr.id !== id;
+        })
+      );
+      const { error } = await supabase
+        .from("community_requests")
+        .delete()
+        .eq("id", id);
+    }
+  };
+
+  const rejectCommunity = async (id) => {
+    setCommunityRequests(
+      communityRequests.filter((cr) => {
+        return cr.id !== id;
+      })
+    );
+    const { error } = await supabase
+      .from("community_requests")
+      .delete()
+      .eq("id", id);
   };
 
   const fetchCommunities = async () => {
@@ -62,7 +152,10 @@ const Communities = () => {
         ...community,
         membersLength: communityMembersCountMap.get(community.id) || 0,
       }));
-      setCommunities(communitiesWithMembers);
+      const sortedCommunities = [...communitiesWithMembers].sort(
+        (a, b) => b.membersLength - a.membersLength
+      );
+      setCommunities(sortedCommunities);
     }
     setLoading(false);
   };
@@ -74,16 +167,12 @@ const Communities = () => {
       .join(" ");
   };
 
-  const newRequest = () => {
-    setSentRequest(true);
-  };
-
   useEffect(() => {
     if (userData) {
       checkIfAdmin();
     }
-    if (communities){
-      setLoading(false)
+    if (communities) {
+      setLoading(false);
     }
   }, [userData, communities]);
   return (
@@ -92,7 +181,109 @@ const Communities = () => {
         <NavBar />
         <div className="w-full pb-2 space-y-8 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
           <SmallTopBar middleTab={true} />
-          {addCommunity ? (
+
+          {openRequests ? (
+            <div className="flex flex-col items-center space-y-1.5 w-full">
+              <span className="w-full justify-start">
+                <svg
+                  onClick={() => {
+                    setOpenRequests(false);
+                  }}
+                  width="35px"
+                  height="35px"
+                  viewBox="0 0 48 48"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mb-2 cursor-pointer"
+                >
+                  <rect
+                    width={48}
+                    height={48}
+                    fill="white"
+                    fillOpacity={0.01}
+                  />
+                  <path
+                    d="M31 36L19 24L31 12"
+                    stroke="gray"
+                    strokeWidth={4}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              {loading ? (
+                <span className="h-screen">
+                  <Lottie animationData={loadscreen} />
+                </span>
+              ) : communityRequests && communityRequests.length > 0 ? (
+                communityRequests.map((request) => {
+                  return (
+                    <span
+                      key={request.id}
+                      className="cursor-pointer w-full justify-between flex flex-row bg-white rounded border border-gray-300"
+                    >
+                      <Image
+                        src={request.avatar}
+                        alt="post"
+                        height={80}
+                        width={80}
+                        className="rounded-l-sm object-cover"
+                      />
+                      <span className="pl-4 flex flex-col py-2 text-sm">
+                        <span>
+                          <span className="font-bold">
+                            {formatGroupName(request.name)}
+                          </span>
+                          <span className="text-xs font-semibold text-gray-500">
+                            {" "}
+                            From {getUserFromId(request.owner).username}
+                          </span>
+                        </span>
+                        <span className="text-gray-500 text-xs">
+                          {request.bio}
+                        </span>
+                      </span>
+                      {false ? (
+                        <span className="flex text-gray-500 text-sm font-semibold flex-col items-center justify-center px-2 space-y-1">
+                          Added
+                        </span>
+                      ) : (
+                        <span className="flex text-white text-sm font-semibold flex-col items-center justify-center px-2 space-y-1">
+                          <span
+                            onClick={() => {
+                              approveCommunity(
+                                request.cover,
+                                request.avatar,
+                                request.bio,
+                                request.owner,
+                                request.name,
+                                request.id
+                              );
+                            }}
+                            className="cursor-default px-2 py-0.5 text-center bg-pastelGreen w-full rounded-md flex flex-row items-center justify-center"
+                          >
+                            {"Approve"}
+                          </span>
+                          <span
+                            onClick={() => {
+                              rejectCommunity(request.id);
+                            }}
+                            className="cursor-default py-0.5 text-center bg-gray-400 w-full rounded-md flex flex-row items-center justify-center"
+                          >
+                            {"Reject"}
+                          </span>
+                        </span>
+                      )}
+                    </span>
+                  );
+                })
+              ) : (
+                <span className="text-gray-900 text-sm text-start w-full">
+                  No new community requests
+                </span>
+              )}
+            </div>
+          ) : addCommunity ? (
             <div className="w-full space-y-5 mt-1 lg:mt-20 flex flex-col">
               <svg
                 onClick={() => {
@@ -114,99 +305,22 @@ const Communities = () => {
                   strokeLinejoin="round"
                 />
               </svg>
-              <NewCommunityContainer />
-            </div>
-          ) : requestCommunity ? (
-            <div className="space-y-5 mt-2 lg:mt-20 flex flex-col">
-              <svg
-                onClick={() => {
-                  setRequestCommunity(false);
-                }}
-                width="35px"
-                height="35px"
-                viewBox="0 0 48 48"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="my-2 cursor-pointer"
-              >
-                <rect width={48} height={48} fill="white" fillOpacity={0.01} />
-                <path
-                  d="M31 36L19 24L31 12"
-                  stroke="gray"
-                  strokeWidth={4}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className="text-center my-auto w-full font-medium">
-                {"What community would you like to see on AnimeBook?"}
-              </span>
-
-              <span>
-                <span className="text-start font-medium w-full">
-                  Community name
-                </span>
-                <input
-                  value={suggestionName}
-                  onChange={(e) => {
-                    setSuggestionName(e.target.value);
-                  }}
-                  placeholder={"One piece community"}
-                  className="bg-white px-4 h-15 rounded-xl w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
-                />
-
-                <span className="text-start font-medium w-full">
-                  Description
-                </span>
-                <textarea
-                  value={suggestionDescription}
-                  onChange={(e) => {
-                    setSuggestionDescription(e.target.value);
-                  }}
-                  placeholder={
-                    "Tell us about this community and why it is needed"
-                  }
-                  className="bg-white px-4 h-40 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
-                />
-              </span>
-              {sentRequest ? (
-                <span className="flex flex-col space-y-3">
-                  <span
-                    onClick={() => {}}
-                    className="cursor-not-allowed shadow-xl border-2 border-gray-500 font-semibold mx-auto w-fit py-1 px-3 rounded-lg bg-transparent text-textGreen"
-                  >
-                    Request Submitted
-                  </span>
-                  <span className="text-center italic text-sm">
-                    Your community suggestion is saved and will be considered
-                  </span>
-                </span>
-              ) : userData ? (
-                <a
-                  href={`mailto:AnimeBookLuffy@gmail.com?subject=communityRequestFrom${userData.id}${suggestionName}&body=${suggestionDescription}`}
-                  onClick={() => {
-                    () => {
-                      newRequest();
-                    };
-                  }}
-                  className="cursor-pointer shadow-xl font-medium mx-auto w-fit py-1 px-3 rounded-lg bg-pastelGreen text-white"
-                >
-                  Request Community
-                </a>
-              ) : (
-                <span
-                  onClick={() => {
-                    fullPageReload("/signin");
-                  }}
-                  className="cursor-pointer shadow-xl border-2 border-gray-500 font-semibold mx-auto w-fit py-1 px-3 rounded-lg bg-transparent text-gray-500"
-                >
-                  {"Login to request"}
-                </span>
-              )}
+              <NewCommunityContainer isAdmin={isAdmin} />
             </div>
           ) : (
             <div className="w-full space-y-5 mt-2 lg:mt-20 flex flex-col">
               <span className="flex flex-row w-full justify-end text-sm">
+                {isAdmin && (
+                  <span
+                    onClick={() => {
+                      fetchCommunityRequests();
+                      setOpenRequests(true);
+                    }}
+                    className="mr-2 flex items-center justify-center rounded-lg py-1 px-2 bg-blue-400 font-bold text-white cursor-pointer"
+                  >
+                    Requests
+                  </span>
+                )}
                 {isAdmin ? (
                   <span
                     onClick={() => {
@@ -219,7 +333,7 @@ const Communities = () => {
                 ) : (
                   <span
                     onClick={() => {
-                      setRequestCommunity(true);
+                      setAddCommunity(true);
                     }}
                     className="cursor-pointer font-bold cursor-pointer bg-pastelGreen text-white py-1 px-2 rounded-lg"
                   >
@@ -229,8 +343,8 @@ const Communities = () => {
               </span>
               <div className="flex flex-col items-center space-y-1.5 w-full">
                 {loading ? (
-                  <span className="text-gray-900 text-sm text-start w-full">
-                    fetching communities...
+                  <span className="h-screen">
+                    <Lottie animationData={loadscreen} />
                   </span>
                 ) : communities && communities.length > 0 ? (
                   communities.map((community) => {
@@ -256,7 +370,7 @@ const Communities = () => {
                             {formatGroupName(community.name)}
                           </span>
                           <span className="text-gray-500 text-xs">
-                            {community.bio.slice(0,110).trim().concat("...")}
+                            {community.bio.slice(0, 110).trim().concat("...")}
                           </span>
                           <span className="text-textGreen text-[0.8rem]">
                             {`${community.membersLength} ${

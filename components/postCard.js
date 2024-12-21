@@ -12,6 +12,8 @@ import ReactPlayer from "react-player";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import Lottie from "lottie-react";
 import animationData from "@/assets/kianimation.json";
+import PopupModal from "./popupModal";
+import UnfollowButton from "./unfollowButton";
 
 export const BinSvg = ({ pixels }) => {
   return (
@@ -38,12 +40,16 @@ export default function PostCard({
   created_at,
   users,
   myProfileId,
+  repostAuthor,
+  repostQuote,
+  repostCreatedAt
 }) {
   const videoRef = useRef(null);
   const router = useRouter();
   const { sendNotification, postTimeAgo } = DappLibrary();
   const [alreadyFollowed, setAlreadyFollowed] = useState(null);
   const { fetchFollows } = Relationships();
+  const { fullPageReload } = PageLoadOptions();
   const {
     setOpenComments,
     setPostIdForComment,
@@ -64,6 +70,13 @@ export default function PostCard({
   const [viewReentry, setViewReentry] = useState(false);
   const [copied, setCopied] = useState(false);
   const [playVideo, setPlayVideo] = useState(false);
+  const [madeRepost, setMadeRepost] = useState(false);
+  const [reposts, setReposts] = useState(null);
+  const [repostReentry, setRepostReentry] = useState(false);
+  const [openQuote, setOpenQuote] = useState(false);
+  const [pressTimeout, setPressTimeout] = useState(null);
+  const [quoteContent, setQuoteContent] = useState(null);
+  const [openTipPost, setOpenTipPost] = useState(false);
 
   const [ref, isBeingViewed] = PostInViewport({
     threshold: 0.5,
@@ -109,55 +122,57 @@ export default function PostCard({
         }
       });
   };
-  
+
   const likePost = () => {
     if (reentry) {
       setReentry(false);
       if (liked) {
+        setLiked(false);
+        setLikes(
+          likes.filter((lk) => {
+            return lk.userid !== myProfileId;
+          })
+        );
         supabase
           .from("likes")
           .delete()
           .eq("postid", id)
           .eq("userid", myProfileId)
           .then(async () => {
-            fetchLikes();
+            setReentry(true);
+            // fetchLikes();
             if (users.id !== myProfileId) {
               await supabase
                 .from("users")
                 .update({
                   ki:
-                    parseFloat(userData.ki) !== 0
-                      ? parseFloat(userData.ki) - 0.1
+                    parseFloat(users.ki) !== 0
+                      ? parseFloat(users.ki) - 0.08
                       : 0,
-                })
-                .eq("id", myProfileId);
-
-              await supabase
-                .from("users")
-                .update({
-                  ki:
-                    parseFloat(users.ki) !== 0 ? parseFloat(users.ki) - 0.8 : 0,
                 })
                 .eq("id", users.id);
             }
           });
       } else {
+        setLiked(true);
+        setLikes([
+          ...likes,
+          {
+            postid: id,
+            userid: myProfileId,
+          },
+        ]);
         supabase
           .from("likes")
           .insert({ postid: id, userid: myProfileId })
           .then(async () => {
-            fetchLikes();
+            setReentry(true);
+            // fetchLikes();
             sendNotification("likepost", users.id, likes, id);
-            console.log(users.id, myProfileId);
             if (users.id !== myProfileId) {
               await supabase
                 .from("users")
-                .update({ ki: parseFloat(userData.ki) + 0.1 })
-                .eq("id", myProfileId);
-
-              await supabase
-                .from("users")
-                .update({ ki: parseFloat(users.ki) + 0.8 })
+                .update({ ki: parseFloat(users.ki) + 0.08 })
                 .eq("id", users.id);
             }
           });
@@ -175,6 +190,93 @@ export default function PostCard({
           setLikes(res.data);
           setLiked(!!res.data.find((lk) => lk.userid === myProfileId));
           setReentry(true);
+        }
+      });
+  };
+
+  const handleRepost = (quoteWanted) => {
+    if (repostReentry) {
+      setRepostReentry(false);
+      if (madeRepost) {
+        setMadeRepost(false);
+        setReposts(
+          reposts.filter((rt) => {
+            return rt.userid !== myProfileId;
+          })
+        );
+        setQuoteContent("");
+        supabase
+          .from("reposts")
+          .delete()
+          .eq("postid", id)
+          .eq("userid", myProfileId)
+          .then(async () => {
+            setRepostReentry(true);
+            // fetchReposts();
+          });
+      } else {
+        if (quoteWanted) {
+          setQuoteContent("");
+          setOpenQuote(true);
+          setRepostReentry(true);
+        } else {
+          setMadeRepost(true);
+          setReposts([
+            ...reposts,
+            {
+              postid: id,
+              userid: myProfileId,
+            },
+          ]);
+          setQuoteContent("");
+          supabase
+            .from("reposts")
+            .insert({ postid: id, userid: myProfileId })
+            .then(async () => {
+              setRepostReentry(true);
+              // fetchReposts();
+              // sendNotification("likepost", users.id, likes, id);
+            });
+        }
+      }
+    }
+  };
+
+  const handleQuoteRepost = () => {
+    if (repostReentry) {
+      setRepostReentry(false);
+      setMadeRepost(true);
+      setReposts([
+        ...reposts,
+        {
+          postid: id,
+          userid: myProfileId,
+          quote:
+            quoteContent !== null && quoteContent !== "" ? quoteContent : null,
+        },
+      ]);
+      setOpenQuote(false);
+
+      supabase
+        .from("reposts")
+        .insert({ postid: id, userid: myProfileId, quote: quoteContent })
+        .then(async () => {
+          setQuoteContent("");
+          setRepostReentry(true);
+        });
+    }
+  };
+
+  const fetchReposts = () => {
+    supabase
+      .from("reposts")
+      .select()
+      .eq("postid", id)
+      .then((res) => {
+        if (res.data !== undefined && res.data !== null) {
+          setReposts(res.data);
+          setMadeRepost(!!res.data.find((rt) => rt.userid === myProfileId));
+          setRepostReentry(true);
         }
       });
   };
@@ -246,6 +348,30 @@ export default function PostCard({
     }
   };
 
+  const handlePressStart = () => {
+    //for long press
+    const timeout = setTimeout(() => {
+      if (userData) {
+        handleRepost(true);
+      } else {
+        fullPageReload("/signin");
+      }
+    }, 500);
+    setPressTimeout(timeout);
+  };
+
+  const handlePressEnd = () => {
+    if (pressTimeout) {
+      clearTimeout(pressTimeout);
+      setPressTimeout(null);
+      if (userData) {
+        handleRepost(false);
+      } else {
+        fullPageReload("/signin");
+      }
+    }
+  };
+
   useEffect(() => {
     if (users.id !== myProfileId) {
       fetchFollows(users.id).then((res) => {
@@ -262,6 +388,7 @@ export default function PostCard({
         addView();
       }
     }
+    fetchReposts();
     fetchLikes();
     fetchViews();
     fetchBookmarkStatus();
@@ -270,6 +397,7 @@ export default function PostCard({
 
   return (
     likes !== null &&
+    reposts !== null &&
     views !== null &&
     comments !== null && (
       <div
@@ -278,12 +406,53 @@ export default function PostCard({
           router.pathname !== "/comments/[comments]" && "shadow-xl"
         } ${
           !media && "w-full"
-        } bg-white space-y-3 py-4 px-3 flex flex-col justify-center text-start`}
+        } bg-white space-y-1 py-4 px-3 flex flex-col justify-center text-start`}
       >
+        {repostQuote && <span className="flex flex-row justify-between items-center">
+          <span
+            onClick={() => {
+              fullPageReload(`/profile/${repostAuthor.username}`);
+            }}
+            className="cursor-pointer flex flex-row justify-start items-center space-x-0"
+          >
+            <span className="relative h-8 w-8 flex">
+              <Image
+                src={repostAuthor.avatar}
+                alt="user profile"
+                width={35}
+                height={35}
+                className="rounded-full object-cover"
+              />
+            </span>
+            
+            <span className="flex flex-col">
+              <span className="flex flex-row items-center">
+                <span className="pl-2 pr-1 text-xs font-semibold">
+                  {repostAuthor.username}
+                </span>
+                <span className="text-[0.7rem] text-gray-400">
+                  reposted {postTimeAgo(repostCreatedAt)}
+                </span>
+              </span>
+              <span className="flex flex-row items-center">
+                <span className="h-4 w-6">
+                  <Lottie animationData={animationData} />
+                </span>
+                <span className="absolute pl-6 text-[0.7rem] font-bold text-blue-400">
+                  {parseFloat(parseFloat(repostAuthor.ki).toFixed(2))}
+                </span>
+              </span>
+            </span>
+            
+          </span>
+          
+        </span>}
+        {repostQuote && <span className="px-1 py-2 bg-gray-100 w-full rounded"><CommentConfig text={repostQuote} tags={true} /> </span>}
+
         <span className="flex flex-row justify-between items-center">
           <span
             onClick={() => {
-              router.push(`/profile/${users.username}`);
+              fullPageReload(`/profile/${users.username}`);
             }}
             className="cursor-pointer flex flex-row justify-start items-center space-x-0"
           >
@@ -293,9 +462,10 @@ export default function PostCard({
                 alt="user profile"
                 width={35}
                 height={35}
-                className="rounded-full object"
+                className="rounded-full object-cover"
               />
             </span>
+            
             <span className="flex flex-col">
               <span className="flex flex-row">
                 <span className="pl-2 pr-1 font-semibold">
@@ -324,7 +494,9 @@ export default function PostCard({
             ) : alreadyFollowed === null ? (
               ""
             ) : alreadyFollowed ? (
-              <span className="text-slate-600">Following</span>
+              <UnfollowButton alreadyFollowed={alreadyFollowed}
+              setAlreadyFollowed={setAlreadyFollowed} followerUserId={myProfileId}
+              followingUserId={users.id}/>
             ) : (
               <PlusIcon
                 alreadyFollowed={alreadyFollowed}
@@ -341,7 +513,7 @@ export default function PostCard({
             if (userData) {
               likePost();
             } else {
-              PageLoadOptions().fullPageReload("/signin");
+              fullPageReload("/signin");
             }
           }}
           className="relative w-full max-h-[600px] flex justify-center"
@@ -419,6 +591,7 @@ export default function PostCard({
               router.push(`/comments/${id}`);
             }}
             className="break-all overflow-wrap-word whitespace-preline"
+            style={{ whiteSpace: "pre-wrap" }}
           >
             <CommentConfig text={content} tags={true} />
           </span>
@@ -433,7 +606,7 @@ export default function PostCard({
                     if (userData) {
                       likePost();
                     } else {
-                      PageLoadOptions().fullPageReload("/signin");
+                      fullPageReload("/signin");
                     }
                   }}
                   className="cursor-pointer text-red-400"
@@ -452,7 +625,7 @@ export default function PostCard({
                     if (userData) {
                       likePost();
                     } else {
-                      PageLoadOptions().fullPageReload("/signin");
+                      fullPageReload("/signin");
                     }
                   }}
                   className="cursor-pointer"
@@ -491,11 +664,46 @@ export default function PostCard({
             </div>
 
             <div className="flex items-center space-x-2">
+              {madeRepost ? (
+                <svg
+                  onMouseDown={handlePressStart}
+                  onMouseUp={handlePressEnd}
+                  onTouchStart={handlePressStart}
+                  onTouchEnd={handlePressEnd}
+                  className="cursor-pointer text-pastelGreen"
+                  fill="currentColor"
+                  width="22px"
+                  height="22px"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M5 4a2 2 0 0 0-2 2v6H0l4 4 4-4H5V6h7l2-2H5zm10 4h-3l4-4 4 4h-3v6a2 2 0 0 1-2 2H6l2-2h7V8z" />
+                </svg>
+              ) : (
+                <svg
+                  onMouseDown={handlePressStart}
+                  onMouseUp={handlePressEnd}
+                  onTouchStart={handlePressStart}
+                  onTouchEnd={handlePressEnd}
+                  className="cursor-pointer text-black"
+                  fill="#000000"
+                  width="22px"
+                  height="22px"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M5 4a2 2 0 0 0-2 2v6H0l4 4 4-4H5V6h7l2-2H5zm10 4h-3l4-4 4 4h-3v6a2 2 0 0 1-2 2H6l2-2h7V8z" />
+                </svg>
+              )}
+              <div className="text-gray-800">{reposts.length}</div>
+            </div>
+
+            <div className="flex items-center space-x-2">
               <svg
                 className="cursor-pointer"
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="16px"
+                height="16px"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#000000"
@@ -509,7 +717,41 @@ export default function PostCard({
               <div className="text-gray-800">{views.length}</div>
             </div>
           </div>
+
           <div className="space-x-3 w-fit flex flex-row justify-center items-center">
+            <div
+              className="flex items-center"
+              onClick={() => {
+                setOpenTipPost(true);
+              }}
+            >
+              <svg
+                width="18px"
+                height="18px"
+                className="text-blue-500"
+                fill="currentColor"
+                id="Capa_1"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlnsXlink="http://www.w3.org/1999/xlink"
+                x="0px"
+                y="0px"
+                viewBox="0 0 19.928 19.928"
+                style={{
+                  enableBackground: "new 0 0 19.928 19.928",
+                }}
+                xmlSpace="preserve"
+              >
+                <g>
+                  <path
+                    style={{
+                      fill: "#010002",
+                    }}
+                    d="M11.273,3.18l-0.242-0.766c-0.096-0.305-0.228-0.603-0.393-0.884 c-0.545-0.926-1.18-1.328-1.425-1.352C9.122,0.373,9.136,1.12,9.701,2.081c0.538,0.916,1.165,1.318,1.417,1.351 C11.118,3.432,11.273,3.18,11.273,3.18z M13.731,2.081c0.564-0.961,0.578-1.708,0.488-1.903c-0.245,0.023-0.882,0.424-1.427,1.352 c-0.166,0.282-0.297,0.58-0.393,0.884L12.154,3.19l0.163,0.252C12.549,3.411,13.185,3.01,13.731,2.081z M11.381,3.927h2.02v2.818 h4.908V3.958H13.7c0.372-0.273,0.75-0.698,1.061-1.225c0.67-1.142,0.768-2.328,0.217-2.651C14.883,0.027,14.776,0,14.66,0 c-0.561,0-1.335,0.617-1.893,1.562c-0.186,0.319-0.324,0.639-0.42,0.945c-0.096-0.306-0.232-0.626-0.42-0.945 C11.372,0.617,10.595,0,10.033,0C9.92,0,9.812,0.027,9.716,0.082c-0.548,0.323-0.45,1.509,0.219,2.651 c0.311,0.527,0.691,0.952,1.062,1.225h-4.61v2.787h4.994V3.927z M12.974,2.705c0.087-0.278,0.208-0.55,0.359-0.81 c0.498-0.849,1.082-1.216,1.309-1.237c0.08,0.177,0.068,0.862-0.447,1.741c-0.502,0.852-1.084,1.218-1.295,1.246l-0.15-0.23 C12.75,3.415,12.974,2.705,12.974,2.705z M10.502,2.399c-0.516-0.879-0.53-1.564-0.446-1.741c0.224,0.021,0.807,0.389,1.306,1.237 c0.152,0.257,0.271,0.529,0.361,0.81l0.22,0.701l-0.142,0.23C11.569,3.607,10.996,3.238,10.502,2.399z M13.568,7.636v3.146 c0.364,0.184,0.465,0.516,0.465,0.516s0.072-0.034,0.072,1.479c0,1.514-0.324,1.568-0.537,1.616v0.824c0,0,2.462-0.796,3.928-2.65 c0.532-0.673,0.822-0.505,0.822-0.505l-0.01-4.426C18.308,7.636,13.568,7.636,13.568,7.636z M11.381,7.636H6.386v2.572 c1.209,0,3.428,0,4.994,0V7.636H11.381z M0.028,10.264h2.855v9.663H0.028V10.264z M18.054,13.379 c-0.113-0.044-0.23-0.061-0.349-0.041c-0.897,0.165-2.255,3.501-5.789,2.538c0,0-1.034-0.334-1.425-0.574 c-0.346-0.191-1.08-0.628-1.68-1.084h1.68h1.889c0,0,0.146,0.009,0.315-0.029c0.231-0.053,0.508-0.194,0.508-0.576 c0-0.66,0-1.647,0-1.647s-0.11-0.548-0.508-0.749c-0.091-0.046-0.194-0.075-0.315-0.075c-0.186,0-0.924,0-1.889,0 c-1.711,0-4.133,0-5.453,0c-0.581,0-0.949,0-0.949,0v7.026c0,0,5.602,1.758,7.578,1.758c0,0,4.939,0.22,8.234-3.624 C19.902,16.303,19.043,13.763,18.054,13.379z"
+                  />
+                </g>
+              </svg>
+            </div>
+
             {copied ? (
               <span
                 className="text-xs text-black font-light"
@@ -549,7 +791,7 @@ export default function PostCard({
                 if (userData) {
                   addBookmark();
                 } else {
-                  PageLoadOptions().fullPageReload("/signin");
+                  fullPageReload("/signin");
                 }
               }}
               className="cursor-pointer w-5 h-5 text-black"
@@ -568,6 +810,65 @@ export default function PostCard({
             </svg>
           </div>
         </div>
+        {openQuote && (
+          <>
+            <div
+              id="modal-visible"
+              className="max-w-[400px] flex flex-col py-2 px-2 w-full relative bg-white rounded-lg"
+            >
+              <span className="pl-3 pb-1 text-start font-semibold">
+                Quoted Repost
+              </span>
+              <textarea
+                value={quoteContent !== null ? quoteContent : ""}
+                onChange={(e) => {
+                  setQuoteContent(e.target.value);
+                }}
+                maxLength={160}
+                placeholder="What do you think of this post..."
+                className="bg-transparent font-medium text-sm h-18 resize-none w-full px-2 text-black border-none focus:outline-none focus:ring-0"
+              ></textarea>
+
+              <span className="pb-4 text-sm text-white text-center flex flex-row justify-end font-semibold">
+                <span
+                  onClick={() => {
+                    handleQuoteRepost();
+                  }}
+                  className="border border-gray-100 bg-pastelGreen py-1 w-[70px] rounded-lg cursor-pointer"
+                >
+                  Repost
+                </span>
+              </span>
+            </div>
+            <div
+              onClick={() => {
+                setOpenQuote(false);
+              }}
+              id="overlay"
+            ></div>
+          </>
+        )}
+
+        {openTipPost && (
+          <>
+            <PopupModal
+              success={"6"}
+              username={users.username}
+              useruuid={users.useruuid}
+              destSolAddress={users.solAddress ? users.solAddress : null}
+              avatar={users.avatar}
+              destinationAddress={users.address}
+              userDestinationId={users.id}
+              post={true}
+            />
+            <div
+              onClick={() => {
+                setOpenTipPost(false);
+              }}
+              id="tip-overlay"
+            ></div>
+          </>
+        )}
       </div>
     )
   );

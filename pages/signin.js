@@ -30,7 +30,7 @@ const Signin = () => {
         const { data, error } = signUpMethod
           ? await supabase.auth
               .signUp({
-                email: manualEmail,
+                email: manualEmail.trim(),
                 password: manualPassword,
                 // options: {
                 //   redirectTo: "https://localhost:3000/home",
@@ -44,11 +44,11 @@ const Signin = () => {
               })
               .catch((e) => {
                 console.log(e);
-                setMiniError("Sign up error. Too many requests");
+                setMiniError(`Sign up error: ${e.message && e.message}`);
               })
           : await supabase.auth
               .signInWithPassword({
-                email: manualEmail,
+                email: manualEmail.trim(),
                 password: manualPassword,
                 // options: {
                 //   redirectTo: "https://localhost:3000/home",
@@ -66,9 +66,7 @@ const Signin = () => {
               });
         if (error) {
           console.log(error, typeof error);
-          setMiniError(
-            "An error occured. Confirm your email if not done already"
-          );
+          setMiniError(`An error occured: ${error.message && error.message}`);
           return;
         }
         if (data && data.user) {
@@ -424,7 +422,9 @@ const Signin = () => {
                     onChange={(e) => {
                       setManualPassword(e.target.value);
                     }}
-                    placeholder="Enter password"
+                    placeholder={
+                      signUpMethod ? "Create password" : "Enter password"
+                    }
                     type="password"
                     className="border border-gray-300 font-semibold text-slate-700 text-center text-gray-800 rounded-xl w-full bg-slate-100 focus:border-gray-300 focus:ring-0"
                   />
@@ -488,8 +488,8 @@ const Signin = () => {
       </div>
 
       <div className="rounded-b-xl pb-3 px-6 text-textGreen text-xs flex flex-row justify-center space-x-10">
-        <span className="cursor-pointer underline">Terms of Service</span>
-        <span className="cursor-pointer underline">Privacy Policy</span>
+        <span onClick={()=>{fullPageReload('/terms-of-service')}} className="cursor-pointer underline">Terms of Service</span>
+        <span onClick={()=>{fullPageReload('privacy-policy')}} className="cursor-pointer underline">Privacy Policy</span>
       </div>
     </div>
   );

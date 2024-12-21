@@ -51,7 +51,7 @@ export default function Onboard({ allUsers, me }) {
 
   const connectAndUpload = async () => {
     setActivated(true);
-    const address = await connectToWallet();
+    const {addr: address} = await connectToWallet();
     if (address) {
       updateUserInfo(address);
     } else {

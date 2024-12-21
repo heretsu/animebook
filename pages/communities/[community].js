@@ -13,6 +13,9 @@ import PostContainer from "@/components/postContainer";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import CommunityCommentItem from "@/components/communityCommentItem";
 import SideBar from "@/components/sideBar";
+import Lottie from "lottie-react";
+import loadscreen from "@/assets/loadscreen.json";
+
 
 export const getServerSideProps = async (context) => {
   const { community } = context.query;
@@ -26,7 +29,8 @@ export const getServerSideProps = async (context) => {
 
 const Community = ({ community }) => {
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, communityInputRef, sideBarOpened} = useContext(UserContext);
+  const { userNumId, communityInputRef, sideBarOpened } =
+    useContext(UserContext);
   const [reentry, setReentry] = useState(false);
   const [joined, setJoined] = useState(false);
   const [comments, setComments] = useState([]);
@@ -95,8 +99,8 @@ const Community = ({ community }) => {
     const { data } = await supabase
       .from("communities")
       .select("*")
-      .eq("name", community.replace(' ', '+').toLowerCase().split("&")[0])
-      // .eq("name", community.split("&")[0].toLowerCase());
+      .eq("name", community.replace(" ", "+").toLowerCase().split("&")[0]);
+    // .eq("name", community.split("&")[0].toLowerCase());
 
     if (!data) {
       console.log("could not fetch communities data");
@@ -109,7 +113,7 @@ const Community = ({ community }) => {
         "id, created_at, content, media, communityid, users(id, avatar, username, created_at, cover, bio)"
       )
       .eq("communityid", data[0].id)
-      .order("created_at", {ascending: false})
+      .order("created_at", { ascending: false });
 
     const members = await supabase
       .from("community_relationships")
@@ -119,7 +123,9 @@ const Community = ({ community }) => {
       setFocusPostId(community.split("&")[1]);
     }
 
-    if (userNumId) {setJoined(!!members.data.find((mb) => mb.userid === userNumId)); setReentry(true);
+    if (userNumId) {
+      setJoined(!!members.data.find((mb) => mb.userid === userNumId));
+      setReentry(true);
     }
 
     if (data) {
@@ -129,13 +135,12 @@ const Community = ({ community }) => {
         members: members.data,
       });
     }
-
   };
 
   const formatGroupName = (text) => {
     return text
       .split("&")[0]
-      .split(" ") // Split the string at ' '
+      .split("+") // Split the string at ' '
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each word
       .join(" ");
     // return text
@@ -146,7 +151,7 @@ const Community = ({ community }) => {
   };
 
   const joinCommunity = async () => {
-    if (!userNumId){
+    if (!userNumId) {
       fullPageReload("/signin");
       return;
     }
@@ -179,9 +184,8 @@ const Community = ({ community }) => {
   };
 
   useEffect(() => {
-      fetchCommunityDetails();
-      fetchCommunityComments();
-    
+    fetchCommunityDetails();
+    fetchCommunityComments();
   }, [userNumId]);
 
   return (
@@ -247,40 +251,42 @@ const Community = ({ community }) => {
                     </span>
                   </span>
                 </span>
-                <span className="flex flex-row w-full justify-between">
-                  <span className="flex flex-row space-x-2 font-medium">
-                    <span
-                      onClick={() => {
-                        joinCommunity();
-                      }}
-                      className={`cursor-pointer ${
-                        joined ? "bg-gray-400" : "bg-pastelGreen"
-                      } text-sm text-white py-2 px-3 rounded-lg`}
-                    >
-                      {joined ? "Leave" : "Join"}
+                {!newPost && (
+                  <span className="flex flex-row w-full justify-between">
+                    <span className="flex flex-row space-x-2 font-medium">
+                      <span
+                        onClick={() => {
+                          joinCommunity();
+                        }}
+                        className={`cursor-pointer ${
+                          joined ? "bg-gray-400" : "bg-pastelGreen"
+                        } text-sm text-white py-2 px-3 rounded-lg`}
+                      >
+                        {joined ? "Leave" : "Join"}
+                      </span>
+                      <span
+                        onClick={() => {
+                          if (joined) {
+                            setNewPost(true);
+                          }
+                        }}
+                        className={`cursor-pointer text-sm text-white ${
+                          joined ? "bg-pastelGreen" : "bg-gray-400"
+                        } py-2 px-3 rounded-lg`}
+                      >
+                        {"Create a post"}
+                      </span>
                     </span>
-                    <span
-                      onClick={() => {
-                        if (joined) {
-                          setNewPost(true);
-                        }
-                      }}
-                      className={`cursor-pointer text-sm text-white ${
-                        joined ? "bg-pastelGreen" : "bg-gray-400"
-                      } py-2 px-3 rounded-lg`}
-                    >
-                      {"Create a post"}
+                    <span className="space-x-2">
+                      <span className="font-semibold text-sm text-black">
+                        {"Sort by:"}
+                      </span>
+                      <span className="cursor-pointer text-sm text-white py-1.5 px-2.5 bg-gray-400 rounded-xl">
+                        Newest
+                      </span>
                     </span>
                   </span>
-                  <span className="space-x-2">
-                    <span className="font-semibold text-sm text-black">
-                      {"Sort by:"}
-                    </span>
-                    <span className="cursor-pointer text-sm text-white py-1.5 px-2.5 bg-gray-400 rounded-xl">
-                      Newest
-                    </span>
-                  </span>
-                </span>
+                )}
 
                 {newPost ? (
                   <>
@@ -418,7 +424,6 @@ const Community = ({ community }) => {
                   {...communityDetails.posts.find(
                     (p) => p.id === parseInt(focusPostId)
                   )}
-                  
                   myProfileId={userNumId}
                   community={community}
                   comments={comments}
@@ -446,6 +451,7 @@ const Community = ({ community }) => {
                         postCommunityComment();
                       }
                     }}
+                    maxLength={1900}
                     placeholder="Write a comment"
                     className="resize-none text-sm bg-transparent text-gray-900 rounded-xl w-full bg-transparent border-none focus:ring-0"
                   />
@@ -475,24 +481,22 @@ const Community = ({ community }) => {
                 {comments &&
                   comments.map((comment) => {
                     return (
-                      
-                        <CommunityCommentItem
-                          key={comment.id}
-                          comment={comment}
-                          comments={comments}
-                          setCommentMsg={setCommentMsg}
-                          setParentId={setParentId}
-                        />
-                      
+                      <CommunityCommentItem
+                        key={comment.id}
+                        comment={comment}
+                        comments={comments}
+                        setCommentMsg={setCommentMsg}
+                        setParentId={setParentId}
+                      />
                     );
                   })}
               </div>
             )}
           </div>
         ) : (
-          <span className="w-full italic text-sm text-gray-800 pb-2 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">{`得る Eru ${formatGroupName(
-            community
-          )} community...`}</span>
+          <span className="w-full italic text-sm text-gray-800 pb-2 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
+          <Lottie animationData={loadscreen} />
+        </span>
         )}
       </section>
       {sideBarOpened && <SideBar />}

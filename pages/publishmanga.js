@@ -191,6 +191,7 @@ const PublishManga = () => {
                   onChange={(e) => {
                     setMangaName(e.target.value);
                   }}
+                  maxLength={50}
                   className="px-4 h-15 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
                 />
               </span>
@@ -200,7 +201,7 @@ const PublishManga = () => {
                   Describe your manga series
                 </span>
                 <textarea
-                  maxLength={150}
+                  maxLength={160}
                   value={desc}
                   onChange={(e) => {
                     setDesc(e.target.value);

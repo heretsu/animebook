@@ -497,6 +497,7 @@ const Inbox = () => {
                             </span>
                             <span
                                 className={`cursor-default font-bold flex flex-row text-gray-500 text-[0.77rem]`}
+                                style={{ wordBreak: "break-word", whiteSpace: "pre-wrap"}}
                               >
                                 {sr.message.length > 110
                                   ? sr.message

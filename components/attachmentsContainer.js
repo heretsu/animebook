@@ -13,12 +13,16 @@ const AttachmentsContainer = ({ receiverid }) => {
 
   const {
     chatsObject,
+    allChats,
     messageRefs,
     foundMessageIndices,
     setFoundMessageIndices,
     currentFoundIndex,
     setCurrentFoundIndex,
-    setMessageItem
+    setMessageItem,
+    fetchChat,
+      setChatsObject
+   
   } = useContext(MessageContext);
 
   const router = useRouter();
@@ -59,8 +63,11 @@ const AttachmentsContainer = ({ receiverid }) => {
         fullPageReload("/signin");
         return;
       }
-      if (content !== "" || !selectedMedia) {
+      if (content !== "" || mediaFile) {
         if (mediaFile !== null) {
+          const contentMsg = content;
+          setSelectedMedia(null);
+          setContent('')
           let mediaUrls = [];
           for (const file of mediaFile) {
             const newName = Date.now() + file.name;
@@ -76,15 +83,14 @@ const AttachmentsContainer = ({ receiverid }) => {
               );
             }
           }
-          console.log("yo", mediaFile);
-          setSelectedMedia(null);
+          // setSelectedMedia(null);
           setMediaFile(null);
 
           supabase
             .from("conversations")
             .insert({
               senderid: userNumId,
-              message: content,
+              message: contentMsg,
               receiverid: receiverid,
               isread: false,
               attachments: mediaUrls.length > 0 ? mediaUrls : null,
@@ -95,18 +101,24 @@ const AttachmentsContainer = ({ receiverid }) => {
             });
         } else {
           if (content !== "") {
+            const contentMsg = content;
+            setContent('')
             try {
               supabase
                 .from("conversations")
                 .insert({
                   senderid: userNumId,
-                  message: content,
+                  message: contentMsg,
                   receiverid: receiverid,
                   isread: false,
                   attachments: null,
                 })
                 .then((res) => {
-                  setContent("");
+                  // setContent("");
+                  fetchChat(receiverid).then((res) => {
+                    setChatsObject(res.data);
+                  });
+
                   setDisable(false);
                 })
                 .catch((e) => {
@@ -301,6 +313,7 @@ const AttachmentsContainer = ({ receiverid }) => {
             onChange={(e) => {
               setContent(e.target.value);
             }}
+            maxLength={1900}
             placeholder={
               searchMode
                 ? "Search for messages in chat..."

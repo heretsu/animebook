@@ -29,17 +29,17 @@ export const getServerSideProps = async (context) => {
 
 const TextConfiguration = ({ text, highlight }) => {
   if (!highlight.trim()) {
-    return <span className="text-sm break-all">{text}</span>;
+    return <span className="text-sm break-all" style={{ wordBreak: "break-word", whiteSpace: "pre-wrap"}}>{text}</span>;
   }
 
   const regex = new RegExp(`(${highlight})`, 'gi');
   const parts = text.split(regex);
 
   return (
-    <span className="text-sm break-all">
+    <span className="text-sm break-all" style={{ wordBreak: "break-word", whiteSpace: "pre-wrap"}}>
       {parts.map((part, index) =>
         part.toLowerCase() === highlight.toLowerCase() ? (
-          <span key={index} className="bg-yellow-300">
+          <span key={index} className="bg-yellow-300" style={{ wordBreak: "break-word", whiteSpace: "pre-wrap"}}>
             {part}
           </span>
         ) : (
@@ -272,7 +272,6 @@ const Message = ({ message }) => {
 
       // Save original chats if not already saved
       if (originalChats === null) {
-        console.log("cypher: originalChats");
         setOriginalChats(allChats);
       } else {
         // Collect chat participants whose usernames include the search text
@@ -341,10 +340,9 @@ const Message = ({ message }) => {
     if (currenctChat === null || (userNumId && !allUserObject)) {
       setCurrentChat(message);
 
-      fetchFollowing(userNumId)
-        .then(({ data }) => {
+      if (userNumId) {fetchFollowing(userNumId)
+        .then(({ data, error }) => {
           if (!data) {
-            console.log("something wrong with data");
             return;
           }
           if (!allUserObject) {
@@ -402,7 +400,7 @@ const Message = ({ message }) => {
         })
         .catch((e) => {
           console.log("error: ", e);
-        });
+        });}
     } else if (currenctChat !== message && allUserObject) {
       const newChatUser = allUserObject.find(
         (user) => user.username === message
@@ -414,7 +412,8 @@ const Message = ({ message }) => {
       });
     }
 
-    if (messageRefs && messageRefs.current && messageRefs.current.length > 0) {
+    if (messageRefs && messageRefs.current && messageRefs.current.length > 0 && messageRefs.current[messageRefs.current.length - 1
+    ].current) {
       messageRefs.current[messageRefs.current.length - 1
       ].current.scrollIntoView();
     }
@@ -704,7 +703,10 @@ const Message = ({ message }) => {
                       setFoundMessageIndices,
                       currentFoundIndex,
                       setCurrentFoundIndex,
-                      setMessageItem
+                      setMessageItem,
+                      fetchChat,
+                        setChatsObject
+                      
                     }}
                   >
                     <AttachmentsContainer receiverid={userDetail.id} />

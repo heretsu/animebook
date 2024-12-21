@@ -7,8 +7,11 @@ import { UserContext } from "@/lib/userContext";
 import Posts from "@/components/posts";
 import DbUsers from "@/hooks/dbUsers";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import { useRouter } from "next/router";
 
 const Search = () => {
+  const router = useRouter()
+
   const {
     originalPostValues,
     setPostValues,
@@ -16,6 +19,8 @@ const Search = () => {
     allUserObject,
     setAllUserObject,
   } = useContext(UserContext);
+  const [searchedHash, setSearchedHash] = useState('')
+  const [searchInitialized, setSearchInitialized] = useState(false)
   const [hashtagList, setHashtagList] = useState(null);
   const [topicSelected, setTopicSelected] = useState(false);
   const [openSuggestions, setOpenSuggestions] = useState(null);
@@ -66,7 +71,10 @@ const Search = () => {
         .catch((e) => console.log(e, "search.js file users error"));
     }
   };
+
   const searchForItem = (e) => {
+    setSearchInitialized(true)
+    setSearchedHash(e.target.value)
     if (e.target.value !== "") {
       if (!postValues || !allUserObject || !originalPostValues) {
         getAllSearchData();
@@ -93,6 +101,17 @@ const Search = () => {
   };
 
   useEffect(() => {
+    if (!searchInitialized) {
+      const hash = router.asPath.split('#')[1];
+      if (hash && originalPostValues) {
+        console.log('Hash:', hash);
+        setSearchedHash('#'.concat(hash));
+        getSelectedHashTag(hash)
+        
+      }
+    }
+    
+    
     if (originalPostValues !== null && originalPostValues !== undefined) {
       fetchAllHashTags();
     }
@@ -103,7 +122,7 @@ const Search = () => {
         })
         .catch((e) => console.log(e, "useEffect in search tab users error"));
     }
-  }, [originalPostValues, allUserObject]);
+  }, [searchInitialized, router, originalPostValues, allUserObject]);
 
   return (
     <main>
@@ -154,6 +173,7 @@ const Search = () => {
             </svg>
             <input
               type="search"
+              value={searchedHash}
               onChange={searchForItem}
               className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
               placeholder="Search"
@@ -223,6 +243,7 @@ const Search = () => {
             <span className="mt-2 space-y-2 flex flex-col">
               <svg
                 onClick={() => {
+                  setSearchInitialized(true)
                   setTopicSelected(false);
                   setPostValues(originalPostValues);
                 }}

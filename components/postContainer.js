@@ -46,7 +46,7 @@ const PostContainer = ({communityId, community}) => {
     if (!userNumId){
       fullPageReload('/signin')
       return;
-    }
+    }    
     setPostLoading(true);
     if (mediaPost) {
       if (mediaFile !== null) {
@@ -71,7 +71,7 @@ const PostContainer = ({communityId, community}) => {
                 content: !mediaContent ? '' : mediaContent.trim(),
                 communityid: parseInt(communityId)
               });
-              fullPageReload(`/communities/${community}`)
+              fullPageReload(`/communities/${community.replace(/&.*/, "")}`)
 
             } else {
               await supabase.from("posts").insert({
@@ -98,7 +98,7 @@ const PostContainer = ({communityId, community}) => {
             content: content,
             communityid: parseInt(communityId)
           });
-          fullPageReload(`/communities/${community}`)
+          fullPageReload(`/communities/${community.replace(/&.*/, "")}`)
         }
         else{
           await supabase.from("posts").insert({
@@ -118,9 +118,7 @@ const PostContainer = ({communityId, community}) => {
   };
 
   useEffect(() => {
-    if (community){
-      setMediaPost(false)
-    }
+    
     // Media blob revoked after component is unmounted. Doing this to prevent memory leaks
     return () => {
       if (selectedMedia) {
@@ -134,6 +132,7 @@ const PostContainer = ({communityId, community}) => {
         <span
           onClick={() => {
             setErrorMsg("");
+            setPostLoading(false)
             setMediaPost(true);
           }}
           className={`cursor-pointer rounded py-1 px-2 text-center ${
@@ -147,6 +146,7 @@ const PostContainer = ({communityId, community}) => {
         <span
           onClick={() => {
             setErrorMsg("");
+            setPostLoading(false)
             setMediaPost(false);
           }}
           className={`cursor-pointer rounded py-1 px-2 text-center ${
@@ -253,8 +253,9 @@ const PostContainer = ({communityId, community}) => {
           )}
           <textarea
             value={mediaContent}
-            onChange={(e) => {
+            onChange={(e) => {if(e.target.value && e.target.value.length < 1900){
               setMediaContent(e.target.value);
+            }
             }}
             placeholder="Give us a description. Add tags to rank higher and get seen by others"
             className="h-18 resize-none w-full px-2 text-black border-none focus:outline-none focus:ring-0"
@@ -264,14 +265,16 @@ const PostContainer = ({communityId, community}) => {
         <textarea
           value={content}
           onChange={(e) => {
-            setContent(e.target.value);
+            if(e.target.value && e.target.value.length < 1900){
+              setContent(e.target.value);
+            }
           }}
           placeholder="Sodesuka. Tell us..."
           className="px-8 h-18 resize-none w-full px-2 text-black border-none focus:outline-none focus:ring-0"
         />
       )}
       <span className="pb-2 flex flex-col">
-        {postLoading && (!mediaPost && content.trim() !== '') ? (
+        {postLoading && (selectedMedia || content.trim() !== '') ? (
           <span className="mx-auto">
             <Spinner spinnerSize={"medium"} />
           </span>

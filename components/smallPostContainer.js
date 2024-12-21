@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import supabase from "@/hooks/authenticateUser";
@@ -19,6 +19,7 @@ const SmallPostContainer = ({ communityId, community }) => {
   const [mediaFile, setMediaFile] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [postLoading, setPostLoading] = useState(false);
+  const textareaRef = useRef(null);
 
   const mediaChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -138,14 +139,23 @@ const SmallPostContainer = ({ communityId, community }) => {
             className="rounded-full object"
           />
         </span>
-        <input
+        <textarea
           value={content}
           onChange={(e) => {
-            setContent(e.target.value);
+            const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+    if(e.target.value && e.target.value.length < 1900){
+      setContent(e.target.value);
+    }
+            
           }}
+          ref={textareaRef}
           placeholder={`What's on your mind...`}
-          className="w-full bg-transparent text-black border-none focus:outline-none focus:ring-0"
-        />
+          className="text-sm resize-none w-full bg-transparent text-black border-none focus:outline-none focus:ring-0"
+        ></textarea>
         {selectedMedia ? (
           <label onClick={mediaChange} htmlFor="input-post-file">
             {isImage ? (

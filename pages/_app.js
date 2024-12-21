@@ -11,8 +11,11 @@ import Onboard from "@/components/onboard";
 import Relationships from "@/hooks/relationships";
 
 export default function App({ Component, pageProps }) {
-  const { fetchAllPosts } = DbUsers();
+  const { fetchAllPosts, fetchAllReposts } = DbUsers();
   const router = useRouter();
+  const [youMayKnow, setYouMayKnow] = useState(null);
+  const [newPeople, setNewPeople] = useState(null);
+
   const [address, setAddress] = useState(null);
   const [userData, setUserData] = useState(undefined);
   const [subscribed, setSubscribed] = useState(false);
@@ -130,6 +133,7 @@ export default function App({ Component, pageProps }) {
       if (dbresponse.error) {
         console.error("ERROR FROM OUTER USER ID CHECK: ", dbresponse.error);
       } else {
+        
         setAllUsers(dbresponse.data);
         const data = dbresponse.data.find((u) => u.useruuid === user.id);
         /*
@@ -200,13 +204,91 @@ export default function App({ Component, pageProps }) {
               });
 
               if (router.pathname !== "/profile/[user]") {
-                fetchAllPosts().then((result1) => {
-                  fetchCommunities().then((secondResult) => {
-                    if (secondResult !== undefined && secondResult !== null) {
-                      setCommunities(secondResult.data);
-                      setOriginalPostValues(result1.data);
-                      setPostValues(result1.data);
-                    }
+                fetchAllReposts().then((reposts) => {
+                  fetchAllPosts().then((result1) => {
+                    fetchCommunities().then((secondResult) => {
+                      if (secondResult !== undefined && secondResult !== null) {
+                        // const sortedCommunities = [...communitiesWithMembers].sort((a, b) => b.membersLength - a.membersLength);
+
+                        setCommunities(
+                          [...secondResult.data].sort(
+                            (a, b) => b.membersLength - a.membersLength
+                          )
+                        );
+                        setOriginalPostValues(
+                          reposts
+                            .map((repost) => {
+                              const originalPost = result1.data.find(
+                                (post) => post.id === repost.postid
+                              );
+
+                              if (originalPost) {
+                                return {
+                                  ...originalPost,
+                                  repostAuthor: repost.users,
+                                  repostQuote: repost.quote,
+                                  repostCreatedAt: repost.created_at,
+                                };
+                              }
+                              return null;
+                            })
+                            .filter(Boolean)
+                            .concat(
+                              result1.data.filter(
+                                (post) =>
+                                  !reposts.some(
+                                    (repost) => repost.postid === post.id
+                                  )
+                              )
+                            )
+                            .sort((a, b) => {
+                              const dateA = new Date(
+                                a.repostQuote ? a.repostCreatedAt : a.created_at
+                              );
+                              const dateB = new Date(
+                                b.repostQuote ? b.repostCreatedAt : b.created_at
+                              );
+                              return dateB - dateA;
+                            })
+                        );
+                        setPostValues(
+                          reposts
+                            .map((repost) => {
+                              const originalPost = result1.data.find(
+                                (post) => post.id === repost.postid
+                              );
+
+                              if (originalPost) {
+                                return {
+                                  ...originalPost,
+                                  repostAuthor: repost.users,
+                                  repostQuote: repost.quote,
+                                  repostCreatedAt: repost.created_at,
+                                };
+                              }
+                              return null;
+                            })
+                            .filter(Boolean)
+                            .concat(
+                              result1.data.filter(
+                                (post) =>
+                                  !reposts.some(
+                                    (repost) => repost.postid === post.id
+                                  )
+                              )
+                            )
+                            .sort((a, b) => {
+                              const dateA = new Date(
+                                a.repostQuote ? a.repostCreatedAt : a.created_at
+                              );
+                              const dateB = new Date(
+                                b.repostQuote ? b.repostCreatedAt : b.created_at
+                              );
+                              return dateB - dateA;
+                            })
+                        );
+                      }
+                    });
                   });
                 });
               }
@@ -230,13 +312,89 @@ export default function App({ Component, pageProps }) {
           });
 
           if (router.pathname !== "/profile/[user]") {
-            fetchAllPosts().then((result1) => {
-              fetchCommunities().then((secondResult) => {
-                if (secondResult !== undefined && secondResult !== null) {
-                  setCommunities(secondResult.data);
-                  setOriginalPostValues(result1.data);
-                  setPostValues(result1.data);
-                }
+            fetchAllReposts().then((reposts) => {
+              fetchAllPosts().then((result1) => {
+                fetchCommunities().then((secondResult) => {
+                  if (secondResult !== undefined && secondResult !== null) {
+                    setCommunities(
+                      [...secondResult.data].sort(
+                        (a, b) => b.membersLength - a.membersLength
+                      )
+                    );
+                    setOriginalPostValues(
+                      reposts
+                        .map((repost) => {
+                          const originalPost = result1.data.find(
+                            (post) => post.id === repost.postid
+                          );
+
+                          if (originalPost) {
+                            return {
+                              ...originalPost,
+                              repostAuthor: repost.users,
+                              repostQuote: repost.quote,
+                              repostCreatedAt: repost.created_at,
+                            };
+                          }
+                          return null;
+                        })
+                        .filter(Boolean)
+                        .concat(
+                          result1.data.filter(
+                            (post) =>
+                              !reposts.some(
+                                (repost) => repost.postid === post.id
+                              )
+                          )
+                        )
+                        .sort((a, b) => {
+                          const dateA = new Date(
+                            a.repostQuote ? a.repostCreatedAt : a.created_at
+                          );
+                          const dateB = new Date(
+                            b.repostQuote ? b.repostCreatedAt : b.created_at
+                          );
+                          return dateB - dateA;
+                        })
+                    );
+                    setPostValues(
+                      reposts
+                        .map((repost) => {
+                          const originalPost = result1.data.find(
+                            (post) => post.id === repost.postid
+                          );
+
+                          if (originalPost) {
+                            return {
+                              ...originalPost,
+                              repostAuthor: repost.users,
+                              repostQuote: repost.quote,
+                              repostCreatedAt: repost.created_at,
+                            };
+                          }
+                          return null;
+                        })
+                        .filter(Boolean)
+                        .concat(
+                          result1.data.filter(
+                            (post) =>
+                              !reposts.some(
+                                (repost) => repost.postid === post.id
+                              )
+                          )
+                        )
+                        .sort((a, b) => {
+                          const dateA = new Date(
+                            a.repostQuote ? a.repostCreatedAt : a.created_at
+                          );
+                          const dateB = new Date(
+                            b.repostQuote ? b.repostCreatedAt : b.created_at
+                          );
+                          return dateB - dateA;
+                        })
+                    );
+                  }
+                });
               });
             });
           }
@@ -292,6 +450,7 @@ export default function App({ Component, pageProps }) {
         "/inbox/[message]",
         "/settings",
         "/earn",
+        "/leaderboard",
         "/create",
         "/publishmanga",
         "/subscriptionplan",
@@ -309,13 +468,89 @@ export default function App({ Component, pageProps }) {
             }
           } else {
             if (router.pathname !== "/profile/[user]") {
-              fetchAllPosts().then((result1) => {
-                fetchCommunities().then((secondResult) => {
-                  if (secondResult !== undefined && secondResult !== null) {
-                    setCommunities(secondResult.data);
-                    setOriginalPostValues(result1.data);
-                    setPostValues(result1.data);
-                  }
+              fetchAllReposts().then((reposts) => {
+                fetchAllPosts().then((result1) => {
+                  fetchCommunities().then((secondResult) => {
+                    if (secondResult !== undefined && secondResult !== null) {
+                      setCommunities(
+                        [...secondResult.data].sort(
+                          (a, b) => b.membersLength - a.membersLength
+                        )
+                      );
+                      setOriginalPostValues(
+                        reposts
+                          .map((repost) => {
+                            const originalPost = result1.data.find(
+                              (post) => post.id === repost.postid
+                            );
+
+                            if (originalPost) {
+                              return {
+                                ...originalPost,
+                                repostAuthor: repost.users,
+                                repostQuote: repost.quote,
+                                repostCreatedAt: repost.created_at,
+                              };
+                            }
+                            return null;
+                          })
+                          .filter(Boolean)
+                          .concat(
+                            result1.data.filter(
+                              (post) =>
+                                !reposts.some(
+                                  (repost) => repost.postid === post.id
+                                )
+                            )
+                          )
+                          .sort((a, b) => {
+                            const dateA = new Date(
+                              a.repostQuote ? a.repostCreatedAt : a.created_at
+                            );
+                            const dateB = new Date(
+                              b.repostQuote ? b.repostCreatedAt : b.created_at
+                            );
+                            return dateB - dateA;
+                          })
+                      );
+                      setPostValues(
+                        reposts
+                          .map((repost) => {
+                            const originalPost = result1.data.find(
+                              (post) => post.id === repost.postid
+                            );
+
+                            if (originalPost) {
+                              return {
+                                ...originalPost,
+                                repostAuthor: repost.users,
+                                repostQuote: repost.quote,
+                                repostCreatedAt: repost.created_at,
+                              };
+                            }
+                            return null;
+                          })
+                          .filter(Boolean)
+                          .concat(
+                            result1.data.filter(
+                              (post) =>
+                                !reposts.some(
+                                  (repost) => repost.postid === post.id
+                                )
+                            )
+                          )
+                          .sort((a, b) => {
+                            const dateA = new Date(
+                              a.repostQuote ? a.repostCreatedAt : a.created_at
+                            );
+                            const dateB = new Date(
+                              b.repostQuote ? b.repostCreatedAt : b.created_at
+                            );
+                            return dateB - dateA;
+                          })
+                      );
+                    }
+                  });
                 });
               });
             }
@@ -333,6 +568,11 @@ export default function App({ Component, pageProps }) {
   return (
     <UserContext.Provider
       value={{
+        allUsers,
+        youMayKnow,
+        setYouMayKnow,
+        newPeople,
+        setNewPeople,
         address,
         userData,
         setUserData,
@@ -435,6 +675,7 @@ export default function App({ Component, pageProps }) {
           "/publishmanga",
           "/settings",
           "/earn",
+          "/leaderboard",
           "/subscriptionplan",
           "/inbox",
           "/[message]",

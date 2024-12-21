@@ -19,6 +19,7 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import SideBar from "@/components/sideBar";
 import Lottie from "lottie-react";
 import animationData from "@/assets/kianimation.json";
+import loadscreen from "@/assets/loadscreen.json";
 
 
 export const getServerSideProps = async (context) => {
@@ -176,7 +177,6 @@ export default function User({ user }) {
         sendAmount.toFixed(18).toString(),
         18
       );
-      console.log(wei);
 
       const { provider } = await connectToWallet();
       let transactionResponse = null;
@@ -187,7 +187,6 @@ export default function User({ user }) {
       });
 
       const receipt = await transactionResponse.wait();
-      console.log(receipt);
 
       if (receipt) {
         const { error } = await supabase.from("subscriptions").insert({
@@ -234,6 +233,7 @@ export default function User({ user }) {
       throw "a problem occurred";
     }
   };
+  const [userNotFound, setUserNotFound] = useState(false)
 
   useEffect(() => {
     setRoutedUser(user);
@@ -243,6 +243,10 @@ export default function User({ user }) {
         const currentUserExtraInfo = r.data.find(
           (c) => c.username.toLowerCase() === user.toLowerCase()
         );
+        if (!currentUserExtraInfo){
+          setUserNotFound(true)
+          return;
+        }
         setItsMe(currentUserExtraInfo.id === userNumId);
         if (currentUserExtraInfo.id === userNumId) {
           setMyProfileRoute(true);
@@ -499,9 +503,9 @@ export default function User({ user }) {
                 )}
                 {openPremium ? (
                   mangaLoading ? (
-                    <span className="mx-auto text-slate-500">
-                      fetching mangas...
-                    </span>
+                    <span className="h-screen">
+                <Lottie animationData={loadscreen} />
+              </span>
                   ) : (
                     <span className="text-xs md:text-sm flex flex-col w-full justify-center space-y-4">
                       {mangaObjects && mangaObjects.length > 0 ? (
@@ -516,7 +520,7 @@ export default function User({ user }) {
                                   }
                                 </p>
                               </span>
-                              {userBasicInfo.subprice && (
+                              {userBasicInfo.subprice ? (
                                 <span className="bg-white rounded-lg px-4 py-6 flex flex-row justify-between items-center">
                                   <span className="font-semibold flex flex-col">
                                     <span className="text-slate-400">
@@ -544,6 +548,9 @@ export default function User({ user }) {
                                     </span>
                                   )}
                                 </span>
+                              ) : (mangaObjects.length > 0 && <span className="italic rounded-lg px-2 flex flex-row justify-between items-center">
+                                {userBasicInfo.username} has no active or free subscription plan but you can buy their mangas and comics
+                                  </span>
                               )}
                             </>
                           ) : (
@@ -556,7 +563,7 @@ export default function User({ user }) {
                                 : "nothing"
                             } per month`}</span>
                           )}
-                          <div className="h-fit grid gap-2 grid-cols-3">
+                          <div className="h-fit grid gap-2 grid-cols-2">
                             {mangaObjects.length > 0 &&
                               mangaObjects.map((mangaSeries) => {
                                 return (
@@ -565,7 +572,7 @@ export default function User({ user }) {
                                     onClick={() => {
                                       readManga(mangaSeries);
                                     }}
-                                    className="cursor-pointer h-fit relative rounded-lg overflow-hidden"
+                                    className="cursor-pointer h-[250px] w-[160px] relative rounded-lg overflow-hidden"
                                   >
                                     <Image
                                       src={mangaSeries.cover}
@@ -575,23 +582,23 @@ export default function User({ user }) {
                                     />
                                     <div className="absolute inset-0 bg-black bg-opacity-70 text-white flex flex-col justify-between items-start">
                                       <span className="p-1 w-full flex flex-row justify-between items-center">
-                                        <span className="w-fit py-1 px-1.5 bg-pastelGreen rounded">
+                                        <span className="w-fit text-xs font-semibold py-1 px-1.5 bg-pastelGreen rounded">
                                           {`$${parseFloat(
                                             mangaSeries.price
                                           ).toFixed(2)}`}
                                         </span>
-                                        <span className="text-gray-200 pr-1.5">
+                                        <span className="text-xs font-medium text-gray-200 pr-1.5">
                                           {`${mangaSeries.pages} Pages`}
                                         </span>
                                       </span>
-                                      <span className="p-2">
-                                        <p className="font-semibold">
+                                      <span className="p-2 flex flex-col">
+                                        <span className="text-sm font-semibold">
                                           {`${mangaSeries.name}`}
-                                        </p>
+                                        </span>
                                         {mangaSeries.description && (
-                                          <p className="text-xs md:text-sm">
+                                          <span className="text-[11px] leading-tight">
                                             {`${mangaSeries.description}...`}
-                                          </p>
+                                          </span>
                                         )}
                                       </span>
                                     </div>
@@ -642,14 +649,17 @@ export default function User({ user }) {
                         ))}
                     </span>
                   )
-                ) : (
-                  <Posts />
+                ) : (  
+                    userPostValues && userPostValues.length > 0 ? <Posts /> : <span className="w-full text-gray-600 text-center">{"Nanimonai! No posts found"}</span>
+                  
                 )}
               </div>
             </div>
           ) : (
             <div className="text-start text-slate-500 w-full py-2 space-y-5 px-2 lg:pl-lPostCustom lg:pr-rPostCustom mt-2 lg:mt-20 flex flex-col">
-              fetching info...
+              {userNotFound ? <span>No such user</span> : <span className="-ml-2 h-6 w-8">
+                <Lottie animationData={animationData} />
+              </span>}
             </div>
           )}
 

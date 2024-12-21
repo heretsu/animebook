@@ -82,20 +82,20 @@ const Notifications = () => {
   //     return "Older";
   //   }
   // };
-  
+
   const updateReadNotification = async () => {
     const { error } = await supabase
       .from("users")
       .update({
         lastreadnotification: new Date().toISOString(),
-    })
+      })
       .eq("id", userNumId);
-      console.log(error)
+    console.log(error);
   };
 
   useEffect(() => {
     updateReadNotification();
-    setNotifyUserObject(null)
+    setNotifyUserObject(null);
   }, []);
 
   return (

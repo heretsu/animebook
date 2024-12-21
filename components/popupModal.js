@@ -39,6 +39,7 @@ export default function PopupModal({
   mangaImage,
   mangaName,
   mangaId,
+  post,
 }) {
   const { sendNotification } = DappLibrary();
   const ercABI = ErcTwentyToken.abi;
@@ -618,20 +619,25 @@ export default function PopupModal({
             >
               <path d="M29,14h-2.2c-0.2-1.3-0.6-2.5-1.3-3.7c-0.7-1.3-0.5-3,0.6-4.1c0.4-0.4,0.4-1,0-1.4c-2-2-5.2-2-7.3-0.1C17.7,4.2,16.3,4,15,4 c-3.9,0-7.5,1.9-9.8,5c-1.5,2-2.2,4.5-2.2,7c0,2.2,0.6,4.3,1.7,6.1l0.1,0.2c-0.1,0.1-0.2,0.1-0.3,0.1C4.2,22.5,4,22.3,4,22 c0-0.6-0.4-1-1-1s-1,0.4-1,1c0,1.4,1.1,2.5,2.5,2.5c0.5,0,1-0.2,1.4-0.4l3.3,5.4C9.3,29.8,9.6,30,10,30h4c0.3,0,0.6-0.1,0.8-0.4 c0.2-0.2,0.3-0.5,0.2-0.8L14.8,28c0.4,0,0.9,0,1.3,0L16,28.8c0,0.3,0,0.6,0.2,0.8S16.7,30,17,30h4c0.3,0,0.7-0.2,0.8-0.5l2-3.1 c2.4-0.9,4.5-2.2,5.9-3.7c0.2-0.2,0.3-0.4,0.3-0.7V15C30,14.4,29.6,14,29,14z M14.9,14.5h1.3c1.6,0,2.9,1.3,2.9,3 c0,1.5-1.1,2.7-2.5,2.9V21c0,0.6-0.4,1-1,1s-1-0.4-1-1v-0.6c-1.4-0.2-2.5-1.4-2.5-2.9c0-0.6,0.4-1,1-1s1,0.4,1,1 c0,0.5,0.4,0.9,0.9,0.9h1.3c0.5,0,0.9-0.4,0.9-0.9c0-0.5-0.4-1-0.9-1h-1.3c-1.6,0-2.9-1.3-2.9-3c0-1.5,1.1-2.7,2.5-2.9V10 c0-0.6,0.4-1,1-1s1,0.4,1,1v0.6c1.4,0.2,2.5,1.4,2.5,2.9c0,0.6-0.4,1-1,1s-1-0.4-1-1c0-0.5-0.4-0.9-0.9-0.9h-1.3 c-0.5,0-0.9,0.4-0.9,0.9C14,14.1,14.4,14.5,14.9,14.5z" />
             </svg>
-            <span>{`Tip ${username} san`}</span>
+            {post === true ? (
+              <span>{`Tip this post`}</span>
+            ) : (
+              <span>{`Tip ${username} san`}</span>
+            )}
           </span>
 
-          <span className="mx-auto py-3">
+          <span className="mt-2 mx-auto relative h-9 w-9 flex">
             <Image
               src={avatar}
               alt="user profile"
-              height={50}
               width={50}
-              className="rounded-full"
+              height={50}
+              className="rounded-full object-cover"
             />
           </span>
+          {post === true && <span className="w-full text-center text-xs text-gray-600 font-medium">{`Creator: ${username} san`}</span>}
 
-          <span className="w-full h-fit text-gray-500 flex flex-row justify-between items-center bg-slate-200 rounded-lg">
+          <span className="mt-3 w-full h-fit text-gray-500 flex flex-row justify-between items-center bg-slate-200 rounded-lg">
             <span className="flex flex-row items-center justify-start">
               <span className="text-3xl pl-2 font-medium">{"$"}</span>
               <input
