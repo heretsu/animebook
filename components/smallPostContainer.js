@@ -68,7 +68,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             await supabase.from("community_posts").insert({
               userid: userNumId,
               media: mediaUrl,
-              content: content.trim() !== '' ? content.trim() : '',
+              content: content.trim() !== "" ? content.trim() : "",
               communityid: parseInt(communityId),
             });
             fullPageReload(`/communities/${community}`);
@@ -76,7 +76,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             await supabase.from("posts").insert({
               userid: userNumId,
               media: mediaUrl,
-              content: content.trim() !== '' ? content.trim() : '',
+              content: content.trim() !== "" ? content.trim() : "",
             });
             fullPageReload("/home");
           }
@@ -141,16 +141,21 @@ const SmallPostContainer = ({ communityId, community }) => {
         </span>
         <textarea
           value={content}
+          onKeyDown={(e)=>{
+            if (e.key === "Backspace" && content && content.length === 1) {
+              setContent("");
+            }
+          }}
           onChange={(e) => {
             const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = "auto";
-      textarea.style.height = `${textarea.scrollHeight}px`;
-    }
-    if(e.target.value && e.target.value.length < 1900){
-      setContent(e.target.value);
-    }
+            if (textarea) {
+              textarea.style.height = "auto";
+              textarea.style.height = `${textarea.scrollHeight}px`;
+            }
             
+            if (e.target.value && e.target.value.length < 1900) {
+              setContent(e.target.value);
+            }
           }}
           ref={textareaRef}
           placeholder={`What's on your mind...`}
@@ -236,37 +241,39 @@ const SmallPostContainer = ({ communityId, community }) => {
         )}
       </span>
 
-      {(mediaFile || content.trim() !== "") && <span className="flex flex-col">
-        {postLoading ? (
-          <span className="mx-auto">
-            <Spinner spinnerSize={"medium"} />
-          </span>
-        ) : (
-          <span
-            onClick={() => {
-              createPost();
-            }}
-            className="w-fit mx-auto hover:shadow cursor-pointer px-12 py-1 bg-pastelGreen text-center text-white font-bold border"
-          >
-            Post
-          </span>
-        )}
-        {errorMsg !== "" && (
-          <span className="text-sm w-full flex flex-row justify-center items-center">
-            <svg
-              fill="red"
-              width="20px"
-              height="20px"
-              viewBox="0 -8 528 528"
-              xmlns="http://www.w3.org/2000/svg"
+      {(mediaFile || content.trim() !== "") && (
+        <span className="flex flex-col">
+          {postLoading ? (
+            <span className="mx-auto">
+              <Spinner spinnerSize={"medium"} />
+            </span>
+          ) : (
+            <span
+              onClick={() => {
+                createPost();
+              }}
+              className="w-fit mx-auto hover:shadow cursor-pointer px-12 py-1 bg-pastelGreen text-center text-white font-bold border"
             >
-              <title>{"fail"}</title>
-              <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
-            </svg>
-            <p className="text-red-500">{errorMsg}</p>
-          </span>
-        )}
-      </span>}
+              Post
+            </span>
+          )}
+          {errorMsg !== "" && (
+            <span className="text-sm w-full flex flex-row justify-center items-center">
+              <svg
+                fill="red"
+                width="20px"
+                height="20px"
+                viewBox="0 -8 528 528"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title>{"fail"}</title>
+                <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
+              </svg>
+              <p className="text-red-500">{errorMsg}</p>
+            </span>
+          )}
+        </span>
+      )}
     </div>
   );
 };
