@@ -9,16 +9,20 @@ import { MessageContext } from "@/lib/messageContext";
 
 const AttachmentsContainer = ({ receiverid }) => {
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId } = useContext(UserContext);
+  const { userNumId, darkMode} = useContext(UserContext);
 
   const {
     chatsObject,
+    allChats,
     messageRefs,
     foundMessageIndices,
     setFoundMessageIndices,
     currentFoundIndex,
     setCurrentFoundIndex,
-    setMessageItem
+    setMessageItem,
+    fetchChat,
+      setChatsObject
+   
   } = useContext(MessageContext);
 
   const router = useRouter();
@@ -59,8 +63,11 @@ const AttachmentsContainer = ({ receiverid }) => {
         fullPageReload("/signin");
         return;
       }
-      if (content !== "" || !selectedMedia) {
+      if (content !== "" || mediaFile) {
         if (mediaFile !== null) {
+          const contentMsg = content;
+          setSelectedMedia(null);
+          setContent('')
           let mediaUrls = [];
           for (const file of mediaFile) {
             const newName = Date.now() + file.name;
@@ -76,15 +83,14 @@ const AttachmentsContainer = ({ receiverid }) => {
               );
             }
           }
-          console.log("yo", mediaFile);
-          setSelectedMedia(null);
+          // setSelectedMedia(null);
           setMediaFile(null);
 
           supabase
             .from("conversations")
             .insert({
               senderid: userNumId,
-              message: content,
+              message: contentMsg,
               receiverid: receiverid,
               isread: false,
               attachments: mediaUrls.length > 0 ? mediaUrls : null,
@@ -95,18 +101,24 @@ const AttachmentsContainer = ({ receiverid }) => {
             });
         } else {
           if (content !== "") {
+            const contentMsg = content;
+            setContent('')
             try {
               supabase
                 .from("conversations")
                 .insert({
                   senderid: userNumId,
-                  message: content,
+                  message: contentMsg,
                   receiverid: receiverid,
                   isread: false,
                   attachments: null,
                 })
                 .then((res) => {
-                  setContent("");
+                  // setContent("");
+                  fetchChat(receiverid).then((res) => {
+                    setChatsObject(res.data);
+                  });
+
                   setDisable(false);
                 })
                 .catch((e) => {
@@ -272,7 +284,7 @@ const AttachmentsContainer = ({ receiverid }) => {
           />
         </label>
       )}
-      <span className="bg-gray-100 py-2 px-2 border border-gray-200 flex flex-col w-full">
+      <span className={`${darkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-gray-100 text-black border-gray-200'} py-2 px-2 border flex flex-col w-full`}>
         <span className="w-full relative flex flex-row justify-between items-center">
           {!searchMode && (
             <svg
@@ -301,6 +313,7 @@ const AttachmentsContainer = ({ receiverid }) => {
             onChange={(e) => {
               setContent(e.target.value);
             }}
+            maxLength={1900}
             placeholder={
               searchMode
                 ? "Search for messages in chat..."
@@ -308,7 +321,7 @@ const AttachmentsContainer = ({ receiverid }) => {
             }
             className={`resize-none ${
               searchMode ? "h-8" : "h-12"
-            } w-full bg-transparent text-black text-xs font-semibold border-none focus:outline-none focus:ring-0`}
+            } w-full bg-transparent text-xs font-semibold border-none focus:outline-none focus:ring-0`}
           />
           <span className="flex flex-col justify-center items-center">
             {searchMode ? (
@@ -327,7 +340,7 @@ const AttachmentsContainer = ({ receiverid }) => {
                 <path
                   d="M1.5 1.5L13.5 13.5M1.5 13.5L13.5 1.5"
                   strokeWidth="2.5"
-                  stroke="gray"
+                  stroke={darkMode ? "white" : "gray"}
                 />
               </svg>
             ) : (
@@ -337,7 +350,7 @@ const AttachmentsContainer = ({ receiverid }) => {
                 height="20px"
                 viewBox="0 0 48 48"
                 xmlns="http://www.w3.org/2000/svg"
-                fill="gray"
+                fill={darkMode ? "#04dbc4" : "gray"}
                 className="cursor-pointer"
               >
                 <title>{"send"}</title>
@@ -363,7 +376,7 @@ const AttachmentsContainer = ({ receiverid }) => {
             >
               Search
             </span>
-            {openSearchNav && <span className="text-gray-500">
+            {openSearchNav && <span className={darkMode ? "text-white" : "text-gray-500"}>
               {foundMessageIndices.length}{" "}
               {foundMessageIndices.length === 1 ? "match" : "matches"}
             </span>}

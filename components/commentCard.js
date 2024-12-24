@@ -120,6 +120,7 @@ export default function CommentCard({ openComments }) {
               postComment();
             }
           }}
+          maxLength={1900}
           className="text-gray-800 rounded-xl w-full bg-slate-100 border-none focus:ring-0"
           placeholder="Leave a comment"
         />

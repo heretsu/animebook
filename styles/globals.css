@@ -31,6 +31,22 @@ body {
   margin: auto;
 }
 
+ol{
+  list-style-type: decimal;
+  margin: 0.5rem 0;
+}
+
+ul{
+  list-style: disc;
+  margin: 0.5rem 0;
+}
+
+li{
+  margin: 0.5rem 0;
+}
+
+
+
 @media(max-width: 1024px) {
   body {
     width: 100%;
@@ -288,7 +304,6 @@ body {
 
 #mobile-suggests{
   position: absolute; 
-  background: white;
   top: 100%;
   z-index: 10;
   width: 50%;
@@ -319,7 +334,7 @@ margin-top: 0.5rem !important;
 }
 
 .topcont{
-  background-color: #e8edf1;
+  background-color: transparent;
   position: sticky;
   top: 0rem;
   padding-top: 0.5rem;

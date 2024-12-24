@@ -10,7 +10,7 @@ import Spinner from "@/components/spinner";
 
 const PublishManga = () => {
   const {fullPageReload} = PageLoadOptions()
-  const { userData, userNumId } = useContext(UserContext);
+  const { userData, userNumId, darkMode } = useContext(UserContext);
   const router = useRouter();
   const [selectedMangaCover, setSelectedMangaCover] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
@@ -133,7 +133,7 @@ const PublishManga = () => {
       <section className="mb-5 flex flex-row space-x-2 w-full">
         <NavBar />
         <div className="w-full pb-2 space-y-8 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
-          <div className="text-gray-600 flex flex-col space-y-4 rounded-xl shadow-lg w-full bg-white justify-center items-center">
+          <div className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-gray-600'} flex flex-col space-y-4 rounded-xl shadow-lg w-full justify-center items-center`}>
             {selectedMangaCover ? (
               <label
                 htmlFor="input-file"
@@ -191,7 +191,8 @@ const PublishManga = () => {
                   onChange={(e) => {
                     setMangaName(e.target.value);
                   }}
-                  className="px-4 h-15 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                  maxLength={50}
+                  className={`${darkMode ? 'bg-gray-500' : 'bg-gray-200'} px-4 h-15 rounded-xl resize-none w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
                 />
               </span>
 
@@ -200,12 +201,12 @@ const PublishManga = () => {
                   Describe your manga series
                 </span>
                 <textarea
-                  maxLength={150}
+                  maxLength={160}
                   value={desc}
                   onChange={(e) => {
                     setDesc(e.target.value);
                   }}
-                  className="px-4 h-15 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                  className={`${darkMode ? 'bg-gray-500' : 'bg-gray-200'} px-4 h-15 rounded-xl resize-none w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
                 />
               </span>
 
@@ -218,7 +219,7 @@ const PublishManga = () => {
                   onChange={(e) => {
                     setMangaPrice(!isNaN(e.target.value) ? e.target.value : mangaPrice);
                   }}
-                  className="px-4 h-15 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                  className={`${darkMode ? 'bg-gray-500' : 'bg-gray-200'} px-4 h-15 rounded-xl resize-none w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
                 />
               </span>
 
@@ -271,7 +272,7 @@ const PublishManga = () => {
                   onClick={() => {
                     publishManga();
                   }}
-                  className="w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold border rounded-lg"
+                  className="w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold rounded-lg"
                 >
                   Publish
                 </span>}

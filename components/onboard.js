@@ -51,7 +51,7 @@ export default function Onboard({ allUsers, me }) {
 
   const connectAndUpload = async () => {
     setActivated(true);
-    const address = await connectToWallet();
+    const {addr: address} = await connectToWallet();
     if (address) {
       updateUserInfo(address);
     } else {
@@ -99,7 +99,7 @@ export default function Onboard({ allUsers, me }) {
 
         const newUser = {
           useruuid: me.id,
-          username: username,
+          username: username.trim(),
           avatar: imageUrl ? imageUrl : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
           address: addr ? addr : null,
           ki: 0

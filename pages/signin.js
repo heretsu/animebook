@@ -1,9 +1,11 @@
 import supabase from "@/hooks/authenticateUser";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import ConnectionData from "@/lib/connectionData";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext} from "react";
+import { UserContext } from "@/lib/userContext";
 
 const Signin = () => {
+  const {darkMode} = useContext(UserContext)
   const { address, connectToWallet } = ConnectionData();
   const { fullPageReload } = PageLoadOptions();
   const [note, setNote] = useState("");
@@ -107,9 +109,9 @@ const Signin = () => {
         <span id="anime-book-font" className="pr-2 text-pastelGreen">
           Anime
         </span>
-        <span id="anime-book-font">Bo</span>
+        <span id="anime-book-font" className={darkMode ? 'text-white' : 'text-black'}>Bo</span>
         <span className="text-invisible text-white">o</span>
-        <span id="anime-book-font">ok</span>
+        <span id="anime-book-font" className={darkMode ? 'text-white' : 'text-black'}>ok</span>
       </div>
 
       <div className="bg-white mx-auto my-6 rounded-xl w-full md:w-1/2 lg:w-1/3 p-4 shadow">
@@ -488,8 +490,8 @@ const Signin = () => {
       </div>
 
       <div className="rounded-b-xl pb-3 px-6 text-textGreen text-xs flex flex-row justify-center space-x-10">
-        <span className="cursor-pointer underline">Terms of Service</span>
-        <span className="cursor-pointer underline">Privacy Policy</span>
+        <span onClick={()=>{fullPageReload('/terms-of-service')}} className="cursor-pointer underline">Terms of Service</span>
+        <span onClick={()=>{fullPageReload('privacy-policy')}} className="cursor-pointer underline">Privacy Policy</span>
       </div>
     </div>
   );

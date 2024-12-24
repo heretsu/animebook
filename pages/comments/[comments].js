@@ -31,6 +31,7 @@ export default function Comments({ comments }) {
     parentId,
     setParentId,
     inputRef,
+    darkMode
   } = useContext(UserContext);
   const [errorMsg, setErrorMsg] = useState("");
   const [commentPostLoading, setCommentPostLoading] = useState(false);
@@ -107,7 +108,7 @@ export default function Comments({ comments }) {
   }, [postid]);
 
   return (
-    <main className="w-full">
+    <main className={`${darkMode ? 'text-white' : 'text-black'} w-full`}>
       <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
         <div className="w-full py-2 px-2 flex flex-col">
           {postReferenced ? (
@@ -188,7 +189,7 @@ export default function Comments({ comments }) {
               <div
                 className={`${
                   !postReferenced.media ? "w-full" : "md:w-1/3"
-                } min-h-screen md:bg-white md:max-h-screen rounded-xl md:rounded-none flex flex-col`}
+                } min-h-screen md:max-h-screen rounded-xl md:rounded-none flex flex-col`}
               >
                 <svg
                   onClick={() => {
@@ -237,17 +238,20 @@ export default function Comments({ comments }) {
                 </span>
                 <div className="my-3 px-2 space-x-2 flex flex-row items-center h-fit">
                   {userData && (
+                    <span className="flex h-8 w-8">
+
                     
                       <Image
                         src={userData.avatar}
                         alt="user profile"
                         height={35}
                         width={35}
-                        className="rounded-full"
+                        className="relative rounded-full"
                       />
+                      </span>
                     
                   )}
-                  <div className="border border-slate-200 bg-slate-100 w-full flex flex-row items-center justify-center pr-2">
+                  <div className={`${darkMode ? 'bg-gray-700 border-slate-700 text-white' : 'bg-slate-100 border-slate-200 text-gray-800'} border w-full flex flex-row items-center justify-center pr-2`}>
                     <input
                       ref={inputRef}
                       value={commentMsg}
@@ -259,7 +263,7 @@ export default function Comments({ comments }) {
                           postComment();
                         }
                       }}
-                      className="text-gray-800 focus:border-none focus:outline-none focus:ring-0 rounded-xl w-full bg-transparent border border-transparent focus:ring-0"
+                      className="focus:border-none focus:outline-none focus:ring-0 rounded-xl w-full bg-transparent border border-transparent focus:ring-0"
                       placeholder="Leave a comment"
                     />
                     {commentPostLoading ? (
@@ -277,7 +281,7 @@ export default function Comments({ comments }) {
                         height={26}
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="#000000"
+                        stroke={darkMode ? "#e2e8f0" : "#000000"}
                         strokeWidth={2}
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -303,7 +307,7 @@ export default function Comments({ comments }) {
                     <p className="text-red-500">{errorMsg}</p>
                   </span>
                 )}
-                <div className="flex flex-col pb-2 bg-white md:min-h-0 md:h-full md:overflow-scroll rounded-xl px-2 space-y-2">
+                <div className={`${darkMode ? 'bg-[#1e1f24]' : 'bg-white'} flex flex-col pb-2 md:min-h-0 md:h-full md:overflow-scroll rounded-xl px-2 space-y-2`}>
                   <span className="p-2 w-full border-b border-gray-400 text-center font-semibold text-base">
                     Comments
                   </span>

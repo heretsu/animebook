@@ -29,17 +29,17 @@ export const getServerSideProps = async (context) => {
 
 const TextConfiguration = ({ text, highlight }) => {
   if (!highlight.trim()) {
-    return <span className="text-sm break-all">{text}</span>;
+    return <span className="text-sm break-all" style={{ wordBreak: "break-word", whiteSpace: "pre-wrap"}}>{text}</span>;
   }
 
   const regex = new RegExp(`(${highlight})`, 'gi');
   const parts = text.split(regex);
 
   return (
-    <span className="text-sm break-all">
+    <span className="text-sm break-all" style={{ wordBreak: "break-word", whiteSpace: "pre-wrap"}}>
       {parts.map((part, index) =>
         part.toLowerCase() === highlight.toLowerCase() ? (
-          <span key={index} className="bg-yellow-300">
+          <span key={index} className="bg-yellow-300" style={{ wordBreak: "break-word", whiteSpace: "pre-wrap"}}>
             {part}
           </span>
         ) : (
@@ -55,7 +55,7 @@ const Message = ({ message }) => {
   const [currentQuery, setCurrentQuery] = useState(null);
   const { fullPageReload } = PageLoadOptions();
   const router = useRouter();
-  const { userNumId, userData, allUserObject, setAllUserObject } =
+  const { userNumId, userData, allUserObject, setAllUserObject, darkMode } =
     useContext(UserContext);
   const [following, setFollowing] = useState(null);
   const [userToSearch, setUserToSearch] = useState("");
@@ -272,7 +272,6 @@ const Message = ({ message }) => {
 
       // Save original chats if not already saved
       if (originalChats === null) {
-        console.log("cypher: originalChats");
         setOriginalChats(allChats);
       } else {
         // Collect chat participants whose usernames include the search text
@@ -341,10 +340,9 @@ const Message = ({ message }) => {
     if (currenctChat === null || (userNumId && !allUserObject)) {
       setCurrentChat(message);
 
-      fetchFollowing(userNumId)
-        .then(({ data }) => {
+      if (userNumId) {fetchFollowing(userNumId)
+        .then(({ data, error }) => {
           if (!data) {
-            console.log("something wrong with data");
             return;
           }
           if (!allUserObject) {
@@ -402,7 +400,7 @@ const Message = ({ message }) => {
         })
         .catch((e) => {
           console.log("error: ", e);
-        });
+        });}
     } else if (currenctChat !== message && allUserObject) {
       const newChatUser = allUserObject.find(
         (user) => user.username === message
@@ -414,7 +412,8 @@ const Message = ({ message }) => {
       });
     }
 
-    if (messageRefs && messageRefs.current && messageRefs.current.length > 0) {
+    if (messageRefs && messageRefs.current && messageRefs.current.length > 0 && messageRefs.current[messageRefs.current.length - 1
+    ].current) {
       messageRefs.current[messageRefs.current.length - 1
       ].current.scrollIntoView();
     }
@@ -584,7 +583,7 @@ const Message = ({ message }) => {
                   </g>
                 </svg>
               </span>
-              <span className="relative bg-white h-full overflow-scroll flex flex-col justify-between">
+              <span className={`${darkMode ? 'bg-[#1e1f24] ' : 'bg-white '} relative h-full overflow-scroll flex flex-col justify-between`}>
                 <span className="flex flex-col pt-5 px-2 space-y-2.5">
                   {chatsObject !== null &&
                   chatsObject !== undefined &&
@@ -704,7 +703,10 @@ const Message = ({ message }) => {
                       setFoundMessageIndices,
                       currentFoundIndex,
                       setCurrentFoundIndex,
-                      setMessageItem
+                      setMessageItem,
+                      fetchChat,
+                        setChatsObject
+                      
                     }}
                   >
                     <AttachmentsContainer receiverid={userDetail.id} />
@@ -714,13 +716,13 @@ const Message = ({ message }) => {
             </span>
           </div>
         ) : (
-          <span className="w-full italic text-sm text-gray-800 pb-2 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">{`得る Loading chat with ${message}`}</span>
+          <span className={`${darkMode ? 'text-white' : 'text-gray-800'} w-full italic text-sm pb-2 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col`}>{`得る Loading chat with ${message}`}</span>
         )}
 
-        <div className="bg-white px-2 hidden lg:block sticky right-2 top-20 heighto">
+        <div className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-black'} px-2 hidden lg:block sticky right-2 top-20 heighto`}>
           <span className="flex flex-col w-full min-h-screen h-full overflow-scroll">
-            <span className="sticky top-0 bg-white pt-2">
-              <span className="bg-gray-100 mt-2 py-1 pl-4 w-full flex flex-row items-center bg-gray-100">
+            <span className="sticky top-0 bg-[#1e1f24] pt-0">
+              <span className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} mt-2 py-1 pl-4 w-full flex flex-row items-center`}>
                 <svg
                   className="w-4 h-4 text-gray-500"
                   aria-hidden="true"
@@ -740,7 +742,7 @@ const Message = ({ message }) => {
                   value={messageItem}
                   onChange={searchForMessage}
                   type="search"
-                  className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+                  className={`${darkMode ? 'text-white' : 'text-gray-500'} w-full text-sm bg-transparent border-none focus:ring-0 placeholder-gray-400`}
                   placeholder="Search chat"
                 />
               </span>
@@ -753,7 +755,7 @@ const Message = ({ message }) => {
                   return (
                     <span
                       key={sr.id}
-                      className="flex flex-row w-full border-b border-gray-300 items-center py-2"
+                      className={`${darkMode ? 'border-gray-700' : 'border-gray-300'} flex flex-row w-full border-b items-center py-2`}
                     >
                       <span
                         onClick={() => {
@@ -815,7 +817,7 @@ const Message = ({ message }) => {
                           </span>
                         </span>
                         <span
-                          className={`cursor-default font-bold flex flex-row text-gray-500 text-[0.77rem]`}
+                          className={`${darkMode ? 'text-white' : 'text-gray-500'} cursor-default font-bold flex flex-row text-[0.77rem]`}
                         >
                           {sr.message.length > 110
                             ? sr.message.slice(0, 110).trim().concat("...")
@@ -834,7 +836,7 @@ const Message = ({ message }) => {
                   return (
                     <span
                       key={singleChat.id}
-                      className="relative flex flex-row w-full border-b border-gray-300 items-end py-2"
+                      className={`${darkMode ? 'border-gray-700' : 'border-gray-300'} relative flex flex-row w-full border-b items-end py-2`}
                       onClick={() => {
                         setMessageItem("");
                         setSearchResult(null)
@@ -883,7 +885,7 @@ const Message = ({ message }) => {
                               <span className="h-1.5 w-1.5 flex flex-shrink-0 mr-1 bg-pastelGreen rounded-full"></span>
                             )}
                           <span
-                            className={`cursor-default font-bold text-gray-500 text-[0.77rem] truncate ${
+                            className={`${darkMode ? 'text-white' : 'text-gray-500'} cursor-default font-bold text-[0.77rem] truncate ${
                               singleChat.receiverid === userNumId &&
                               !singleChat.isread &&
                               "font-black"

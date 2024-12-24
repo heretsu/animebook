@@ -46,7 +46,8 @@ const CommentConfig = ({ text, tags }) => {
       return (
         <span
           key={index}
-          onClick={() => getClickedHashtag(word)}
+          // onClick={() => getClickedHashtag(word)}
+          onClick={()=>{fullPageReload('/search?'.concat(word))}}
           className="text-green-500 cursor-pointer"
           style={{ paddingRight: "4px" }}
         >
@@ -81,10 +82,13 @@ const CommentConfig = ({ text, tags }) => {
   };
 
   const words = text.split(/(\s+)/).map(renderWord);
-  return <span 
-  className="break-all whitespace-pre-wrap" 
-  style={{ wordBreak: "break-word", whiteSpace: "pre-wrap" }}
->{words}</span>;
+  return (
+    <span
+      style={{ wordBreak: "break-word", whiteSpace: "pre-wrap"}}
+    >
+      {words}
+    </span>
+  );
 };
 
 export default CommentConfig;

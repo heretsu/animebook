@@ -11,6 +11,7 @@ import Onboard from "@/components/onboard";
 import Relationships from "@/hooks/relationships";
 
 export default function App({ Component, pageProps }) {
+  const [darkMode, setDarkMode] = useState(null)
   const { fetchAllPosts, fetchAllReposts } = DbUsers();
   const router = useRouter();
   const [youMayKnow, setYouMayKnow] = useState(null);
@@ -133,6 +134,7 @@ export default function App({ Component, pageProps }) {
       if (dbresponse.error) {
         console.error("ERROR FROM OUTER USER ID CHECK: ", dbresponse.error);
       } else {
+        
         setAllUsers(dbresponse.data);
         const data = dbresponse.data.find((u) => u.useruuid === user.id);
         /*
@@ -194,6 +196,10 @@ export default function App({ Component, pageProps }) {
               }
 
               setUserNumId(res.data[0].id);
+              setDarkMode(res.data[0].theme)
+              // if (res.data[0].theme) {
+              //   localStorage.getItem("darkMode");
+              // }
               setUserData({
                 preferred_username: res.data[0].username,
                 picture: user.user_metadata.picture
@@ -203,18 +209,24 @@ export default function App({ Component, pageProps }) {
               });
 
               if (router.pathname !== "/profile/[user]") {
-                fetchAllReposts().then((reposts)=>{
+                fetchAllReposts().then((reposts) => {
                   fetchAllPosts().then((result1) => {
                     fetchCommunities().then((secondResult) => {
                       if (secondResult !== undefined && secondResult !== null) {
-                        setCommunities(secondResult.data);
+                        // const sortedCommunities = [...communitiesWithMembers].sort((a, b) => b.membersLength - a.membersLength);
+
+                        setCommunities(
+                          [...secondResult.data].sort(
+                            (a, b) => b.membersLength - a.membersLength
+                          )
+                        );
                         setOriginalPostValues(
                           reposts
                             .map((repost) => {
                               const originalPost = result1.data.find(
                                 (post) => post.id === repost.postid
                               );
-    
+
                               if (originalPost) {
                                 return {
                                   ...originalPost,
@@ -250,7 +262,7 @@ export default function App({ Component, pageProps }) {
                               const originalPost = result1.data.find(
                                 (post) => post.id === repost.postid
                               );
-    
+
                               if (originalPost) {
                                 return {
                                   ...originalPost,
@@ -283,9 +295,7 @@ export default function App({ Component, pageProps }) {
                       }
                     });
                   });
-                })
-                
-                
+                });
               }
             } else {
               console.log("ERROR FROM INNER USER ID CHECK: ", res.error);
@@ -298,6 +308,7 @@ export default function App({ Component, pageProps }) {
           fetchFollowingAndFollowers(data.id);
           setUserNumId(data.id);
           setAddress(data.address);
+          setDarkMode(data.theme)
           setUserData({
             preferred_username: data.username,
             picture: user.user_metadata.picture
@@ -311,7 +322,11 @@ export default function App({ Component, pageProps }) {
               fetchAllPosts().then((result1) => {
                 fetchCommunities().then((secondResult) => {
                   if (secondResult !== undefined && secondResult !== null) {
-                    setCommunities(secondResult.data);
+                    setCommunities(
+                      [...secondResult.data].sort(
+                        (a, b) => b.membersLength - a.membersLength
+                      )
+                    );
                     setOriginalPostValues(
                       reposts
                         .map((repost) => {
@@ -427,6 +442,11 @@ export default function App({ Component, pageProps }) {
   };
 
   useEffect(() => {
+    if (darkMode){
+        document.body.style.backgroundColor = "black"
+    } else {
+      document.body.style.backgroundColor = "#e8edf1"
+    }
     if (
       [
         "/home",
@@ -441,6 +461,7 @@ export default function App({ Component, pageProps }) {
         "/inbox/[message]",
         "/settings",
         "/earn",
+        "/leaderboard",
         "/create",
         "/publishmanga",
         "/subscriptionplan",
@@ -462,7 +483,11 @@ export default function App({ Component, pageProps }) {
                 fetchAllPosts().then((result1) => {
                   fetchCommunities().then((secondResult) => {
                     if (secondResult !== undefined && secondResult !== null) {
-                      setCommunities(secondResult.data);
+                      setCommunities(
+                        [...secondResult.data].sort(
+                          (a, b) => b.membersLength - a.membersLength
+                        )
+                      );
                       setOriginalPostValues(
                         reposts
                           .map((repost) => {
@@ -549,11 +574,13 @@ export default function App({ Component, pageProps }) {
         });
       }
     }
-  }, [address, router.pathname, router, subscribed]);
+  }, [darkMode, address, router.pathname, router, subscribed]);
 
   return (
     <UserContext.Provider
       value={{
+        darkMode,
+        setDarkMode,
         allUsers,
         youMayKnow,
         setYouMayKnow,
@@ -661,6 +688,7 @@ export default function App({ Component, pageProps }) {
           "/publishmanga",
           "/settings",
           "/earn",
+          "/leaderboard",
           "/subscriptionplan",
           "/inbox",
           "/[message]",

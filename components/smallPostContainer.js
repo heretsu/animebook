@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import supabase from "@/hooks/authenticateUser";
@@ -8,7 +8,7 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 
 const SmallPostContainer = ({ communityId, community }) => {
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, userData } = useContext(UserContext);
+  const { userNumId, userData, darkMode} = useContext(UserContext);
   const router = useRouter();
   const [content, setContent] = useState("");
   const [mediaContent, setMediaContent] = useState("");
@@ -19,6 +19,7 @@ const SmallPostContainer = ({ communityId, community }) => {
   const [mediaFile, setMediaFile] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [postLoading, setPostLoading] = useState(false);
+  const textareaRef = useRef(null);
 
   const mediaChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -67,7 +68,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             await supabase.from("community_posts").insert({
               userid: userNumId,
               media: mediaUrl,
-              content: content.trim() !== '' ? content.trim() : '',
+              content: content.trim() !== "" ? content.trim() : "",
               communityid: parseInt(communityId),
             });
             fullPageReload(`/communities/${community}`);
@@ -75,7 +76,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             await supabase.from("posts").insert({
               userid: userNumId,
               media: mediaUrl,
-              content: content.trim() !== '' ? content.trim() : '',
+              content: content.trim() !== "" ? content.trim() : "",
             });
             fullPageReload("/home");
           }
@@ -118,17 +119,17 @@ const SmallPostContainer = ({ communityId, community }) => {
     };
   }, [selectedMedia]);
   return (
-    <div className="p-4 flex flex-col space-y-4 shadow-lg w-full bg-white justify-center items-center">
+    <div className={`p-4 flex flex-col space-y-4 shadow-lg w-full ${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white'} justify-center items-center`}>
       <span className="flex flex-row w-full justify-center space-x-2">
         <span
           id="anime-book-font"
-          className="w-full text-start text-xl text-slate-600"
+          className={`w-full text-start text-xl ${darkMode ? 'text-white': 'text-slate-600'}`}
         >
           {"POST SOMETHING.."}
         </span>
       </span>
 
-      <span className="w-full p-2 bg-gray-100 relative flex flex-row justify-between items-center space-x-0">
+      <span className={`w-full p-2 ${darkMode ? 'bg-zinc-800 text-white' : 'bg-gray-100'} relative flex flex-row justify-between items-center space-x-0`}>
         <span className="relative h-9 w-9 flex flex-shrink-0">
           <Image
             src={userData.avatar}
@@ -140,13 +141,25 @@ const SmallPostContainer = ({ communityId, community }) => {
         </span>
         <textarea
           value={content}
-          onChange={(e) => {
-            setContent(e.target.value);
-            
+          onKeyDown={(e)=>{
+            if (e.key === "Backspace" && content && content.length === 1) {
+              setContent("");
+            }
           }}
-          
+          onChange={(e) => {
+            const textarea = textareaRef.current;
+            if (textarea) {
+              textarea.style.height = "auto";
+              textarea.style.height = `${textarea.scrollHeight}px`;
+            }
+            
+            if (e.target.value && e.target.value.length < 1900) {
+              setContent(e.target.value);
+            }
+          }}
+          ref={textareaRef}
           placeholder={`What's on your mind...`}
-          className="text-sm resize-none w-full bg-transparent text-black border-none focus:outline-none focus:ring-0"
+          className={`text-sm resize-none w-full bg-transparent ${darkMode ? 'placeholder:text-gray-400 text-white' : 'text-black'} border-none focus:outline-none focus:ring-0`}
         ></textarea>
         {selectedMedia ? (
           <label onClick={mediaChange} htmlFor="input-post-file">
@@ -184,6 +197,8 @@ const SmallPostContainer = ({ communityId, community }) => {
               viewBox="0 0 218.168 218.168"
               style={{ enableBackground: "new 0 0 218.168 218.168" }}
               xmlSpace="preserve"
+              className={darkMode ? "text-white" : "text-black"}
+              fill="currentColor"
             >
               <g opacity="0.3">
                 <g>
@@ -228,37 +243,39 @@ const SmallPostContainer = ({ communityId, community }) => {
         )}
       </span>
 
-      {(mediaFile || content.trim() !== "") && <span className="flex flex-col">
-        {postLoading ? (
-          <span className="mx-auto">
-            <Spinner spinnerSize={"medium"} />
-          </span>
-        ) : (
-          <span
-            onClick={() => {
-              createPost();
-            }}
-            className="w-fit mx-auto hover:shadow cursor-pointer px-12 py-1 bg-pastelGreen text-center text-white font-bold border"
-          >
-            Post
-          </span>
-        )}
-        {errorMsg !== "" && (
-          <span className="text-sm w-full flex flex-row justify-center items-center">
-            <svg
-              fill="red"
-              width="20px"
-              height="20px"
-              viewBox="0 -8 528 528"
-              xmlns="http://www.w3.org/2000/svg"
+      {(mediaFile || content.trim() !== "") && (
+        <span className="flex flex-col">
+          {postLoading ? (
+            <span className="mx-auto">
+              <Spinner spinnerSize={"medium"} />
+            </span>
+          ) : (
+            <span
+              onClick={() => {
+                createPost();
+              }}
+              className={`w-fit mx-auto hover:shadow cursor-pointer px-12 py-1 bg-pastelGreen text-center text-white font-bold`}
             >
-              <title>{"fail"}</title>
-              <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
-            </svg>
-            <p className="text-red-500">{errorMsg}</p>
-          </span>
-        )}
-      </span>}
+              Post
+            </span>
+          )}
+          {errorMsg !== "" && (
+            <span className="text-sm w-full flex flex-row justify-center items-center">
+              <svg
+                fill="red"
+                width="20px"
+                height="20px"
+                viewBox="0 -8 528 528"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title>{"fail"}</title>
+                <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
+              </svg>
+              <p className="text-red-500">{errorMsg}</p>
+            </span>
+          )}
+        </span>
+      )}
     </div>
   );
 };

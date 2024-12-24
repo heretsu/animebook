@@ -14,7 +14,7 @@ import SideBar from "@/components/sideBar";
 const Inbox = () => {
   const router = useRouter();
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, userData, allUserObject, setAllUserObject, sideBarOpened, setSideBarOpened} =
+  const { userNumId, userData, allUserObject, setAllUserObject, sideBarOpened, setSideBarOpened, darkMode} =
     useContext(UserContext);
   const [newChat, setNewChat] = useState(false);
   const { fetchAllUsers } = DbUsers();
@@ -227,13 +227,13 @@ const Inbox = () => {
         <NavBar />
         <div className="w-full top-0 pb-2 space-y-8 pl-2 lg:pl-60 pr-4 flex flex-col">
           {newChat ? (
-            <span className="flex flex-col w-full bg-white min-h-screen h-full mt-2 px-4">
+            <span className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-black'} flex flex-col w-full min-h-screen h-full mt-2 px-4`}>
               <span className="border-b border-gray-300 flex flex-row justify-between items-center">
                 <svg
                   onClick={() => {
                     setNewChat(false);
                   }}
-                  fill="#000000"
+                  fill={darkMode ? "white" : "#000000"}
                   width="18px"
                   height="18px"
                   viewBox="-3.5 0 19 19"
@@ -250,9 +250,9 @@ const Inbox = () => {
                 </span>
                 <span></span>
               </span>
-              <span className="mt-2 py-1 pl-4 w-full flex flex-row items-center bg-gray-100">
+              <span className={`${darkMode ? 'bg-gray-500 text-white' : 'bg-gray-100 text-gray-500 '} mt-2 py-1 pl-4 w-full flex flex-row items-center`}>
                 <svg
-                  className="w-4 h-4 text-gray-500"
+                  className="w-4 h-4"
                   aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -270,7 +270,7 @@ const Inbox = () => {
                   value={userToSearch}
                   onChange={searchForUser}
                   type="search"
-                  className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+                  className="w-full text-sm bg-transparent border-none focus:ring-0 placeholder-gray-400"
                   placeholder="Search users to chat with!"
                 />
               </span>
@@ -338,7 +338,7 @@ const Inbox = () => {
               <span className="flex flex-col w-full">
                 <span
                   id="anime-book-font"
-                  className="flex lg:hidden flex-row bg-gray-100 border-b border-gray-200 shadow-xl p-2 justify-between items-center"
+                  className={`${darkMode ? 'bg-[#1e1f24] text-white border-b border-gray-400' : 'bg-gray-100 border-b border-gray-200'} flex lg:hidden flex-row shadow-xl p-2 justify-between items-center`}
                 >
                   <span
                     onClick={() => {
@@ -354,7 +354,7 @@ const Inbox = () => {
                       className="border border-white rounded-full"
                     />
                   </span>
-                  <span className="text-gray-600 font-bold text-xl">
+                  <span className={`${darkMode ? 'text-white' : 'text-gray-600'} font-bold text-xl`}>
                     Messages
                   </span>
                   <span
@@ -405,10 +405,10 @@ const Inbox = () => {
                   </span>
                 </span>
 
-                <span className="px-2 w-full bg-white min-h-screen h-full">
-                  <span className="mt-2 py-1 pl-4 w-full flex flex-row items-center bg-gray-100 border border-gray-200">
+                <span className={`${darkMode ? 'bg-[#1e1f24]' : 'bg-white' }px-2 w-full min-h-screen h-full`}>
+                  <span className={`${darkMode ? 'bg-gray-500 border-none' : 'bg-gray-100 border border-gray-200'} mt-2 py-1 pl-4 w-full flex flex-row items-center`}>
                     <svg
-                      className="w-4 h-4 text-gray-500"
+                      className={`${darkMode ? 'text-gray-300' : 'text-gray-500'} w-4 h-4`}
                       aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
@@ -426,7 +426,7 @@ const Inbox = () => {
                       value={messageItem}
                       onChange={searchForMessage}
                       type="search"
-                      className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+                      className={`${darkMode ? 'text-whitea' : 'text-gray-500'} w-full text-sm bg-transparent border-none focus:ring-0 placeholder-gray-400`}
                       placeholder="Search for messages and more..."
                     />
                   </span>
@@ -497,6 +497,7 @@ const Inbox = () => {
                             </span>
                             <span
                                 className={`cursor-default font-bold flex flex-row text-gray-500 text-[0.77rem]`}
+                                style={{ wordBreak: "break-word", whiteSpace: "pre-wrap"}}
                               >
                                 {sr.message.length > 110
                                   ? sr.message
@@ -519,7 +520,7 @@ const Inbox = () => {
                       return (
                         <span
                           key={singleChat.id}
-                          className="flex flex-row w-full border-b border-gray-300 items-center py-2"
+                          className={`${darkMode ? 'text-white border-b border-gray-800' : 'text-black border-b border-gray-300'} flex flex-row w-full items-center py-2`}
                         >
                           <span
                             onClick={() => {
@@ -584,7 +585,7 @@ const Inbox = () => {
                                   <span className="h-1.5 w-1.5 flex flex-shrink-0 mr-1 bg-pastelGreen rounded-full"></span>
                                 )}
                               <span
-                                className={`cursor-default font-bold flex flex-row text-gray-500 text-[0.77rem] ${
+                                className={`${darkMode ? 'text-white' : 'text-gray-500'} cursor-default font-bold flex flex-row text-[0.77rem] ${
                                   singleChat.receiverid === userNumId &&
                                   !singleChat.isread &&
                                   "font-black"
@@ -603,7 +604,7 @@ const Inbox = () => {
                       );
                     })
                   ) : (
-                    !searchResult || searchResult && searchResult.length === 0 && <span className="p-2 text-sm text-gray-500 w-full flex flex-row justify-center">
+                    !searchResult || searchResult && searchResult.length === 0 && <span className={`${darkMode ? 'text-white' : 'text-gray-500'} p-2 text-sm w-full flex flex-row justify-center`}>
                       {"Start a conversation"}
                     </span>
                   )}

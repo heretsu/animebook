@@ -10,7 +10,7 @@ import DappLibrary from "@/lib/dappLibrary";
 export default function CommunityCommentItemChild({ commentChild, setCommentMsg, setParentId }) {
    const {postTimeAgo} = DappLibrary()
     const { fullPageReload } = PageLoadOptions();
-  const { userNumId, communityInputRef, userData } =
+  const { userNumId, communityInputRef, userData, darkMode } =
     useContext(UserContext);
     const [upvotes, setUpVotes] = useState(null);
     const [upvoted, setUpvoted] = useState(false);
@@ -75,7 +75,7 @@ export default function CommunityCommentItemChild({ commentChild, setCommentMsg,
   return (
     upvotes &&
         <span className="flex justify-end w-full space-y-2">
-        <span className="w-11/12 bg-white text-black space-y-3 py-4 px-3 rounded-xl flex flex-col justify-center text-start">
+        <span className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-black'} w-11/12 space-y-3 py-4 px-3 rounded-xl flex flex-col justify-center text-start`}>
           <span className="flex flex-row justify-between items-center">
             <span
               onClick={() => {
@@ -109,7 +109,7 @@ export default function CommunityCommentItemChild({ commentChild, setCommentMsg,
               </span>
             )}
           <div className="text-white flex flex-row justify-between items-center">
-            <div className="flex flex-row items-center space-x-4 bg-white pr-4 py-2">
+            <div className="flex flex-row items-center space-x-4 pr-4 py-2">
               <div className="cursor-pointer py-0.5 px-2 rounded-3xl bg-slate-400 flex items-center space-x-1">
                 <svg
                 onClick={()=>{upvoteComment(commentChild.id)}}

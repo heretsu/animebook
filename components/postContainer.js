@@ -253,8 +253,9 @@ const PostContainer = ({communityId, community}) => {
           )}
           <textarea
             value={mediaContent}
-            onChange={(e) => {
+            onChange={(e) => {if(e.target.value && e.target.value.length < 1900){
               setMediaContent(e.target.value);
+            }
             }}
             placeholder="Give us a description. Add tags to rank higher and get seen by others"
             className="h-18 resize-none w-full px-2 text-black border-none focus:outline-none focus:ring-0"
@@ -264,7 +265,9 @@ const PostContainer = ({communityId, community}) => {
         <textarea
           value={content}
           onChange={(e) => {
-            setContent(e.target.value);
+            if(e.target.value && e.target.value.length < 1900){
+              setContent(e.target.value);
+            }
           }}
           placeholder="Sodesuka. Tell us..."
           className="px-8 h-18 resize-none w-full px-2 text-black border-none focus:outline-none focus:ring-0"

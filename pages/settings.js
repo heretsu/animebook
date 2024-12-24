@@ -5,7 +5,7 @@ import ConnectionData from "@/lib/connectionData";
 import { useRouter } from "next/router";
 const Settings = () => {
   const router = useRouter()
-  const {disconnectWallet} = ConnectionData() 
+  const {disconnectWallet} = ConnectionData();
 
   const logOut = async () => {
     try {

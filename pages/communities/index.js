@@ -13,12 +13,17 @@ import { UserContext } from "@/lib/userContext";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import SideBar from "@/components/sideBar";
 import DappLibrary from "@/lib/dappLibrary";
+import Lottie from "lottie-react";
+import loadscreen from "@/assets/loadscreen.json";
+import darkloadscreen from "@/assets/darkloadscreen.json"
 
 const Communities = () => {
+  const [cValue, setCValue] = useState('')
+  const [defaultCommunities, setDefaultCommunities] = useState(null)
   const { getUserFromId } = DappLibrary();
   const { fullPageReload } = PageLoadOptions();
   const router = useRouter();
-  const { userData, communities, setCommunities, sideBarOpened } =
+  const { userData, communities, setCommunities, sideBarOpened, darkMode } =
     useContext(UserContext);
   const [addCommunity, setAddCommunity] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -40,7 +45,12 @@ const Communities = () => {
       userData.useruuid === "69436932-d1e0-43a6-92bb-1ee4644331b2" ||
       userData.useruuid === "6db1f631-b204-499e-a1e2-fcf77647e14f" ||
       userData.useruuid === "222a3ecf-d715-43ba-9aec-ee97a8b8bed6" ||
-      userData.useruuid === "e58cd906-1a25-43fc-bffb-67e3c1689c26"
+      userData.useruuid === "e58cd906-1a25-43fc-bffb-67e3c1689c26" ||
+      userData.useruuid === "7adc69a6-84ea-4893-a74f-4977d060a235" ||
+      userData.useruuid === "a5ad109b-e701-4752-9fa8-47a6ec913e37" || 
+      userData.useruuid === "222a3ecf-d715-43ba-9aec-ee97a8b8bed6" ||
+      userData.useruuid === "e58cd906-1a25-43fc-bffb-67e3c1689c26" ||
+      userData.useruuid === "881ee2e4-3edc-4a75-82e5-a55972ce09a8"
     ) {
       setIsAdmin(true);
       return "admin";
@@ -98,14 +108,17 @@ const Communities = () => {
         .toLowerCase()
         .replace(/\s+(?!\s*$)/g, "+"),
     });
-    
+
     if (!error) {
       setCommunityRequests(
         communityRequests.filter((cr) => {
           return cr.id !== id;
         })
       );
-      const { error } = await supabase.from("community_requests").delete().eq("id", id);
+      const { error } = await supabase
+        .from("community_requests")
+        .delete()
+        .eq("id", id);
     }
   };
 
@@ -115,8 +128,11 @@ const Communities = () => {
         return cr.id !== id;
       })
     );
-    const { error } = await supabase.from("community_requests").delete().eq("id", id);
-  }
+    const { error } = await supabase
+      .from("community_requests")
+      .delete()
+      .eq("id", id);
+  };
 
   const fetchCommunities = async () => {
     const { data } = await supabase
@@ -139,7 +155,10 @@ const Communities = () => {
         ...community,
         membersLength: communityMembersCountMap.get(community.id) || 0,
       }));
-      setCommunities(communitiesWithMembers);
+      const sortedCommunities = [...communitiesWithMembers].sort(
+        (a, b) => b.membersLength - a.membersLength
+      );
+      setCommunities(sortedCommunities);
     }
     setLoading(false);
   };
@@ -155,10 +174,12 @@ const Communities = () => {
     if (userData) {
       checkIfAdmin();
     }
-    if (communities) {
+
+    if (communities && !defaultCommunities) {
+      setDefaultCommunities(communities)
       setLoading(false);
     }
-  }, [userData, communities]);
+  }, [userData, communities, defaultCommunities]);
   return (
     <main>
       <section className="mb-5 flex flex-row space-x-2 w-full">
@@ -196,15 +217,15 @@ const Communities = () => {
                 </svg>
               </span>
               {loading ? (
-                <span className="text-gray-900 text-sm text-start w-full">
-                  fetching community requests...
+                <span className="h-screen">
+                  <Lottie animationData={darkMode ? darkloadscreen : loadscreen} />
                 </span>
               ) : communityRequests && communityRequests.length > 0 ? (
                 communityRequests.map((request) => {
                   return (
                     <span
                       key={request.id}
-                      className="cursor-pointer w-full justify-between flex flex-row bg-white rounded border border-gray-300"
+                      className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-black'} cursor-pointer w-full justify-between flex flex-row rounded border border-gray-300`}
                     >
                       <Image
                         src={request.avatar}
@@ -248,9 +269,12 @@ const Communities = () => {
                           >
                             {"Approve"}
                           </span>
-                          <span onClick={()=>{
-                            rejectCommunity(request.id)
-                          }} className="cursor-default py-0.5 text-center bg-gray-400 w-full rounded-md flex flex-row items-center justify-center">
+                          <span
+                            onClick={() => {
+                              rejectCommunity(request.id);
+                            }}
+                            className="cursor-default py-0.5 text-center bg-gray-400 w-full rounded-md flex flex-row items-center justify-center"
+                          >
                             {"Reject"}
                           </span>
                         </span>
@@ -259,7 +283,7 @@ const Communities = () => {
                   );
                 })
               ) : (
-                <span className="text-gray-900 text-sm text-start w-full">
+                <span className={`darkMode ? 'text-gray-200' : 'text-gray-900'} text-sm text-start w-full`}>
                   No new community requests
                 </span>
               )}
@@ -290,6 +314,7 @@ const Communities = () => {
             </div>
           ) : (
             <div className="w-full space-y-5 mt-2 lg:mt-20 flex flex-col">
+              
               <span className="flex flex-row w-full justify-end text-sm">
                 {isAdmin && (
                   <span
@@ -323,9 +348,42 @@ const Communities = () => {
                 )}
               </span>
               <div className="flex flex-col items-center space-y-1.5 w-full">
+              <span className={`${darkMode ? 'bg-zinc-800 text-white' : 'border-[1.5px] border-gray-300 bg-gray-100 text-gray-500'} px-2 py-1 w-full flex flex-row items-center rounded-3xl`}>
+            <svg
+              className="w-4 h-4 text-slate-400"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+              />
+            </svg>
+            <input
+              type="search"
+              value={cValue}
+              onChange={(e)=> {
+                setCValue(e.target.value)
+                if (e.target.value){
+                  setCommunities(defaultCommunities.filter((c)=> {return (c.name.toLowerCase().includes(e.target.value.toLowerCase()) || c.bio.toLowerCase().includes(e.target.value.toLowerCase()))}))
+                } else{
+                  if (defaultCommunities){
+                    setCommunities(defaultCommunities)
+                  }
+                }
+              }}
+              className="w-full text-sm bg-transparent border-none focus:ring-0 placeholder-gray-400"
+              placeholder="Search Communities"
+            />
+          </span>
                 {loading ? (
-                  <span className="text-gray-900 text-sm text-start w-full">
-                    fetching communities...
+                  <span className="h-screen">
+                    <Lottie animationData={darkMode ? darkloadscreen : loadscreen} />
                   </span>
                 ) : communities && communities.length > 0 ? (
                   communities.map((community) => {
@@ -337,7 +395,7 @@ const Communities = () => {
                             `/communities/${community.name}`.replace(" ", "+")
                           );
                         }}
-                        className="cursor-pointer w-full flex flex-row bg-white rounded border border-gray-300"
+                        className={`border ${darkMode ? 'bg-[#1e1f24] border-gray-700 text-white' : 'bg-white border-gray-300 text-black'} cursor-pointer w-full flex flex-row rounded`}
                       >
                         <Image
                           src={community.avatar}
@@ -350,7 +408,7 @@ const Communities = () => {
                           <span className="font-bold">
                             {formatGroupName(community.name)}
                           </span>
-                          <span className="text-gray-500 text-xs">
+                          <span className={`${darkMode ? 'text-gray-200' : 'text-gray-500'} text-xs`}>
                             {community.bio.slice(0, 110).trim().concat("...")}
                           </span>
                           <span className="text-textGreen text-[0.8rem]">
@@ -365,7 +423,7 @@ const Communities = () => {
                     );
                   })
                 ) : (
-                  <span className="text-gray-900 text-sm text-start w-full">
+                  <span className={`${darkMode ? 'text-gray-200' : 'text-gray-900'} text-sm text-start w-full`}>
                     No communities found
                   </span>
                 )}

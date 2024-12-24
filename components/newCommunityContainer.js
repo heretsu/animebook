@@ -27,7 +27,7 @@ export const BinSvg = ({ pixels }) => {
 };
 const NewCommunityContainer = ({ isAdmin }) => {
   const { fullPageReload } = PageLoadOptions();
-  const { userData, userNumId } = useContext(UserContext);
+  const { userData, userNumId, darkMode } = useContext(UserContext);
   const router = useRouter();
   const [bio, setBio] = useState("");
   const [animeName, setAnimeName] = useState("");
@@ -150,7 +150,7 @@ const NewCommunityContainer = ({ isAdmin }) => {
   return (
     <>
       {userData !== null && userData !== undefined && (
-        <div className="text-gray-600 flex flex-col space-y-4 rounded-xl shadow-lg w-full bg-white justify-center items-center">
+        <div className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-gray-600'} flex flex-col space-y-4 rounded-xl shadow-lg w-full justify-center items-center`}>
           {selectedMedia ? (
             <label
               htmlFor="input-file"
@@ -270,7 +270,7 @@ const NewCommunityContainer = ({ isAdmin }) => {
                 }}
                 maxLength={50}
                 placeholder={"One piece community"}
-                className="px-4 h-15 rounded-xl w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${darkMode ? 'bg-gray-700' : 'bg-gray-200'} px-4 rounded-xl w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
               />
 
               <span className="text-start font-medium w-full">Description</span>
@@ -281,7 +281,7 @@ const NewCommunityContainer = ({ isAdmin }) => {
                 }}
                 maxLength={250}
                 placeholder={"One piece community for all..."}
-                className="px-4 h-15 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${darkMode ? 'bg-gray-700' : 'bg-gray-200'} resize-none px-4 h-15 rounded-xl w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
               />
             </span>
 
@@ -307,7 +307,7 @@ const NewCommunityContainer = ({ isAdmin }) => {
                   onClick={() => {
                     addToCommunity();
                   }}
-                  className="w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold border rounded-lg"
+                  className="w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold rounded-lg"
                 >
                   {isAdmin ? "Add community" : "Request community"}
                 </span>

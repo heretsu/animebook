@@ -7,15 +7,21 @@ import { UserContext } from "@/lib/userContext";
 import Posts from "@/components/posts";
 import DbUsers from "@/hooks/dbUsers";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import { useRouter } from "next/router";
 
 const Search = () => {
+  const router = useRouter()
+
   const {
     originalPostValues,
     setPostValues,
     postValues,
     allUserObject,
     setAllUserObject,
+    darkMode
   } = useContext(UserContext);
+  const [searchedHash, setSearchedHash] = useState('')
+  const [searchInitialized, setSearchInitialized] = useState(false)
   const [hashtagList, setHashtagList] = useState(null);
   const [topicSelected, setTopicSelected] = useState(false);
   const [openSuggestions, setOpenSuggestions] = useState(null);
@@ -66,20 +72,28 @@ const Search = () => {
         .catch((e) => console.log(e, "search.js file users error"));
     }
   };
+
   const searchForItem = (e) => {
+    setSearchInitialized(true)
+    setSearchedHash(e.target.value)
     if (e.target.value !== "") {
       if (!postValues || !allUserObject || !originalPostValues) {
         getAllSearchData();
       }
       const foundPosts = originalPostValues
         ? originalPostValues.filter((post) =>
-            post.content.toLowerCase().includes(e.target.value.toLowerCase())
+            {if (e.target.value && e.target.value.startsWith('#')){
+              return post.content.toLowerCase() === e.target.value.toLowerCase()}
+              else {
+                return post.content.toLowerCase().includes(e.target.value.toLowerCase())
+              }
+            } 
           )
         : [];
 
       const foundUsers = allUserObject
         ? allUserObject.filter((user) =>
-            user.username.toLowerCase().includes(e.target.value.toLowerCase())
+            {return user.username.toLowerCase().includes(e.target.value.toLowerCase())}
           )
         : [];
 
@@ -93,6 +107,17 @@ const Search = () => {
   };
 
   useEffect(() => {
+    if (!searchInitialized) {
+      const hash = router.asPath.split('#')[1];
+      if (hash && originalPostValues) {
+        console.log('Hash:', hash);
+        setSearchedHash('#'.concat(hash));
+        getSelectedHashTag(hash)
+        
+      }
+    }
+    
+    
     if (originalPostValues !== null && originalPostValues !== undefined) {
       fetchAllHashTags();
     }
@@ -103,7 +128,7 @@ const Search = () => {
         })
         .catch((e) => console.log(e, "useEffect in search tab users error"));
     }
-  }, [originalPostValues, allUserObject]);
+  }, [searchInitialized, router, originalPostValues, allUserObject]);
 
   return (
     <main>
@@ -136,7 +161,7 @@ const Search = () => {
       <section className="mb-5 flex flex-row px-1 w-full">
         <NavBar />
         <div className="w-full py-2 lg:pl-[13.9rem] flex flex-col">
-          <span className="px-2 py-1 w-full flex flex-row items-center border-[1.5px] border-gray-300 rounded-3xl bg-gray-100">
+          <span className={`${darkMode ? 'bg-zinc-800 text-white' : 'border-[1.5px] border-gray-300 bg-gray-100 text-gray-500'} px-2 py-1 w-full flex flex-row items-center rounded-3xl`}>
             <svg
               className="w-4 h-4 text-slate-400"
               aria-hidden="true"
@@ -154,8 +179,9 @@ const Search = () => {
             </svg>
             <input
               type="search"
+              value={searchedHash}
               onChange={searchForItem}
-              className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+              className="w-full text-sm bg-transparent border-none focus:ring-0 placeholder-gray-400"
               placeholder="Search"
             />
           </span>
@@ -163,10 +189,10 @@ const Search = () => {
           {openSuggestions !== null && (
             <span className="w-full flex flex-col">
               {openSuggestions !== null && (
-                <span className="w-full flex flex-col">
+                <span className={`${darkMode ? 'text-white' : 'text-black'} w-full flex flex-col`}>
                   <span
                     id="anime-book-font"
-                    className="text-gray-700 text-xl font-bold pt-1"
+                    className={`${darkMode ? 'text-white' : 'text-gray-700 '} text-xl font-bold pt-1`}
                   >
                     Search results
                   </span>
@@ -185,10 +211,10 @@ const Search = () => {
               {openSuggestions.foundUsers !== undefined &&
                 openSuggestions.foundUsers !== null &&
                 openSuggestions.foundUsers.length !== 0 && (
-                  <span>
+                  <span className={darkMode ? "text-white" : 'text-black'}>
                     <span
                       id="anime-book-font"
-                      className="text-gray-700 text-xl font-bold py-1"
+                      className={`${darkMode ? 'text-white' : 'text-gray-700'} text-xl font-bold py-1`}
                     >
                       People
                     </span>
@@ -223,6 +249,7 @@ const Search = () => {
             <span className="mt-2 space-y-2 flex flex-col">
               <svg
                 onClick={() => {
+                  setSearchInitialized(true)
                   setTopicSelected(false);
                   setPostValues(originalPostValues);
                 }}
@@ -256,7 +283,7 @@ const Search = () => {
                       onClick={() => {
                         getSelectedHashTag(tag);
                       }}
-                      className="cursor-default py-2.5 border-b border-gray-300 text-sm flex flex-col justify-between"
+                      className={`${darkMode ? 'text-white' : 'text-black'} cursor-default py-2.5 border-b border-gray-300 text-sm flex flex-col justify-between`}
                     >
                       <span className="font-bold">
                         {index + 1} {" . "}

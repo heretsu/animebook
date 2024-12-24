@@ -8,6 +8,8 @@ import Relationships from "@/hooks/relationships";
 import DappLibrary from "@/lib/dappLibrary";
 import { useRouter } from "next/router";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import Lottie from "lottie-react";
+import animationData from "@/assets/kianimation.json";
 
 export const BinSvg = ({ pixels }) => {
   return (
@@ -43,7 +45,7 @@ export default function CommunityPostCard({
   const { sendNotification, postTimeAgo } = DappLibrary();
   const [alreadyFollowed, setAlreadyFollowed] = useState(null);
   const { fetchFollows } = Relationships();
-  const { setDeletePost, userData } = useContext(UserContext);
+  const { setDeletePost, userData, darkMode} = useContext(UserContext);
   const [upvoted, setUpvoted] = useState(false);
   const [upvotes, setUpvotes] = useState(null);
   const [downvoted, setDownvoted] = useState(false);
@@ -233,7 +235,7 @@ export default function CommunityPostCard({
       <div
         className={`${
           router !== "/comments/[comments]" && "shadow-sm"
-        } bg-white space-y-3 my-2 py-4 px-3 rounded-xl flex flex-col justify-center text-start`}
+        } ${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-black'} space-y-3 my-2 py-4 px-3 rounded-xl flex flex-col justify-center text-start`}
       >
         <span className="flex flex-row justify-between items-center">
           <span
@@ -251,9 +253,24 @@ export default function CommunityPostCard({
                 className="rounded-full object"
               />
             </span>
-            <span className="pl-2 pr-1 font-semibold">{users.username}</span>
-            <span className="text-[0.7rem] text-gray-400">
-              {postTimeAgo(created_at)}
+          
+            <span className="flex flex-col">
+              <span className="flex flex-row">
+                <span className="pl-2 pr-1 font-semibold">
+                  {users.username}
+                </span>
+                <span className="text-[0.7rem] text-gray-400">
+                  {postTimeAgo(created_at)}
+                </span>
+              </span>
+              <span className="flex flex-row items-center">
+                <span className="h-6 w-8">
+                  <Lottie animationData={animationData} />
+                </span>
+                <span className="absolute pl-6 text-xs font-bold text-blue-400">
+                  {parseFloat(parseFloat(users.ki).toFixed(2))}
+                </span>
+              </span>
             </span>
           </span>
 
@@ -378,7 +395,7 @@ export default function CommunityPostCard({
         )}
 
         <div className="text-white flex flex-row justify-between items-center">
-          <div className="flex flex-row items-center space-x-4 bg-white pr-4 py-2">
+          <div className="flex flex-row items-center space-x-4 pr-4 py-2">
             <div className="cursor-pointer py-0.5 px-2 rounded-3xl bg-slate-400 flex items-center space-x-1">
               <svg
                 onClick={() => {

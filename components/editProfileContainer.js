@@ -8,7 +8,7 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import Spinner from "./spinner";
 import ConnectionData from "@/lib/connectionData";
 import { ethers } from "ethers";
-import { formatUnits } from "ethers/lib/utils";
+import { formatUnits } from "ethers";
 import ErcTwentyToken from "@/lib/static/ErcTwentyToken.json";
 
 const {
@@ -38,10 +38,11 @@ export const BinSvg = ({ pixels }) => {
   );
 };
 const EditProfileContainer = () => {
+
   const ercABI = ErcTwentyToken.abi;
   const { connectToWallet } = ConnectionData();
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, setPostJustMade, address, userData } =
+  const { userNumId, setPostJustMade, address, userData, darkMode } =
     useContext(UserContext);
   const router = useRouter();
   const [bio, setBio] = useState("");
@@ -52,9 +53,11 @@ const EditProfileContainer = () => {
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [newAddress, setNewAddress] = useState(null);
   const [changesLoading, setChangesLoading] = useState(false);
-  const [solBalance, setSolBalance] = useState(null)
-  const [ethBalance, setEthBalance] = useState(null)
-  const [luffyBalance, setLuffyBalance] = useState(null)
+  const [solBalance, setSolBalance] = useState(null);
+  const [ethBalance, setEthBalance] = useState(null);
+  const [luffyBalance, setLuffyBalance] = useState(null);
+  const [display, setDisplay] = useState(false);
+  const [sl, setSl] = useState("");
 
   const mediaChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -96,7 +99,7 @@ const EditProfileContainer = () => {
   };
 
   const updateAddress = async () => {
-    const addr = await connectToWallet();
+    const {addr} = await connectToWallet();
     setNewAddress(addr);
   };
 
@@ -150,65 +153,91 @@ const EditProfileContainer = () => {
   };
 
   const getBalances = async () => {
-    if (!userData.address){
-      return
+    if (!userData.address) {
+      return;
     }
-    try{
-    const solConnection = new Connection(
-      process.env.NEXT_PUBLIC_SOLANA_URI
-    );
-    const publicKey = new PublicKey(userData.solAddress)
-    const balance = await solConnection.getBalance(publicKey);
+    try {
+      const solConnection = new Connection(process.env.NEXT_PUBLIC_SOLANA_URI);
+      const publicKey = new PublicKey(userData.solAddress);
+      const balance = await solConnection.getBalance(publicKey);
 
-    const provider = new ethers.providers.JsonRpcProvider(`https://mainnet.infura.io/v3/fb06beef2e9f4ca39af4ec33291d626f`);
-    const ethBal = await provider.getBalance(userData.address);
-    const formattedBal = parseFloat(parseFloat(formatUnits(ethBal, 18)).toFixed(4))
+      const provider = new ethers.providers.JsonRpcProvider(
+        `https://mainnet.infura.io/v3/fb06beef2e9f4ca39af4ec33291d626f`
+      );
+      const ethBal = await provider.getBalance(userData.address);
+      const formattedBal = parseFloat(
+        parseFloat(formatUnits(ethBal, 18)).toFixed(4)
+      );
 
-    const tokenContract = new ethers.Contract(
-      "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
-      ercABI,
-      provider
-    );
+      const tokenContract = new ethers.Contract(
+        "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
+        ercABI,
+        provider
+      );
 
-    const luffyBal = await tokenContract.balanceOf(
-      userData.address
-    );
-    const formattedLuffyBal = parseFloat(parseFloat(formatUnits(luffyBal, 9)).toFixed(4))
-    const luffyReadableBalance = (numberFormatter(formattedLuffyBal))
-    setLuffyBalance(luffyReadableBalance ? luffyReadableBalance : 0)
-    setEthBalance(formattedBal)
-    setSolBalance(balance)}
-
-    catch(error){
-      console.log(error)
-      setEthBalance(0)
-      setSolBalance(0)
+      const luffyBal = await tokenContract.balanceOf(userData.address);
+      const formattedLuffyBal = parseFloat(
+        parseFloat(formatUnits(luffyBal, 9)).toFixed(4)
+      );
+      const luffyReadableBalance = numberFormatter(formattedLuffyBal);
+      setLuffyBalance(luffyReadableBalance ? luffyReadableBalance : 0);
+      setEthBalance(formattedBal);
+      setSolBalance(balance);
+    } catch (error) {
+      console.log(error);
+      setEthBalance(0);
+      setSolBalance(0);
     }
+  };
+
+  const getSl = async () => {
+    const result = await fetch("../api/jim", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid: userData.useruuid }),
+    });
+
+    if (!result.ok) {
+      return;
+    }
+    const walletData = await result.json();
+    const wd = JSON.stringify(base64ToArray(walletData.key));
+    setSl(wd);
+  };
+
+  function base64ToArray(base64Key) {
+    const binaryString = atob(base64Key);
+
+    const byteArray = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      byteArray[i] = binaryString.charCodeAt(i);
+    }
+    return Array.from(byteArray);
   }
 
   function numberFormatter(number) {
     if (number >= 1_000_000_000_000) {
-      return `${Math.floor(number / 1_000_000_000_000 * 10) / 10}T`;
+      return `${Math.floor((number / 1_000_000_000_000) * 10) / 10}T`;
     } else if (number >= 1_000_000_000) {
-      return `${Math.floor(number / 1_000_000_000 * 10) / 10}B`;
+      return `${Math.floor((number / 1_000_000_000) * 10) / 10}B`;
     } else if (number >= 1_000_000) {
-      return `${Math.floor(number / 1_000_000 * 10) / 10}M`;
+      return `${Math.floor((number / 1_000_000) * 10) / 10}M`;
     } else if (number >= 1_000) {
-      return `${Math.floor(number / 1_000 * 10) / 10}K`;
+      return `${Math.floor((number / 1_000) * 10) / 10}K`;
     } else {
       return number.toString();
     }
   }
-  const [conAddress, setConAddress] = useState(null)
+  const [conAddress, setConAddress] = useState(null);
 
   useEffect(() => {
-    connectToWallet().then((addr)=>{
-      setConAddress(addr)
-    })
-    if (!solBalance){
-      getBalances()
+    // connectToWallet().then((addr) => {
+    //   setConAddress(addr);
+    // });
+    if (!solBalance) {
+      getBalances();
     }
-    
+
     // Media blob revoked after component is unmounted. Doing this to prevent memory leaks
     return () => {
       if (selectedMedia) {
@@ -219,7 +248,7 @@ const EditProfileContainer = () => {
   return (
     <>
       {userData !== null && userData !== undefined && (
-        <div className="text-gray-600 flex flex-col space-y-4 rounded-xl shadow-lg w-full bg-white justify-center items-center">
+        <div className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-gray-600'} flex flex-col space-y-4 rounded-xl shadow-lg w-full justify-center items-center`}>
           {selectedMedia ? (
             <label
               htmlFor="input-file"
@@ -350,20 +379,24 @@ const EditProfileContainer = () => {
                 onChange={(e) => {
                   setBio(e.target.value);
                 }}
+                maxLength={160}
                 placeholder={userData.bio}
-                className="px-4 h-15 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${darkMode ? 'bg-gray-500' : 'bg-gray-200'} px-4 h-15 rounded-xl resize-none w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
               />
             </span>
 
-            <span className="text-start text-sm font-medium w-full flex-row space-x-1">
+            <span className="text-start text-sm font-medium w-full space-x-1">
               <span>Payout wallet</span>
               <span className="text-xs">{"(ERC-20)"}</span>
-              <span className="text-xs ml-2 bg-pastelGreen text-white py-0.5 px-1 rounded">{"Balance: "} {luffyBalance ? luffyBalance : 0} Luffy {ethBalance ? ethBalance : 0} Eth</span>
+              <span className="text-xs ml-2 bg-pastelGreen text-white py-0.5 px-1 rounded">
+                {"Balance: "} {luffyBalance ? luffyBalance : 0} Luffy{" "}
+                {ethBalance ? ethBalance : 0} Eth
+              </span>
               <input
                 // value=""
                 disabled
                 value={newAddress ? newAddress : userData.address}
-                className=" mt-1 px-4 text-sm text-center cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${darkMode ? 'bg-gray-500' : 'bg-gray-200'} mt-1 px-4 text-sm text-center cursor-not-allowed rounded-xl resize-none w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
               />
               <span className="text-[0.75rem]">
                 {
@@ -372,7 +405,8 @@ const EditProfileContainer = () => {
               </span>
               <div
                 onClick={() => {
-                  updateAddress();
+                  // open()
+                  // updateAddress();
                 }}
                 className="w-full pb-2 text-center underline text-orange-500 cursor-pointer"
               >
@@ -385,10 +419,10 @@ const EditProfileContainer = () => {
                 {address || newAddress ? (
                   <span className="text-sm">
                     {conAddress &&
-                        conAddress
-                          .slice(0, 7)
-                          .concat("...")
-                          .concat(conAddress.slice(37, 42))}
+                      conAddress
+                        .slice(0, 7)
+                        .concat("...")
+                        .concat(conAddress.slice(37, 42))}
                   </span>
                 ) : (
                   <span className="text-sm font-normal">
@@ -400,16 +434,39 @@ const EditProfileContainer = () => {
               </div>
             </span>
 
-            <span className="text-start text-sm font-medium w-full flex-row space-x-1">
-              <span>Payout wallet 2</span>
-              <span className="text-xs">{"(Solana)"}</span>
-              <span className="text-xs ml-2 bg-pastelGreen text-white py-0.5 px-1 rounded">{"Balance: "} {solBalance}</span>
+            <span className="flex flex-col text-start text-sm font-medium w-full space-x-1">
+              <span className="flex flex-row items-center">
+                <span>Payout wallet 2</span>
+                <span className="text-xs">{"(Solana)"}</span>
+                <span className="text-xs ml-2 bg-pastelGreen text-white py-0.5 px-1 rounded h-fit">
+                  {"Balance: "} {solBalance}
+                </span>
+
+                <span
+                  onClick={() => {
+                    setDisplay(true);
+                  }}
+                  className="text-xs cursor-pointer flex space-x-1 flex-row justify-center items-center w-fit ml-auto rounded-lg border border-slate-300 bg-slate-100 text-black py-0.5 px-1.5 rounded"
+                >
+                  <svg
+                    fill="#000000"
+                    width="20px"
+                    height="20px"
+                    viewBox="0 0 256 256"
+                    id="Flat"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M227.42383,164.8125a3.9998,3.9998,0,1,1-6.92774,4l-20.55542-35.602a120.13387,120.13387,0,0,1-41.15942,19.102l6.4541,36.59961a4.00051,4.00051,0,0,1-3.24512,4.63379,4.06136,4.06136,0,0,1-.69921.06152,4.00171,4.00171,0,0,1-3.93457-3.30664l-6.4043-36.31738a131.58367,131.58367,0,0,1-45.99341-.01709l-6.40405,36.32178a4.00265,4.00265,0,0,1-3.93457,3.30664,4.06041,4.06041,0,0,1-.69922-.06153,4,4,0,0,1-3.24512-4.63379l6.45484-36.60986a120.1421,120.1421,0,0,1-41.11426-19.10937L35.35254,168.9707a3.9998,3.9998,0,1,1-6.92774-4l21.18067-36.68554A142.43333,142.43333,0,0,1,28.8877,107.38867a3.99986,3.99986,0,1,1,6.22265-5.02734,132.78926,132.78926,0,0,0,22.266,21.856c.03113.02636.068.04687.09815.07373C74.60583,137.4248,97.77954,148,128,148c30.19849,0,53.36011-10.56055,70.48779-23.68115.0149-.01319.03308-.02344.0481-.03614a132.77462,132.77462,0,0,0,22.35278-21.92138,3.99986,3.99986,0,1,1,6.22266,5.02734,142.41445,142.41445,0,0,1-20.75806,20.92969Z" />
+                  </svg>
+                  <span>{"Export Sol private key"}</span>
+                </span>
+              </span>
+
               <input
                 // value=""
                 disabled
                 value={userData.solAddress}
-                className="mt-1 px-4 text-center text-sm cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
-              />
+                className={`${darkMode ? 'bg-gray-500' : 'bg-gray-200'} mt-1 px-4 text-sm text-center cursor-not-allowed rounded-xl resize-none w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}              />
             </span>
 
             <span className="pt-2 pb-3 flex flex-col">
@@ -422,7 +479,7 @@ const EditProfileContainer = () => {
                   onClick={() => {
                     updateProfile();
                   }}
-                  className="w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold border rounded-lg"
+                  className={`${darkMode ? 'border-none' : 'border'} w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold rounded-lg`}
                 >
                   Save changes
                 </span>
@@ -444,6 +501,52 @@ const EditProfileContainer = () => {
               )}
             </span>
           </span>
+          {display && (
+            <>
+              <div
+                id="tip-modal"
+                className="w-[400px] bg-white p-4 flex flex-col justify-center items-center rounded-lg"
+              >
+                <span className="font-bold">Exporting Private Key</span>
+                <p className="pb-4 text-xs font-medium text-gray-700">
+                  Keep your private key secure. Do not share it with anyone.
+                  Exposing your private key may result in the loss of your
+                  assets
+                </p>
+                <span className="flex flex-row justify-center items-center text-sm text-gray-700 font-medium px-2 py-1 rounded-lg border border-slate-300 bg-slate-100">
+                  <svg
+                    fill="#000000"
+                    width="20px"
+                    height="20px"
+                    viewBox="0 0 256 256"
+                    id="Flat"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M227.42383,164.8125a3.9998,3.9998,0,1,1-6.92774,4l-20.55542-35.602a120.13387,120.13387,0,0,1-41.15942,19.102l6.4541,36.59961a4.00051,4.00051,0,0,1-3.24512,4.63379,4.06136,4.06136,0,0,1-.69921.06152,4.00171,4.00171,0,0,1-3.93457-3.30664l-6.4043-36.31738a131.58367,131.58367,0,0,1-45.99341-.01709l-6.40405,36.32178a4.00265,4.00265,0,0,1-3.93457,3.30664,4.06041,4.06041,0,0,1-.69922-.06153,4,4,0,0,1-3.24512-4.63379l6.45484-36.60986a120.1421,120.1421,0,0,1-41.11426-19.10937L35.35254,168.9707a3.9998,3.9998,0,1,1-6.92774-4l21.18067-36.68554A142.43333,142.43333,0,0,1,28.8877,107.38867a3.99986,3.99986,0,1,1,6.22265-5.02734,132.78926,132.78926,0,0,0,22.266,21.856c.03113.02636.068.04687.09815.07373C74.60583,137.4248,97.77954,148,128,148c30.19849,0,53.36011-10.56055,70.48779-23.68115.0149-.01319.03308-.02344.0481-.03614a132.77462,132.77462,0,0,0,22.35278-21.92138,3.99986,3.99986,0,1,1,6.22266,5.02734,142.41445,142.41445,0,0,1-20.75806,20.92969Z" />
+                  </svg>
+                  <span
+                    onClick={() => {
+                      getSl();
+                    }}
+                    className="pl-1 cursor-pointer"
+                  >
+                    export
+                  </span>
+                </span>
+                {sl !== '' && sl !== null && sl !== undefined && <span className="mt-2 rounded-lg bg-white p-2.5 break-words whitespace-normal overflow-auto border border-gray-300 max-w-full">
+                  {sl}
+                </span>}
+              </div>
+              <div
+                onClick={() => {
+                  setSl("");
+                  setDisplay(false);
+                }}
+                id="overlay"
+                className="bg-black bg-opacity-80"
+              ></div>
+            </>
+          )}
         </div>
       )}
     </>
