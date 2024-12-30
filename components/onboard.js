@@ -262,6 +262,17 @@ export default function Onboard({ allUsers, me }) {
           </span>
         )}
         {(openConnectWallet || openImageOnboard) && !activated && (
+          <span className="flex flew-row justify-between w-full">
+
+            <span onClick={
+              openConnectWallet
+                ? () => {
+                    setOpenImageOnboard(true);
+                    setOpenConnectWallet(false);
+                  }
+                : () => {setOpenImageOnboard(false)}
+            } className="cursor-pointer w-full text-sm text-center underline pt-2 text-slate-500">back</span>
+          
           <span
             onClick={
               openImageOnboard
@@ -274,6 +285,7 @@ export default function Onboard({ allUsers, me }) {
             className="cursor-pointer w-full text-sm text-center underline pt-2 text-slate-500"
           >
             skip
+          </span>
           </span>
         )}
       </div>

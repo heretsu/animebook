@@ -335,8 +335,16 @@ const Message = ({ message }) => {
 
     // setOpenSearchNav(true)
   };
+  const [imgSrc, setImgSrc] = useState('')
+  const [secondImgSrc, setSecondImgSrc] = useState('')
 
   useEffect(() => {
+    if (userData && userData.avatar){
+      setImgSrc(userData.avatar)
+    }
+    if (userDetail){
+      setSecondImgSrc(userDetail.avatar)
+    }
     if (currenctChat === null || (userNumId && !allUserObject)) {
       setCurrentChat(message);
 
@@ -499,6 +507,8 @@ const Message = ({ message }) => {
       .subscribe();
   }, [
     userNumId,
+    userDetail,
+    userData,
     allUserObject,
     allChats,
     chatsObject,
@@ -602,13 +612,14 @@ const Message = ({ message }) => {
                             <Image
                               src={
                                 chat.senderid === userNumId
-                                  ? userData.avatar
-                                  : userDetail.avatar
+                                  ? imgSrc
+                                  : secondImgSrc
                               }
                               alt="post"
                               height={30}
                               width={30}
                               className="rounded-full object-cover"
+                              onError={()=>{if (chat.senderId === userNumId){setImgSrc('https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png')} else{setSecondImgSrc('')}}}
                             />
                           </span>
                           <span

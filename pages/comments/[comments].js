@@ -7,6 +7,7 @@ import PostCard from "@/components/postCard";
 import DbUsers from "@/hooks/dbUsers";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import { useRouter } from "next/router";
+import NavBar, { MobileNavBar } from "@/components/navBar";
 export const getServerSideProps = async (context) => {
   const { comments } = context.query;
   return {
@@ -384,6 +385,7 @@ export default function Comments({ comments }) {
           ></div>
         </>
       )}
+      <MobileNavBar/> 
     </main>
   );
 }

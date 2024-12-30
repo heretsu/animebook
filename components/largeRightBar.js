@@ -275,25 +275,27 @@ const LargeRightBar = () => {
     }
   };
 
+  const [searchedWord, setSearchedWord] = useState('')
   const searchForItem = (e) => {
+    setSearchedWord(e.target.value)
     if (e.target.value !== "") {
       if (!postValues || !allUserObject || !originalPostValues) {
         getAllSearchData();
       }
       const foundPosts =
-        router.pathname === "/profile/[user]"
-          ? originalPostValues
-            ? originalPostValues.filter((post) => {
-                if (
-                  post.users.username.toLowerCase() === routedUser.toLowerCase()
-                ) {
-                  return post.content
-                    .toLowerCase()
-                    .includes(e.target.value.toLowerCase());
-                }
-              })
-            : []
-          : originalPostValues
+        // router.pathname === "/profile/[user]"
+        //   ? originalPostValues
+        //     ? originalPostValues.filter((post) => {
+        //         if (
+        //           post.users.username.toLowerCase() === routedUser.toLowerCase()
+        //         ) {
+        //           return post.content
+        //             .toLowerCase()
+        //             .includes(e.target.value.toLowerCase());
+        //         }
+        //       })
+        //     : [] :
+           originalPostValues
           ? originalPostValues.filter((post) =>
               post.content.toLowerCase().includes(e.target.value.toLowerCase())
             )
@@ -330,7 +332,22 @@ const LargeRightBar = () => {
       .join(" ");
   };
 
+  const [imgSrcs, setImgSrcs] = useState('');
+  const [valuesLoaded, setValuesLoaded] = useState(false)
+
+  const handleImageError = (id) => {
+    setImgSrcs((prev) => ({
+      ...prev,
+      [id]: "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+    }));
+  };
+
+
   useEffect(() => {
+    if (openUsers && !valuesLoaded){
+      setImgSrcs(openUsers.reduce((acc, user) => ({ ...acc, [user.id]: user.avatar }), {})      )
+      setValuesLoaded(true)
+    }
     if (originalPostValues !== null && originalPostValues !== undefined) {
       fetchAllHashTags();
     }
@@ -338,7 +355,7 @@ const LargeRightBar = () => {
       setSliceIndex(sliceIndex + 1);
     }
     fetchYouMayKnow();
-  }, [originalPostValues, alreadyFollowed, userData]);
+  }, [valuesLoaded, openUsers, originalPostValues, alreadyFollowed, userData]);
 
   return (
     <div className="h-screen overflow-scroll pb-22 flex">
@@ -363,6 +380,7 @@ const LargeRightBar = () => {
                   />
                 </svg>
                 <input
+                value={searchedWord}
                   onChange={searchForItem}
                   onClick={getAllSearchData}
                   type="search"
@@ -377,26 +395,28 @@ const LargeRightBar = () => {
                   <span className="w-full flex flex-col">
                     <span
                       onClick={() => {
-                        if (
-                          router.pathname !== "/explore" &&
-                          openSuggestions.foundPosts &&
-                          openSuggestions.foundPosts.length === 0
-                        ) {
-                          return;
-                        } else {
-                          setPostValues(openSuggestions.foundPosts);
-                        }
-                        if (
-                          router.pathname === "/explore" &&
-                          openSuggestions.foundExplorePosts &&
-                          openSuggestions.foundExplorePosts.length === 0
-                        ) {
-                          return;
-                        } else {
-                          setExplorePosts(openSuggestions.foundExplorePosts);
-                        }
+                        router.push(`/search?${searchedWord}`)
+                        // if (
+                        //   router.pathname !== "/explore" &&
+                        //   openSuggestions.foundPosts &&
+                        //   openSuggestions.foundPosts.length === 0
+                        // ) {
+                        //   return;
+                        // } else {
+                        //   router.push('/search/')
+                        //   setPostValues(openSuggestions.foundPosts);
+                        // }
+                        // if (
+                        //   router.pathname === "/explore" &&
+                        //   openSuggestions.foundExplorePosts &&
+                        //   openSuggestions.foundExplorePosts.length === 0
+                        // ) {
+                        //   return;
+                        // } else {
+                        //   setExplorePosts(openSuggestions.foundExplorePosts);
+                        // }
 
-                        setOpenSuggestions(null);
+                        // setOpenSuggestions(null);
                       }}
                       className={`${darkMode ? 'text-white' : 'text-black'} p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium`}
                     >
@@ -448,13 +468,14 @@ const LargeRightBar = () => {
                             className={`${darkMode ? 'text-white' : 'text-black'} p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium`}
                           >
                             <span className="relative h-8 w-8 flex">
-                              <Image
-                                src={os.avatar}
+                              {valuesLoaded && <Image
+                                src={imgSrcs[os.id]}
                                 alt="user"
                                 width={30}
                                 height={30}
                                 className="border border-white rounded-full"
-                              />
+                                onError={() => handleImageError(os.id)}
+                              />}
                             </span>
                             <span>{os.username}</span>
                           </span>
@@ -545,6 +566,8 @@ const LargeRightBar = () => {
                         </span>
 
                         <PlusIcon
+                        
+                          ymk={true}
                           sideBar={true}
                           alreadyFollowed={alreadyFollowed}
                           setAlreadyFollowed={setAlreadyFollowed}

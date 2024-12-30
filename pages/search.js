@@ -30,8 +30,9 @@ const Search = () => {
 
   const getSelectedHashTag = (htag) => {
     const selectedTag = originalPostValues.filter((post) =>
-      post.content.toLowerCase().includes(htag[0].toLowerCase())
+      {return post.content.toLowerCase().includes(htag.toLowerCase())}
     );
+    console.log(htag, selectedTag)
     setPostValues(selectedTag);
     setTopicSelected(true);
   };
@@ -82,18 +83,15 @@ const Search = () => {
       }
       const foundPosts = originalPostValues
         ? originalPostValues.filter((post) =>
-            {if (e.target.value && e.target.value.startsWith('#')){
-              return post.content.toLowerCase() === e.target.value.toLowerCase()}
-              else {
-                return post.content.toLowerCase().includes(e.target.value.toLowerCase())
-              }
+            {
+                return post.content.trim().toLowerCase().includes(e.target.value.trim().toLowerCase())
             } 
           )
         : [];
 
       const foundUsers = allUserObject
         ? allUserObject.filter((user) =>
-            {return user.username.toLowerCase().includes(e.target.value.toLowerCase())}
+            {return user.username.trim().toLowerCase().includes(e.target.value.trim().toLowerCase())}
           )
         : [];
 
@@ -108,13 +106,18 @@ const Search = () => {
 
   useEffect(() => {
     if (!searchInitialized) {
-      const hash = router.asPath.split('#')[1];
-      if (hash && originalPostValues) {
-        console.log('Hash:', hash);
-        setSearchedHash('#'.concat(hash));
-        getSelectedHashTag(hash)
-        
-      }
+       const hash = router.asPath.split('#')[1];
+
+       const queryP = router.asPath.split('/search?')[1]
+ 
+       if (hash && originalPostValues) {
+         console.log('Hash:', hash);
+         setSearchedHash('#'.concat(hash));
+         getSelectedHashTag(hash); 
+       } else if (queryP && originalPostValues) {
+         setSearchedHash(queryP);
+         getSelectedHashTag(queryP);
+       }
     }
     
     
@@ -281,7 +284,7 @@ const Search = () => {
                     <div
                       key={tag}
                       onClick={() => {
-                        getSelectedHashTag(tag);
+                        getSelectedHashTag(tag[0]);
                       }}
                       className={`${darkMode ? 'text-white' : 'text-black'} cursor-default py-2.5 border-b border-gray-300 text-sm flex flex-col justify-between`}
                     >

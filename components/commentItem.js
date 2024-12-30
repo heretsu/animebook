@@ -75,6 +75,7 @@ export default function CommentItem({comment}) {
     setParentId(parentCommentId);
     inputRef.current.focus();
   };
+  const [imgSrc, setImgSrc] = useState(comment.users.avatar)
 
   useEffect(() => {
     fetchCommentLikes();
@@ -87,11 +88,12 @@ export default function CommentItem({comment}) {
 
         <span onClick={()=>{fullPageReload(`/profile/${comment.users.username}`)}} className="relative h-8 w-8 flex">
           <Image
-            src={comment.users.avatar}
+            src={imgSrc}
             alt="user"
             width={35}
             height={35}
             className="rounded-full"
+            onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
           />
         </span>
 

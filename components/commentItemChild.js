@@ -63,7 +63,8 @@ export default function CommentItemChild({ commentChild }) {
     setCommentMsg(`@${commentOwner} `);
     setParentId(parentCommentId);
     inputRef.current.focus();
-  };
+  };  
+  const [imgSrc, setImgSrc] = useState(commentChild.users.avatar)
   
   useEffect(() => {
     fetchCommentLikes();
@@ -78,11 +79,12 @@ export default function CommentItemChild({ commentChild }) {
             fullPageReload(`/profile/${commentChild.users.username}`);
           }} className="relative h-8 w-8 flex">
           <Image
-            src={commentChild.users.avatar}
+            src={imgSrc}
             alt="user"
             width={35}
             height={35}
             className="rounded-full"
+            onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
           />
         </span>
 

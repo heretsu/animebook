@@ -9,9 +9,11 @@ import ConnectionData from "@/lib/connectionData";
 import DbUsers from "@/hooks/dbUsers";
 import Onboard from "@/components/onboard";
 import Relationships from "@/hooks/relationships";
+import TOS, { Policy } from "@/components/agreements";
 
 export default function App({ Component, pageProps }) {
-  const [darkMode, setDarkMode] = useState(null)
+  const [agreementMade, setAgreementMade] = useState(false);
+  const [darkMode, setDarkMode] = useState(null);
   const { fetchAllPosts, fetchAllReposts } = DbUsers();
   const router = useRouter();
   const [youMayKnow, setYouMayKnow] = useState(null);
@@ -134,7 +136,6 @@ export default function App({ Component, pageProps }) {
       if (dbresponse.error) {
         console.error("ERROR FROM OUTER USER ID CHECK: ", dbresponse.error);
       } else {
-        
         setAllUsers(dbresponse.data);
         const data = dbresponse.data.find((u) => u.useruuid === user.id);
         /*
@@ -196,7 +197,7 @@ export default function App({ Component, pageProps }) {
               }
 
               setUserNumId(res.data[0].id);
-              setDarkMode(res.data[0].theme)
+              setDarkMode(res.data[0].theme);
               // if (res.data[0].theme) {
               //   localStorage.getItem("darkMode");
               // }
@@ -305,10 +306,11 @@ export default function App({ Component, pageProps }) {
             setOnboarding(true);
           }
         } else {
+          setAgreementMade(data.agreedpolicies)
           fetchFollowingAndFollowers(data.id);
           setUserNumId(data.id);
           setAddress(data.address);
-          setDarkMode(data.theme)
+          setDarkMode(data.theme);
           setUserData({
             preferred_username: data.username,
             picture: user.user_metadata.picture
@@ -441,11 +443,18 @@ export default function App({ Component, pageProps }) {
     }
   };
 
+  const agreeToTerms = async () => {
+   const agreeStatus = await supabase.from('users').update({agreedpolicies: true}).eq('useruuid', userData.useruuid)
+   if (!agreeStatus.error){
+    setAgreementMade(true)
+   }
+  }
+
   useEffect(() => {
-    if (darkMode){
-        document.body.style.backgroundColor = "black"
+    if (darkMode) {
+      document.body.style.backgroundColor = "black";
     } else {
-      document.body.style.backgroundColor = "#e8edf1"
+      document.body.style.backgroundColor = "#e8edf1";
     }
     if (
       [
@@ -461,6 +470,7 @@ export default function App({ Component, pageProps }) {
         "/inbox/[message]",
         "/settings",
         "/earn",
+        "/reports",
         "/leaderboard",
         "/create",
         "/publishmanga",
@@ -688,6 +698,7 @@ export default function App({ Component, pageProps }) {
           "/publishmanga",
           "/settings",
           "/earn",
+          "/reports",
           "/leaderboard",
           "/subscriptionplan",
           "/inbox",
@@ -700,7 +711,25 @@ export default function App({ Component, pageProps }) {
             </div>
           ) : subscribed ? (
             userData ? (
-              <Component {...pageProps} />
+              agreementMade ? (
+                <Component {...pageProps} />
+              ) : userData && !userData.agreedpolicies && (
+                <span className={`${darkMode && 'text-white'} flex flex-col space-y-4 py-2`}>
+                  <span className="font-medium flex flex-col text-center justify-center items-center">
+                    <p>{"By signing in to Animebook,"}</p>
+                    <p>{
+                      "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
+                    }</p>
+                  </span>
+                  <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
+                    <TOS darkMode={darkMode}/>
+                    <Policy darkMode={darkMode}/>
+                  </span>
+                  <span onClick={()=>{agreeToTerms()}} className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg">
+                    I Agree
+                  </span>
+                </span>
+              )
             ) : (
               <div className="pt-8">
                 <DappLogo size={"default"} />
@@ -717,9 +746,25 @@ export default function App({ Component, pageProps }) {
           )
         ) : onboarding ? (
           <Onboard allUsers={allUsers} me={oauthDetails} />
-        ) : (
+        ) : userData && agreementMade ? (
           <Component {...pageProps} />
-        )}
+        ) : userData && !userData.agreedpolicies ? (
+          <span className={`${darkMode && 'text-white'} flex flex-col space-y-4 py-2`}>
+            <span className="font-medium flex flex-col text-center justify-center items-center">
+              <p>{"By signing in to Animebook,"}</p>
+              <p>{
+                "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
+              }</p>
+            </span>
+            <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
+              <TOS darkMode={darkMode}/>
+              <Policy darkMode={darkMode}/>
+            </span>
+            <span onClick={()=>{agreeToTerms()}} className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg">
+              I Agree
+            </span>
+          </span>
+        ) : <Component {...pageProps} />}
       </span>
     </UserContext.Provider>
   );

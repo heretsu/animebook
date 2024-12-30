@@ -20,8 +20,7 @@ import SideBar from "@/components/sideBar";
 import Lottie from "lottie-react";
 import animationData from "@/assets/kianimation.json";
 import loadscreen from "@/assets/loadscreen.json";
-import darkloadscreen from "@/assets/darkloadscreen.json"
-
+import darkloadscreen from "@/assets/darkloadscreen.json";
 
 export const getServerSideProps = async (context) => {
   const { user } = context.query;
@@ -36,7 +35,7 @@ export default function User({ user }) {
   const { connectToWallet, disconnectWallet } = ConnectionData();
   const { getUsdPrice } = PriceFeedStation();
   const router = useRouter();
-  const { fetchAllUsers, fetchAllPosts, fetchUserMangas } = DbUsers();
+  const { fetchAllUsers, fetchAllPosts, fetchAllReposts, fetchUserMangas } = DbUsers();
   const { fetchFollowing, fetchFollows } = Relationships();
   const {
     userPostValues,
@@ -61,7 +60,7 @@ export default function User({ user }) {
     userData,
     setRoutedUser,
     sideBarOpened,
-    darkMode
+    darkMode,
   } = useContext(UserContext);
 
   const [openPremium, setOpenPremium] = useState(false);
@@ -72,6 +71,7 @@ export default function User({ user }) {
   const [mangaObjects, setMangaObjects] = useState(null);
   const [openTipModal, setOpenTipModal] = useState(false);
   const [subscribedUser, setSubscribedUser] = useState(false);
+  const [imgSrc, setImgSrc] = useState('')
 
   const [mangaIndex, setMangaIndex] = useState(0);
   const fetchFollowingAndFollowers = async (userid) => {
@@ -100,16 +100,15 @@ export default function User({ user }) {
       .catch((e) => console.log(e));
   };
 
-  function userSpecificPosts(result) {
+  function userSpecificPosts(data) {      
+    const filteredUserPosts = data.filter(
+      (r) => {return (r.users.username.trim().toLowerCase() === user.trim().toLowerCase() || (r.repostAuthor && r.repostAuthor.username && r.repostAuthor.username.trim().toLowerCase() === user.trim().toLowerCase()))}
+    )
     setPostValues(
-      result.data.filter(
-        (r) => r.users.username.toLowerCase() === user.toLowerCase()
-      )
+      filteredUserPosts
     );
     setUserPostValues(
-      result.data.filter(
-        (r) => r.users.username.toLowerCase() === user.toLowerCase()
-      )
+      filteredUserPosts
     );
   }
 
@@ -167,37 +166,47 @@ export default function User({ user }) {
     return allowRead;
   };
 
+  const [openSub, setOpenSub] = useState(false);
   const subscribeToPublisher = async () => {
     if (userData === undefined || userData === null) {
       PageLoadOptions().fullPageReload("/signin");
       return;
     }
     try {
-      const prs = await getUsdPrice();
-      const sendAmount = parseFloat(userBasicInfo.subprice) / prs.ethPrice;
-      const wei = ethers.utils.parseUnits(
-        sendAmount.toFixed(18).toString(),
-        18
-      );
-
-      const { provider } = await connectToWallet();
-      let transactionResponse = null;
-
-      transactionResponse = await provider.getSigner().sendTransaction({
-        to: userBasicInfo.address,
-        value: wei,
-      });
-
-      const receipt = await transactionResponse.wait();
-
-      if (receipt) {
+      if (userBasicInfo.subprice === 0) {
+        setSubscribedUser(true);
         const { error } = await supabase.from("subscriptions").insert({
           subscriber: userNumId,
           creator: userBasicInfo.id,
         });
-        if (!error) {
-          setSubscribedUser(true);
-        }
+      } else {
+        setOpenSub(true);
+        // const prs = await getUsdPrice();
+        // const sendAmount = parseFloat(userBasicInfo.subprice) / prs.ethPrice;
+        // const wei = ethers.utils.parseUnits(
+        //   sendAmount.toFixed(18).toString(),
+        //   18
+        // );
+
+        // const { provider } = await connectToWallet();
+        // let transactionResponse = null;
+
+        // transactionResponse = await provider.getSigner().sendTransaction({
+        //   to: userBasicInfo.address,
+        //   value: wei,
+        // });
+
+        // const receipt = await transactionResponse.wait();
+
+        // if (receipt) {
+        //   const { error } = await supabase.from("subscriptions").insert({
+        //     subscriber: userNumId,
+        //     creator: userBasicInfo.id,
+        //   });
+        //   if (!error) {
+        //     setSubscribedUser(true);
+        //   }
+        // }
       }
     } catch (e) {
       console.log(e.message);
@@ -235,19 +244,24 @@ export default function User({ user }) {
       throw "a problem occurred";
     }
   };
-  const [userNotFound, setUserNotFound] = useState(false)
+  const [userNotFound, setUserNotFound] = useState(false);
 
+  const [valuesLoaded, setValuesLoaded] = useState(false)
   useEffect(() => {
+    if (userBasicInfo && userBasicInfo.avatar && !valuesLoaded){
+      setImgSrc(userBasicInfo.avatar)
+      setValuesLoaded(true)
+    }
     setRoutedUser(user);
     fetchAllUsers().then((r) => {
       setAllUserObject(r.data);
       if (r.data !== null && r.data !== undefined && r.data.length !== 0) {
         const currentUserExtraInfo = r.data.find(
-          (c) => c.username.toLowerCase().trim() === user.toLowerCase().trim()
+          (c) => {return c.username.toLowerCase().trim() === user.toLowerCase().trim()}
         );
-        
-        if (!currentUserExtraInfo){
-          setUserNotFound(true)
+
+        if (!currentUserExtraInfo) {
+          setUserNotFound(true);
           return;
         }
         setItsMe(currentUserExtraInfo.id === userNumId);
@@ -285,13 +299,54 @@ export default function User({ user }) {
       }
     });
 
-    fetchAllPosts().then((result) => {
-      if (result.data !== null && result.data !== undefined) {
-        userSpecificPosts(result);
-        setOriginalPostValues(result.data);
-      }
+    fetchAllReposts().then((reposts) => {
+      fetchAllPosts().then((result1) => {
+        const userPostsAndReposts = reposts
+            .map((repost) => {
+              const originalPost = result1.data.find(
+                (post) => {return post.id === repost.postid}
+              );
+              if (originalPost && repost.users && repost.users.username.trim().toLowerCase() === user.trim().toLowerCase()) {
+                return {
+                  ...originalPost,
+                  repostAuthor: repost.users,
+                  repostQuote: repost.quote,
+                  repostCreatedAt: repost.created_at,
+                };
+              }
+              return null;
+            })
+            .filter(Boolean)
+            .concat(
+              result1.data.filter(
+                (post) =>
+                  !reposts.some(
+                    (repost) => repost.postid === post.id
+                  )
+              )
+            )
+            .sort((a, b) => {
+              const dateA = new Date(
+                a.repostQuote ? a.repostCreatedAt : a.created_at
+              );
+              const dateB = new Date(
+                b.repostQuote ? b.repostCreatedAt : b.created_at
+              );
+              return dateB - dateA;
+            })
+            userSpecificPosts(userPostsAndReposts);
+            setOriginalPostValues(userPostsAndReposts)
+            
+      });
     });
-  }, [userNumId]);
+
+    // fetchAllPosts().then((result) => {
+    //   if (result.data !== null && result.data !== undefined) {
+    //     userSpecificPosts(result);
+    //     setOriginalPostValues(result.data);
+    //   }
+    // });
+  }, [userNumId, userBasicInfo, valuesLoaded]);
 
   return (
     <>
@@ -365,11 +420,12 @@ export default function User({ user }) {
                         <span className="flex flex-row justify-start items-center space-x-0.5">
                           <span className="relative h-8 w-8 flex">
                             <Image
-                              src={userBasicInfo.avatar}
+                              src={imgSrc}
                               alt="user"
                               width={35}
                               height={35}
                               className="border border-white rounded-full"
+                              onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
                             />
                           </span>
                           <span className="font-semibold text-[0.85rem] pr-2">
@@ -389,6 +445,7 @@ export default function User({ user }) {
                               </div>
                             ) : (
                               <PlusIcon
+                              ymk={false}
                                 alreadyFollowed={alreadyFollowed}
                                 setAlreadyFollowed={setAlreadyFollowed}
                                 followerUserId={userNumId}
@@ -507,8 +564,10 @@ export default function User({ user }) {
                 {openPremium ? (
                   mangaLoading ? (
                     <span className="h-screen">
-                <Lottie animationData={darkMode ? darkloadscreen : loadscreen} />
-              </span>
+                      <Lottie
+                        animationData={darkMode ? darkloadscreen : loadscreen}
+                      />
+                    </span>
                   ) : (
                     <span className="text-xs md:text-sm flex flex-col w-full justify-center space-y-4">
                       {mangaObjects && mangaObjects.length > 0 ? (
@@ -524,7 +583,11 @@ export default function User({ user }) {
                                 </p>
                               </span>
                               {userBasicInfo.subprice ? (
-                                <span className={`${darkMode ? 'bg-[#1e1f24]' : 'bg-white'} rounded-lg px-4 py-6 flex flex-row justify-between items-center`}>
+                                <span
+                                  className={`${
+                                    darkMode ? "bg-[#1e1f24]" : "bg-white"
+                                  } rounded-lg px-4 py-6 flex flex-row justify-between items-center`}
+                                >
                                   <span className="font-semibold flex flex-col">
                                     <span className="text-slate-400">
                                       {`Subscribe to ${userBasicInfo.username} now and unlock all premium content`}
@@ -551,9 +614,14 @@ export default function User({ user }) {
                                     </span>
                                   )}
                                 </span>
-                              ) : (mangaObjects.length > 0 && <span className="italic rounded-lg px-2 flex flex-row justify-between items-center">
-                                {userBasicInfo.username} has no active or free subscription plan but you can buy their mangas and comics
+                              ) : (
+                                mangaObjects.length > 0 && (
+                                  <span className="italic rounded-lg px-2 flex flex-row justify-between items-center">
+                                    {userBasicInfo.username} has no active or
+                                    free subscription plan but you can buy their
+                                    mangas and comics
                                   </span>
+                                )
                               )}
                             </>
                           ) : (
@@ -627,7 +695,11 @@ export default function User({ user }) {
 
                       {itsMe &&
                         (userData.address ? (
-                          <span className={`space-x-2 border border-black ${darkMode ? 'bg-[#1e1f24]' : 'bg-white'} border-dashed rounded-lg p-4 flex justify-center items-center`}>
+                          <span
+                            className={`space-x-2 border border-black ${
+                              darkMode ? "bg-[#1e1f24]" : "bg-white"
+                            } border-dashed rounded-lg p-4 flex justify-center items-center`}
+                          >
                             <span
                               onClick={() => {
                                 router.push("/publishmanga");
@@ -652,17 +724,24 @@ export default function User({ user }) {
                         ))}
                     </span>
                   )
-                ) : (  
-                    userPostValues && userPostValues.length > 0 ? <Posts /> : <span className="w-full text-gray-600 text-center">{"Nanimonai! No posts found"}</span>
-                  
+                ) : userPostValues && userPostValues.length > 0 ? (
+                  <Posts />
+                ) : (
+                  <span className="w-full text-gray-600 text-center">
+                    {"Nanimonai! No posts found"}
+                  </span>
                 )}
               </div>
             </div>
           ) : (
             <div className="text-start text-slate-500 w-full py-2 space-y-5 px-2 lg:pl-lPostCustom lg:pr-rPostCustom mt-2 lg:mt-20 flex flex-col">
-              {userNotFound ? <span>No such user</span> : <span className="-ml-2 h-6 w-8">
-                <Lottie animationData={animationData} />
-              </span>}
+              {userNotFound ? (
+                <span>No such user</span>
+              ) : (
+                <span className="-ml-2 h-6 w-8">
+                  <Lottie animationData={animationData} />
+                </span>
+              )}
             </div>
           )}
 
@@ -731,7 +810,7 @@ export default function User({ user }) {
             <PopupModal
               success={"6"}
               username={userBasicInfo.username}
-              useruuid={userBasicInfo.useruuid}
+              useruuid={userData.useruuid}
               destSolAddress={
                 userBasicInfo.solAddress ? userBasicInfo.solAddress : null
               }
@@ -755,6 +834,7 @@ export default function User({ user }) {
               username={userBasicInfo.username}
               mangaImage={mgComic.cover}
               sourceAddress={userNumId}
+              useruuid={userData.useruuid}
               destinationAddress={userBasicInfo.address}
               userDestinationId={userBasicInfo.id}
               mangaPrice={mgComic.price}
@@ -783,6 +863,29 @@ export default function User({ user }) {
             <div
               onClick={() => {
                 setDeletePost(null);
+              }}
+              id="overlay"
+              className="bg-black bg-opacity-80"
+            ></div>
+          </>
+        )}
+
+        {openSub && (
+          <>
+            <PopupModal
+              success={"9"}
+              username={userBasicInfo.username}
+              avatar={userBasicInfo.avatar}
+              subprice={userBasicInfo.subprice}
+              useruuid={userData.useruuid}
+              destinationAddress={userBasicInfo.address}
+              userDestinationId={userBasicInfo.id}
+              setSubscribedUser={setSubscribedUser}
+              setOpenSub={setOpenSub}
+            />
+            <div
+              onClick={() => {
+                setOpenSub(false);
               }}
               id="overlay"
               className="bg-black bg-opacity-80"

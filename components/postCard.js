@@ -42,7 +42,7 @@ export default function PostCard({
   myProfileId,
   repostAuthor,
   repostQuote,
-  repostCreatedAt
+  repostCreatedAt,
 }) {
   const videoRef = useRef(null);
   const router = useRouter();
@@ -57,7 +57,7 @@ export default function PostCard({
     deletePost,
     setDeletePost,
     userData,
-    darkMode
+    darkMode,
   } = useContext(UserContext);
   const [comments, setComments] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -78,6 +78,7 @@ export default function PostCard({
   const [pressTimeout, setPressTimeout] = useState(null);
   const [quoteContent, setQuoteContent] = useState(null);
   const [openTipPost, setOpenTipPost] = useState(false);
+  const [openPostOptions, setOpenPostOptions] = useState(false)
 
   const [ref, isBeingViewed] = PostInViewport({
     threshold: 0.5,
@@ -373,6 +374,9 @@ export default function PostCard({
     }
   };
 
+  const [imgSrc, setImgSrc] = useState(repostAuthor && repostAuthor.avatar)
+  const [imgSrcOrigin, setImgSrcOrigin] = useState(users && users.avatar)
+
   useEffect(() => {
     if (users.id !== myProfileId) {
       fetchFollows(users.id).then((res) => {
@@ -405,50 +409,66 @@ export default function PostCard({
         ref={ref}
         className={`${
           router.pathname !== "/comments/[comments]" && "shadow-xl"
-        } ${
-          !media && "w-full"
-        } ${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-black'} space-y-1 py-4 px-3 flex flex-col justify-center text-start`}
+        } ${!media && "w-full"} ${
+          darkMode ? "bg-[#1e1f24] text-white" : "bg-white text-black"
+        } space-y-1 py-4 px-3 flex flex-col justify-center text-start`}
       >
-        {repostQuote && <span className="flex flex-row justify-between items-center">
-          <span
-            onClick={() => {
-              fullPageReload(`/profile/${repostAuthor.username}`);
-            }}
-            className="cursor-pointer flex flex-row justify-start items-center space-x-0"
-          >
-            <span className="relative h-8 w-8 flex">
-              <Image
-                src={repostAuthor.avatar}
-                alt="user profile"
-                width={35}
-                height={35}
-                className="rounded-full object-cover"
-              />
+        {router.pathname === "/profile/[user]" &&
+          repostAuthor &&
+          repostAuthor.username && (
+            <span className="text-xs text-slate-500 font-medium">
+              {repostAuthor.username} reposted
             </span>
-            
-            <span className="flex flex-col">
-              <span className="flex flex-row items-center">
-                <span className="pl-2 pr-1 text-xs font-semibold">
-                  {repostAuthor.username}
+          )}
+        {repostQuote && (
+          <span className="flex flex-row justify-between items-center">
+            <span
+              onClick={() => {
+                fullPageReload(`/profile/${repostAuthor.username}`);
+              }}
+              className="cursor-pointer flex flex-row justify-start items-center space-x-0"
+            >
+              <span className="relative h-8 w-8 flex">
+                <Image
+                  src={imgSrc}
+                  alt="user profile"
+                  width={35}
+                  height={35}
+                  className="rounded-full object-cover"
+                  onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
+                />
+              </span>
+
+              <span className="flex flex-col">
+                <span className="flex flex-row items-center">
+                  <span className="pl-2 pr-1 text-xs font-semibold">
+                    {repostAuthor.username}
+                  </span>
+                  <span className="text-[0.7rem] text-gray-400">
+                    reposted {postTimeAgo(repostCreatedAt)}
+                  </span>
                 </span>
-                <span className="text-[0.7rem] text-gray-400">
-                  reposted {postTimeAgo(repostCreatedAt)}
+                <span className="flex flex-row items-center">
+                  <span className="h-4 w-6">
+                    <Lottie animationData={animationData} />
+                  </span>
+                  <span className="absolute pl-6 text-[0.7rem] font-bold text-blue-400">
+                    {parseFloat(parseFloat(repostAuthor.ki).toFixed(2))}
+                  </span>
                 </span>
               </span>
-              <span className="flex flex-row items-center">
-                <span className="h-4 w-6">
-                  <Lottie animationData={animationData} />
-                </span>
-                <span className="absolute pl-6 text-[0.7rem] font-bold text-blue-400">
-                  {parseFloat(parseFloat(repostAuthor.ki).toFixed(2))}
-                </span>
-              </span>
             </span>
-            
           </span>
-          
-        </span>}
-        {repostQuote && <span className="px-1 py-2 bg-gray-100 w-full rounded"><CommentConfig text={repostQuote} tags={true} /> </span>}
+        )}
+        {repostQuote && (
+          <span
+            className={`${
+              darkMode ? "text-white bg-gray-700" : "text-black bg-gray-100"
+            } px-1 py-2 w-full rounded`}
+          >
+            <CommentConfig text={repostQuote} tags={true} />{" "}
+          </span>
+        )}
 
         <span className="flex flex-row justify-between items-center">
           <span
@@ -459,14 +479,15 @@ export default function PostCard({
           >
             <span className="relative h-9 w-9 flex">
               <Image
-                src={users.avatar}
+                src={imgSrcOrigin}
                 alt="user profile"
                 width={35}
                 height={35}
                 className="rounded-full object-cover"
+                onError={() => setImgSrcOrigin("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
               />
             </span>
-            
+
             <span className="flex flex-col">
               <span className="flex flex-row">
                 <span className="pl-2 pr-1 font-semibold">
@@ -495,18 +516,41 @@ export default function PostCard({
             ) : alreadyFollowed === null ? (
               ""
             ) : alreadyFollowed ? (
-              <UnfollowButton alreadyFollowed={alreadyFollowed}
-              setAlreadyFollowed={setAlreadyFollowed} followerUserId={myProfileId}
-              followingUserId={users.id}/>
+              <span className="flex flex-row space-x-0.5">
+                <span></span>
+                <UnfollowButton
+                  alreadyFollowed={alreadyFollowed}
+                  setAlreadyFollowed={setAlreadyFollowed}
+                  followerUserId={myProfileId}
+                  followingUserId={users.id}
+                />
+              </span>
             ) : (
-              <PlusIcon
-                alreadyFollowed={alreadyFollowed}
-                setAlreadyFollowed={setAlreadyFollowed}
-                followerUserId={myProfileId}
-                followingUserId={users.id}
-                size={"19"}
-                color={"default"}
-              />
+              <span className="flex flex-row space-x-0.5 justify-center items-center">
+                <PlusIcon
+                ymk={false}
+                  alreadyFollowed={alreadyFollowed}
+                  setAlreadyFollowed={setAlreadyFollowed}
+                  followerUserId={myProfileId}
+                  followingUserId={users.id}
+                  size={"19"}
+                  color={"default"}
+                />
+                
+                <svg
+                onClick={()=>{
+                  setOpenPostOptions(true)
+                }}
+                className="rotate-90 cursor-pointer"
+                  fill={darkMode ? "white" : "#000000"}
+                  width="18px"
+                  height="18px"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M12,10a2,2,0,1,1-2,2A2,2,0,0,1,12,10ZM4,14a2,2,0,1,0-2-2A2,2,0,0,0,4,14Zm16-4a2,2,0,1,0,2,2A2,2,0,0,0,20,10Z" />
+                </svg>
+              </span>
             ))}
         </span>
         <span
@@ -639,7 +683,9 @@ export default function PostCard({
                   <path d="M20.16,5A6.29,6.29,0,0,0,12,4.36a6.27,6.27,0,0,0-8.16,9.48l6.21,6.22a2.78,2.78,0,0,0,3.9,0l6.21-6.22A6.27,6.27,0,0,0,20.16,5Zm-1.41,7.46-6.21,6.21a.76.76,0,0,1-1.08,0L5.25,12.43a4.29,4.29,0,0,1,0-6,4.27,4.27,0,0,1,6,0,1,1,0,0,0,1.42,0,4.27,4.27,0,0,1,6,0A4.29,4.29,0,0,1,18.75,12.43Z" />
                 </svg>
               )}
-              <div className={darkMode ? "text-white" : "text-gray-800"}>{likes.length}</div>
+              <div className={darkMode ? "text-white" : "text-gray-800"}>
+                {likes.length}
+              </div>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -650,7 +696,7 @@ export default function PostCard({
                   router.push(`/comments/${id}`);
                 }}
                 className="cursor-pointer"
-                fill={darkMode ? 'white' : "#000000"}
+                fill={darkMode ? "white" : "#000000"}
                 width="24px"
                 height="24px"
                 viewBox="0 0 24 24"
@@ -659,7 +705,7 @@ export default function PostCard({
                 <path d="M8,11a1,1,0,1,0,1,1A1,1,0,0,0,8,11Zm4,0a1,1,0,1,0,1,1A1,1,0,0,0,12,11Zm4,0a1,1,0,1,0,1,1A1,1,0,0,0,16,11ZM12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.26,6.33l-2,2a1,1,0,0,0-.21,1.09A1,1,0,0,0,3,22h9A10,10,0,0,0,12,2Zm0,18H5.41l.93-.93a1,1,0,0,0,.3-.71,1,1,0,0,0-.3-.7A8,8,0,1,1,12,20Z" />
               </svg>
 
-              <div className={`${darkMode ? 'text-white' : 'text-gray-800'}`}>
+              <div className={`${darkMode ? "text-white" : "text-gray-800"}`}>
                 {comments.filter((c) => c.parentid === null).length}
               </div>
             </div>
@@ -696,7 +742,9 @@ export default function PostCard({
                   <path d="M5 4a2 2 0 0 0-2 2v6H0l4 4 4-4H5V6h7l2-2H5zm10 4h-3l4-4 4 4h-3v6a2 2 0 0 1-2 2H6l2-2h7V8z" />
                 </svg>
               )}
-              <div className={darkMode ? 'text-white' : "text-gray-800"}>{reposts.length}</div>
+              <div className={darkMode ? "text-white" : "text-gray-800"}>
+                {reposts.length}
+              </div>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -715,7 +763,9 @@ export default function PostCard({
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
-              <div className={darkMode ? "white" : "text-gray-800"}>{views.length}</div>
+              <div className={darkMode ? "white" : "text-gray-800"}>
+                {views.length}
+              </div>
             </div>
           </div>
 
@@ -756,7 +806,9 @@ export default function PostCard({
 
             {copied ? (
               <span
-                className={`text-xs ${darkMode ? 'text-white' : 'text-black'} font-light`}
+                className={`text-xs ${
+                  darkMode ? "text-white" : "text-black"
+                } font-light`}
                 onClick={() => {
                   navigator.clipboard.writeText(
                     `https://animebook.io/comments/${id}`
@@ -780,7 +832,7 @@ export default function PostCard({
                   );
                   setCopied(true);
                   setTimeout(() => {
-                    setCopied(false); 
+                    setCopied(false);
                   }, 500);
                 }}
               >
@@ -799,7 +851,9 @@ export default function PostCard({
                   fullPageReload("/signin");
                 }
               }}
-              className={`cursor-pointer w-5 h-5 ${darkMode ? "text-white" : "text-black"}`}
+              className={`cursor-pointer w-5 h-5 ${
+                darkMode ? "text-white" : "text-black"
+              }`}
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill={bookmarked ? "currentColor" : "none"}
@@ -819,7 +873,9 @@ export default function PostCard({
           <>
             <div
               id="modal-visible"
-              className={`max-w-[400px] flex flex-col py-2 px-2 w-full relative ${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-black'} rounded-lg`}
+              className={`max-w-[400px] flex flex-col py-2 px-2 w-full relative ${
+                darkMode ? "bg-[#1e1f24] text-white" : "bg-white text-black"
+              } rounded-lg`}
             >
               <span className="pl-3 pb-1 text-start font-semibold">
                 Quoted Repost
@@ -839,7 +895,9 @@ export default function PostCard({
                   onClick={() => {
                     handleQuoteRepost();
                   }}
-                  className={`${darkMode ? '' : 'border border-gray-100'} bg-pastelGreen py-1 w-[70px] rounded-lg cursor-pointer`}
+                  className={`${
+                    darkMode ? "" : "border border-gray-100"
+                  } bg-pastelGreen py-1 w-[70px] rounded-lg cursor-pointer`}
                 >
                   Repost
                 </span>
@@ -853,6 +911,26 @@ export default function PostCard({
             ></div>
           </>
         )}
+
+        {
+          openPostOptions && (
+            <>
+            <PopupModal
+              success={"10"}
+              useruuid={users.useruuid}
+              username={users.username}
+              postid={id}
+              setOpenPostOptions={setOpenPostOptions}
+            />
+            <div
+              onClick={() => {
+                setOpenPostOptions(false);
+              }}
+              id="tip-overlay"
+            ></div>
+            </>
+          )
+        }
 
         {openTipPost && (
           <>

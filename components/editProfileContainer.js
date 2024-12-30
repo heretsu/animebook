@@ -229,11 +229,17 @@ const EditProfileContainer = () => {
     }
   }
   const [conAddress, setConAddress] = useState(null);
+  const [valuesLoaded, setValuesLoaded] = useState(false)
 
+  const [imgSrc, setImgSrc] = useState('')
   useEffect(() => {
     // connectToWallet().then((addr) => {
     //   setConAddress(addr);
     // });
+    if (userData && userData.avatar && !valuesLoaded){
+      setImgSrc(userData.avatar)
+      setValuesLoaded(true)
+    }
     if (!solBalance) {
       getBalances();
     }
@@ -244,7 +250,7 @@ const EditProfileContainer = () => {
         URL.revokeObjectURL(selectedMedia);
       }
     };
-  }, [selectedMedia, solBalance]);
+  }, [selectedMedia, solBalance, userData]);
   return (
     <>
       {userData !== null && userData !== undefined && (
@@ -350,11 +356,12 @@ const EditProfileContainer = () => {
                 >
                   <div className="relative h-[35px] w-[35px] cursor-pointer">
                     <Image
-                      src={userData.avatar}
+                      src={imgSrc}
                       alt="user avatar"
                       height={35}
                       width={35}
                       className="rounded-full"
+                      onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
                     />
                     <span className="rounded-full absolute inset-0 flex bg-black bg-opacity-60 justify-center items-center">
                       <CloudSvg pixels={"20px"} />
@@ -405,8 +412,9 @@ const EditProfileContainer = () => {
               </span>
               <div
                 onClick={() => {
+                  // connectToWallet()
                   // open()
-                  // updateAddress();
+                  updateAddress();
                 }}
                 className="w-full pb-2 text-center underline text-orange-500 cursor-pointer"
               >

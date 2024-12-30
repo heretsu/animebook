@@ -82,6 +82,7 @@ export default function CommunityCommentItem({
     setParentId(parentCommentId);
     communityInputRef.current.focus();
   };
+  const [imgSrc, setImgSrc] = useState(comment.users.avatar)
 
   useEffect(() => {
     fetchCommentUpvotes();
@@ -100,11 +101,12 @@ export default function CommunityCommentItem({
             >
               <span className="relative h-9 w-9 flex">
                 <Image
-                  src={comment.users.avatar}
+                  src={imgSrc}
                   alt="user profile"
                   width={35}
                   height={35}
                   className="rounded-full object"
+                  onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
                 />
               </span>
               <span className="pl-2 pr-1 font-semibold">

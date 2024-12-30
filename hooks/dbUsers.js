@@ -4,7 +4,7 @@ export default function DbUsers() {
     const res = await supabase
       .from("posts")
       .select(
-        "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio, ki)"
+        "id, media, content, created_at, users(id, avatar, username, useruuid, created_at, cover, bio, ki)"
       )
       .order("created_at", { ascending: false });
       
@@ -15,7 +15,7 @@ export default function DbUsers() {
     const res = await supabase
       .from("reposts")
       .select(
-        "id, created_at, postid, users(id, avatar, username, created_at, cover, bio, ki), quote"
+        "id, created_at, postid, users(id, avatar, username, useruuid, created_at, cover, bio, ki), quote"
       )
       .order("created_at", { ascending: false });
       // console.log(res)
@@ -30,7 +30,7 @@ export default function DbUsers() {
     const res = await supabase
       .from("posts")
       .select(
-        "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio, ki)"
+        "id, media, content, created_at, users(id, avatar, username, useruuid, created_at, cover, bio, ki)"
       ).eq("id", postid)
     return res;
   }
@@ -39,7 +39,7 @@ export default function DbUsers() {
     const res = await supabase
       .from("posts")
       .select(
-        "id, media, content, created_at, users(id, avatar, username, created_at, cover, bio, ki)"
+        "id, media, content, created_at, users(id, avatar, username, useruuid, created_at, cover, bio, ki)"
       ).eq("userid", userid).order("created_at", { ascending: false });
       
     return res;
@@ -49,7 +49,7 @@ export default function DbUsers() {
     const res = await supabase
       .from("mangas")
       .select(
-        "id, created_at, name, description, price, cover, pages, filepaths, users(id, avatar, username, ki)"
+        "id, created_at, name, description, price, cover, pages, filepaths, users(id, avatar, username, useruuid, ki)"
       )
       .eq("userid", userid)
       .order("created_at", { ascending: false });

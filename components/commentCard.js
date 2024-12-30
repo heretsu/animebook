@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { UserContext } from "@/lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import CommentItem from "./commentItem";
@@ -23,7 +23,8 @@ export default function CommentCard({ openComments }) {
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
   const [commentPostLoading, setCommentPostLoading] = useState(false);
-
+  const [imgSrc, setImgSrc] = useState('')
+const [valuesLoaded, setValuesLoaded] = useState(false)
   const fetchSinglePostComments = async () => {
     const { data } = await supabase
       .from("comments")
@@ -66,7 +67,12 @@ export default function CommentCard({ openComments }) {
       setCommentPostLoading(false);
     }
   };
-
+  useEffect(()=>{
+    if (userData && userData.avatar && !valuesLoaded){
+      setImgSrc(userData.avatar)
+      setValuesLoaded(true)
+    }
+  }, [userData, valuesLoaded])
   return (
     <div
       id={openComments ? "comments" : "invisible"}
@@ -101,11 +107,12 @@ export default function CommentCard({ openComments }) {
         <span className="relative h-8 w-8 flex">
           {userData &&
             <Image
-              src={userData.avatar}
+              src={imgSrc}
               alt="user profile"
               height={35}
               width={35}
               className="absolute rounded-full"
+              onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
             />
           }
         </span>

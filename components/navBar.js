@@ -185,8 +185,13 @@ const NavBarDependencies = () => {
     }
   }
 
+  const [imgSrc, setImgSrc] = useState("");
+
   const [initialized, setInitialized] = useState(false);
   useEffect(() => {
+    if (userData && userData.avatar) {
+      setImgSrc(userData.avatar);
+    }
     setCurrentRoute(router.pathname);
     if (!initialized) {
       fetchNotifications();
@@ -202,6 +207,8 @@ const NavBarDependencies = () => {
   }, [initialized, router.pathname, notifyUserObject, userData]);
 
   return {
+    imgSrc,
+    setImgSrc,
     allUsers,
     userData,
     myProfileRoute,
@@ -220,7 +227,8 @@ const NavBarDependencies = () => {
 export const MobileNavBar = () => {
   // For dev: This is mobile nav.
   const { fullPageReload } = PageLoadOptions();
-  const { unreadCount, currentRoute, router, darkMode } = NavBarDependencies();
+  const { imgSrc, setImgSrc, unreadCount, currentRoute, router, darkMode } =
+    NavBarDependencies();
 
   return (
     <div
@@ -705,6 +713,8 @@ export const MobileNavBar = () => {
 const NavBar = () => {
   const { fullPageReload } = PageLoadOptions();
   const {
+    imgSrc,
+    setImgSrc,
     allUsers,
     userData,
     myProfileRoute,
@@ -1170,7 +1180,11 @@ const NavBar = () => {
           </div>
           <div
             onClick={() => {
-              fullPageReload(`/profile/${userData.username}`);
+              if (!userData) {
+                router.push("/signin");
+              } else {
+                fullPageReload(`/profile/${userData.username}`);
+              }
             }}
             className={
               myProfileRoute &&
@@ -1365,11 +1379,16 @@ const NavBar = () => {
               className="pl-3 relative flex flex-shrink-0"
             >
               <Image
-                src={userData.avatar}
+                src={imgSrc}
                 alt="user myprofile"
                 height={35}
                 width={35}
                 className="rounded-full"
+                onError={() =>
+                  setImgSrc(
+                    "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                  )
+                }
               />
             </span>
           )}
@@ -1377,7 +1396,11 @@ const NavBar = () => {
             <span className="text-sm flex flex-row items-center justify-start">
               <span
                 onClick={() => {
-                  fullPageReload(`/profile/${userData.username}`);
+                  if (!userData) {
+                    router.push("/signin");
+                  } else {
+                    fullPageReload(`/profile/${userData.username}`);
+                  }
                 }}
                 className="font-semibold"
               >

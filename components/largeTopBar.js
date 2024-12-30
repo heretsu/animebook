@@ -82,25 +82,27 @@ export const TopBarObjects = () => {
     }
   };
 
+  const [searchValue, setSearchValue] = useState('')
   const searchForItem = (e) => {
     if (e.target.value !== "") {
       if (!postValues || !allUserObject || !originalPostValues) {
         getAllSearchData();
       }
+      setSearchValue(e.target.value)
       const foundPosts =
-        router.pathname === "/profile/[user]"
-          ? originalPostValues
-            ? originalPostValues.filter((post) => {
-                if (
-                  post.users.username.toLowerCase() === routedUser.toLowerCase()
-                ) {
-                  return post.content
-                    .toLowerCase()
-                    .includes(e.target.value.toLowerCase());
-                }
-              })
-            : []
-          : originalPostValues
+        // router.pathname === "/profile/[user]"
+        //   ? originalPostValues
+        //     ? originalPostValues.filter((post) => {
+        //         if (
+        //           post.users.username.toLowerCase() === routedUser.toLowerCase()
+        //         ) {
+        //           return post.content
+        //             .toLowerCase()
+        //             .includes(e.target.value.toLowerCase());
+        //         }
+        //       })
+        //     : [] :
+           originalPostValues
           ? originalPostValues.filter((post) =>
               post.content.toLowerCase().includes(e.target.value.toLowerCase())
             )
@@ -185,7 +187,8 @@ export const TopBarObjects = () => {
     openUsers,
     setOpenUsers,
     setExplorePosts,
-    darkMode
+    darkMode,
+    searchValue
   };
 };
 
@@ -205,7 +208,8 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
     setExplorePosts,
     openUsers,
     setOpenUsers,
-    darkMode
+    darkMode,
+    searchValue
   } = TopBarObjects();
   const { fullPageReload } = PageLoadOptions();
 
@@ -246,6 +250,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
               />
             </svg>
             <input
+              
               onChange={searchForItem}
               onClick={getAllSearchData}
               type="search"
@@ -269,7 +274,8 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
                     ) {
                       return;
                     } else {
-                      setPostValues(openSuggestions.foundPosts);
+                      router.push(`/search?${searchValue}`)
+                      // setPostValues(openSuggestions.foundPosts);
                     }
                     if (
                       router.pathname === "/explore" &&
@@ -278,7 +284,8 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
                     ) {
                       return;
                     } else {
-                      setExplorePosts(openSuggestions.foundExplorePosts);
+                      router.push(`/search?${searchValue}`)
+                      // setExplorePosts(openSuggestions.foundExplorePosts);
                     }
 
                     setOpenSuggestions(null);
@@ -380,7 +387,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
 
 const LargeTopBar = ({ relationship }) => {
   const router = useRouter();
-  const { followingPosts, changePostsDisplayed, getAllPosts } = TopBarObjects();
+  const { followingPosts, changePostsDisplayed, getAllPosts, searchValue } = TopBarObjects();
   return (
     <>
       {router.pathname !== "/explore" &&

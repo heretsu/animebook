@@ -212,6 +212,7 @@ export default function CommunityPostCard({
       }
     }
   };
+  const [imgSrc, setImgSrc] = useState(users.avatar)
 
   useEffect(() => {
     if (users.id !== myProfileId) {
@@ -246,11 +247,12 @@ export default function CommunityPostCard({
           >
             <span className="relative h-9 w-9 flex">
               <Image
-                src={users.avatar}
+                src={imgSrc}
                 alt="user profile"
                 width={35}
                 height={35}
                 className="rounded-full object"
+                onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
               />
             </span>
           

@@ -589,6 +589,7 @@ const SideBar = () => {
                         </span>
 
                         <PlusIcon
+                        ymk={true}
                           sideBar={true}
                           alreadyFollowed={alreadyFollowed}
                           setAlreadyFollowed={setAlreadyFollowed}
