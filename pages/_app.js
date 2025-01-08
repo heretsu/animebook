@@ -492,12 +492,13 @@ export default function App({ Component, pageProps }) {
   const [allowUnloggedView, setAllowUnloggedView] = useState(false)
   useEffect(() => {
 
+    console.log(localStorage.getItem('darkmode'))
     if (darkMode) {
       document.body.style.backgroundColor = "black";
       document.documentElement.classList.add("dark");
       document.documentElement.style.backgroundColor = "black";
       localStorage.setItem("darkmode", true)
-    } else {
+    } else if (darkMode === null) {
       document.body.style.backgroundColor = "#e8edf1";
       document.documentElement.classList.remove("dark");
       document.documentElement.style.backgroundColor = "#e8edf1";

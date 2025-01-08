@@ -249,7 +249,7 @@ export const MobileNavBar = () => {
       >
         <span
           onClick={() => {
-            fullPageReload("/home");
+            fullPageReload("/home", "window");
           }}
           className="flex flex-col justify-center items-center"
         >
@@ -287,11 +287,11 @@ export const MobileNavBar = () => {
             Home
           </span> */}
         </span>
-
-        <Link href={'/explore'}
-          // onClick={() => {
-          //   fullPageReload("/explore");
-          // }}
+        
+        <span
+          onClick={() => {
+            fullPageReload("/explore", "window");
+          }}
           className="flex flex-col justify-center items-center"
         >
           <svg
@@ -322,13 +322,13 @@ export const MobileNavBar = () => {
             }`}
           >
             Explore
-          </span> */}</Link>
+          </span> */}</span>
         {/* </span> */}
 
-        <Link href={'/search'}
-          // onClick={() => {
-          //   fullPageReload("/search");
-          // }}
+        <span
+          onClick={() => {
+            fullPageReload("/search", "window");
+          }}
           className="flex flex-col justify-center items-center"
         >
           <svg
@@ -359,7 +359,7 @@ export const MobileNavBar = () => {
             Search
           </span> */}
         {/* </span> */}
-        </Link>
+        </span>
 
         <Link href={'/communities'}
           // onClick={() => {
@@ -751,7 +751,7 @@ const NavBar = () => {
       <div className="w-full h-full">
         <div
           onClick={() => {
-            fullPageReload("/home");
+            fullPageReload("/home", "window");
           }}
           className="flex justify-start items-center"
         >
@@ -769,10 +769,10 @@ const NavBar = () => {
             darkMode ? "text-white" : "text-slate-600"
           } block font-semibold`}
         >
-          <Link href={'/home'}
-            // onClick={() => {
-            //   fullPageReload("/home");
-            // }}
+          <span
+            onClick={() => {
+              fullPageReload("/home", "window");
+            }}
             className={
               currentRoute == "/home" || currentRoute == "/create"
                 ? `${
@@ -808,7 +808,7 @@ const NavBar = () => {
 
             <span>Home</span>
           {/* </div> */}
-          </Link>
+          </span>
           <Link href={'/explore'}
             // onClick={() => {
             //   fullPageReload("/explore");

@@ -59,13 +59,14 @@ const AttachmentsContainer = ({ receiverid }) => {
   };
 
   const sendMessage = async (gifUrl) => {
+    console.log(gifUrl)
     if (!disable) {
       setDisable(true);
       if (!userNumId) {
         fullPageReload("/signin");
         return;
       }
-      if (gifUrl){
+      if (gifUrl && gifUrl.length > 0){
         supabase
         .from("conversations")
         .insert({
@@ -75,10 +76,12 @@ const AttachmentsContainer = ({ receiverid }) => {
           isread: false,
           attachments: [gifUrl],
         })
-        .then((res) => {
+        .then(() => {
           setContent("");
           setDisable(false);
-        });
+        }).catch((error)=>{
+          console.log('cypher e: ', error)
+        })
       } 
       else{
       if (content !== "" || mediaFile) {

@@ -261,7 +261,7 @@ const SideBar = () => {
 
         <span className="flex flex-col px-2 py-3 space-y-4 text-slate-500 text-[13px] font-bold">
           <span onClick={() => {
-                fullPageReload(`/profile/${userData.username}`);
+                fullPageReload(`/profile/${userData.username}`, "window");
               }} className="cursor-pointer w-fit flex flex-row items-center space-x-2">
             <svg
               id="ninja"
@@ -570,7 +570,7 @@ const SideBar = () => {
                       >
                         <span
                           onClick={() => {
-                            fullPageReload(`/profile/${thisUser.username}`);
+                            fullPageReload(`/profile/${thisUser.username}`, "window");
                           }}
                           className="cursor-pointer flex justify-start items-center space-x-2"
                         >

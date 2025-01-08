@@ -473,7 +473,7 @@ export default function PostCard({
         <span className="flex flex-row justify-between items-center">
           <span
             onClick={() => {
-              fullPageReload(`/profile/${users.username}`);
+              fullPageReload(`/profile/${users.username}`, 'window');
             }}
             className="cursor-pointer flex flex-row justify-start items-center space-x-0"
           >
