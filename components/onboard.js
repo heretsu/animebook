@@ -49,15 +49,22 @@ export default function Onboard({ allUsers, me }) {
     setOpenConnectWallet(true);
   };
 
-  const connectAndUpload = async () => {
+  const connectAndUpload = () => {
     setActivated(true);
-    const {addr: address} = await connectToWallet();
-    if (address) {
-      updateUserInfo(address);
+   connectToWallet().then(({addr}) => {
+    
+    console.log(addr)
+    if (addr) {
+      updateUserInfo(addr);
     } else {
       setErrorMsg("Something went wrong");
       setActivated(false);
     }
+    }).catch((e)=>{
+      console.log(e, 'e')
+      updateUserInfo(null);
+    })
+    
   };
 
   const uploadToBucket = async (file, storagePath) => {
@@ -99,7 +106,7 @@ export default function Onboard({ allUsers, me }) {
 
         const newUser = {
           useruuid: me.id,
-          username: username,
+          username: username.trim(),
           avatar: imageUrl ? imageUrl : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
           address: addr ? addr : null,
           ki: 0
@@ -109,7 +116,7 @@ export default function Onboard({ allUsers, me }) {
           setErrorMsg(error);
           return
         }
-        fullPageReload("/home");
+        fullPageReload("/home", "window");
       } else {
         setErrorMsg("Input a username otaku san");
       }
@@ -261,7 +268,18 @@ export default function Onboard({ allUsers, me }) {
             {openConnectWallet ? "Connect" : "Next"}
           </span>
         )}
-        {(openConnectWallet || openImageOnboard) && !activated && (
+        {(openConnectWallet || openImageOnboard) && (
+          <span className="flex flew-row justify-between w-full">
+
+            <span onClick={
+              openConnectWallet
+                ? () => {
+                    setOpenImageOnboard(true);
+                    setOpenConnectWallet(false);
+                  }
+                : () => {setOpenImageOnboard(false)}
+            } className="cursor-pointer w-full text-sm text-center underline pt-2 text-slate-500">back</span>
+          
           <span
             onClick={
               openImageOnboard
@@ -274,6 +292,7 @@ export default function Onboard({ allUsers, me }) {
             className="cursor-pointer w-full text-sm text-center underline pt-2 text-slate-500"
           >
             skip
+          </span>
           </span>
         )}
       </div>

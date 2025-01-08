@@ -15,7 +15,7 @@ export default function CommunityCommentItem({
   setParentId,
 }) {
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, communityInputRef, userData } = useContext(UserContext);
+  const { userNumId, communityInputRef, userData, darkMode } = useContext(UserContext);
   const [upvotes, setUpVotes] = useState(null);
   const [upvoted, setUpvoted] = useState(false);
   const [reentry, setReentry] = useState(false);
@@ -82,6 +82,7 @@ export default function CommunityCommentItem({
     setParentId(parentCommentId);
     communityInputRef.current.focus();
   };
+  const [imgSrc, setImgSrc] = useState(comment.users.avatar)
 
   useEffect(() => {
     fetchCommentUpvotes();
@@ -90,7 +91,7 @@ export default function CommunityCommentItem({
     upvotes !== null &&
     comment.parentid === null && (
       <span className="py-2 space-y-2">
-        <span className="bg-white text-black space-y-3 py-4 px-3 rounded-xl flex flex-col justify-center text-start">
+        <span className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-black'} text-black space-y-3 py-4 px-3 rounded-xl flex flex-col justify-center text-start`}>
           <span className="flex flex-row justify-between items-center">
             <span
               onClick={() => {
@@ -100,11 +101,12 @@ export default function CommunityCommentItem({
             >
               <span className="relative h-9 w-9 flex">
                 <Image
-                  src={comment.users.avatar}
+                  src={imgSrc}
                   alt="user profile"
                   width={35}
                   height={35}
                   className="rounded-full object"
+                  onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
                 />
               </span>
               <span className="pl-2 pr-1 font-semibold">
@@ -123,7 +125,7 @@ export default function CommunityCommentItem({
               </span>
             )}
           <div className="text-white flex flex-row justify-between items-center">
-            <div className="flex flex-row items-center space-x-4 bg-white pr-4 py-2">
+            <div className="flex flex-row items-center space-x-4 pr-4 py-2">
               <div className="cursor-pointer py-0.5 px-2 rounded-3xl bg-slate-400 flex items-center space-x-1">
                 <svg
                 onClick={()=>{upvoteComment(comment.id)}}

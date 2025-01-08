@@ -8,6 +8,8 @@ import Image from "next/image";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import Lottie from "lottie-react";
 import loadscreen from "@/assets/loadscreen.json";
+import darkloadscreen from "@/assets/darkloadscreen.json";
+import UnfollowButton from "./unfollowButton";
 
 const Posts = () => {
   const {
@@ -26,6 +28,7 @@ const Posts = () => {
     tagsFilter,
     searchFilter,
     followingPosts,
+    darkMode,
   } = useContext(UserContext);
   const [alreadyFollowed, setAlreadyFollowed] = useState(false);
   const { fullPageReload } = PageLoadOptions();
@@ -87,7 +90,9 @@ const Posts = () => {
             ))}
             {visiblePosts.length < postValues.length && (
               <span>
-                <Lottie animationData={loadscreen} />
+                <Lottie
+                  animationData={darkMode ? darkloadscreen : loadscreen}
+                />
               </span>
             )}
           </>
@@ -146,16 +151,18 @@ const Posts = () => {
                                   {thisUser.username}
                                 </span>
                               </span>
-
-                              <PlusIcon
-                                sideBar={true}
-                                alreadyFollowed={alreadyFollowed}
-                                setAlreadyFollowed={setAlreadyFollowed}
-                                followerUserId={userNumId}
-                                followingUserId={thisUser.id}
-                                size={"19"}
-                                color={"default"}
-                              />
+                              
+                                <PlusIcon
+                                  ymk={true}
+                                  sideBar={true}
+                                  alreadyFollowed={alreadyFollowed}
+                                  setAlreadyFollowed={setAlreadyFollowed}
+                                  followerUserId={userNumId}
+                                  followingUserId={thisUser.id}
+                                  size={"19"}
+                                  color={"default"}
+                                />
+                              
                             </span>
                           );
                         })}
@@ -167,7 +174,9 @@ const Posts = () => {
               <span className="text-gray-600">Nanimonai! No posts found</span>
             ) : (
               <span className="h-screen">
-                <Lottie animationData={loadscreen} />
+                <Lottie
+                  animationData={darkMode ? darkloadscreen : loadscreen}
+                />
               </span>
             )}
           </div>

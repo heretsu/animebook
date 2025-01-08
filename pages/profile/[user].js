@@ -20,22 +20,26 @@ import SideBar from "@/components/sideBar";
 import Lottie from "lottie-react";
 import animationData from "@/assets/kianimation.json";
 import loadscreen from "@/assets/loadscreen.json";
-
+import darkloadscreen from "@/assets/darkloadscreen.json";
+import DappLibrary from "@/lib/dappLibrary";
+import { BinSvg } from "@/components/communityPostCard";
 
 export const getServerSideProps = async (context) => {
   const { user } = context.query;
   return {
     props: {
-      user,
+      user: user.toLowerCase(),
     },
   };
 };
 
 export default function User({ user }) {
+  const { getUserFromId } = DappLibrary();
   const { connectToWallet, disconnectWallet } = ConnectionData();
   const { getUsdPrice } = PriceFeedStation();
   const router = useRouter();
-  const { fetchAllUsers, fetchAllPosts, fetchUserMangas } = DbUsers();
+  const { fetchAllUsers, fetchAllPosts, fetchAllReposts, fetchUserMangas } =
+    DbUsers();
   const { fetchFollowing, fetchFollows } = Relationships();
   const {
     userPostValues,
@@ -60,6 +64,7 @@ export default function User({ user }) {
     userData,
     setRoutedUser,
     sideBarOpened,
+    darkMode,
   } = useContext(UserContext);
 
   const [openPremium, setOpenPremium] = useState(false);
@@ -70,6 +75,7 @@ export default function User({ user }) {
   const [mangaObjects, setMangaObjects] = useState(null);
   const [openTipModal, setOpenTipModal] = useState(false);
   const [subscribedUser, setSubscribedUser] = useState(false);
+  const [imgSrc, setImgSrc] = useState("");
 
   const [mangaIndex, setMangaIndex] = useState(0);
   const fetchFollowingAndFollowers = async (userid) => {
@@ -98,17 +104,18 @@ export default function User({ user }) {
       .catch((e) => console.log(e));
   };
 
-  function userSpecificPosts(result) {
-    setPostValues(
-      result.data.filter(
-        (r) => r.users.username.toLowerCase() === user.toLowerCase()
-      )
-    );
-    setUserPostValues(
-      result.data.filter(
-        (r) => r.users.username.toLowerCase() === user.toLowerCase()
-      )
-    );
+  function userSpecificPosts(data) {
+    const filteredUserPosts = data.filter((r) => {
+      return (
+        r.users.username.trim().toLowerCase() === user.trim().toLowerCase() ||
+        (r.repostAuthor &&
+          r.repostAuthor.username &&
+          r.repostAuthor.username.trim().toLowerCase() ===
+            user.trim().toLowerCase())
+      );
+    });
+    setPostValues(filteredUserPosts);
+    setUserPostValues(filteredUserPosts);
   }
 
   function getMangas() {
@@ -165,37 +172,47 @@ export default function User({ user }) {
     return allowRead;
   };
 
+  const [openSub, setOpenSub] = useState(false);
   const subscribeToPublisher = async () => {
     if (userData === undefined || userData === null) {
       PageLoadOptions().fullPageReload("/signin");
       return;
     }
     try {
-      const prs = await getUsdPrice();
-      const sendAmount = parseFloat(userBasicInfo.subprice) / prs.ethPrice;
-      const wei = ethers.utils.parseUnits(
-        sendAmount.toFixed(18).toString(),
-        18
-      );
-
-      const { provider } = await connectToWallet();
-      let transactionResponse = null;
-
-      transactionResponse = await provider.getSigner().sendTransaction({
-        to: userBasicInfo.address,
-        value: wei,
-      });
-
-      const receipt = await transactionResponse.wait();
-
-      if (receipt) {
+      if (userBasicInfo.subprice === 0) {
+        setSubscribedUser(true);
         const { error } = await supabase.from("subscriptions").insert({
           subscriber: userNumId,
           creator: userBasicInfo.id,
         });
-        if (!error) {
-          setSubscribedUser(true);
-        }
+      } else {
+        setOpenSub(true);
+        // const prs = await getUsdPrice();
+        // const sendAmount = parseFloat(userBasicInfo.subprice) / prs.ethPrice;
+        // const wei = ethers.utils.parseUnits(
+        //   sendAmount.toFixed(18).toString(),
+        //   18
+        // );
+
+        // const { provider } = await connectToWallet();
+        // let transactionResponse = null;
+
+        // transactionResponse = await provider.getSigner().sendTransaction({
+        //   to: userBasicInfo.address,
+        //   value: wei,
+        // });
+
+        // const receipt = await transactionResponse.wait();
+
+        // if (receipt) {
+        //   const { error } = await supabase.from("subscriptions").insert({
+        //     subscriber: userNumId,
+        //     creator: userBasicInfo.id,
+        //   });
+        //   if (!error) {
+        //     setSubscribedUser(true);
+        //   }
+        // }
       }
     } catch (e) {
       console.log(e.message);
@@ -233,18 +250,55 @@ export default function User({ user }) {
       throw "a problem occurred";
     }
   };
-  const [userNotFound, setUserNotFound] = useState(false)
+
+  function uniqueFollowers(data, followingMe) {
+    const seen = new Set();
+    return data.filter((item) => {
+      const identifier = followingMe ? item.following_userid : item.follower_userid;
+      if (seen.has(identifier)) {
+        return false; 
+      }
+      seen.add(identifier);
+      return true;
+    });
+  }
+  const [clickFollower, setClickFollower] = useState(false)
+  const [clickFollowing, setClickFollowing] = useState(false)
+
+  const [userNotFound, setUserNotFound] = useState(false);
+
+  const [valuesLoaded, setValuesLoaded] = useState(false);
+
+  const [deletionModal, setDeletionModal] = useState(null)
+
+    const deleteManga = (series) => {
+      setOpenManga(false)
+      setDeletionModal(series)
+    }
+    
+    const deleteMangaFromDB = (id) => {
+      supabase
+        .from("mangas").delete().eq('id', id).then((res)=>{
+          setMangaObjects(mangaObjects.filter((m)=>{
+            return m.id !== id
+          }));
+          setDeletionModal(null); 
+          setOpenManga(false);
+        })
+    }
 
   useEffect(() => {
+    
     setRoutedUser(user);
     fetchAllUsers().then((r) => {
       setAllUserObject(r.data);
       if (r.data !== null && r.data !== undefined && r.data.length !== 0) {
-        const currentUserExtraInfo = r.data.find(
-          (c) => c.username.toLowerCase() === user.toLowerCase()
-        );
-        if (!currentUserExtraInfo){
-          setUserNotFound(true)
+        const currentUserExtraInfo = r.data.find((c) => {
+          return c.username.toLowerCase().trim() === user.toLowerCase().trim();
+        });
+
+        if (!currentUserExtraInfo) {
+          setUserNotFound(true);
           return;
         }
         setItsMe(currentUserExtraInfo.id === userNumId);
@@ -266,8 +320,9 @@ export default function User({ user }) {
                   setSubscribedUser(true);
                 }
               });
-            setFollowerObject(res.followings.data);
-            setFollowingObject(res.followers.data);
+
+            setFollowerObject(uniqueFollowers(res.followings.data, true));
+            setFollowingObject(uniqueFollowers(res.followers.data, false));
 
             setAlreadyFollowed(
               !!res.followers.data.find(
@@ -282,13 +337,70 @@ export default function User({ user }) {
       }
     });
 
-    fetchAllPosts().then((result) => {
-      if (result.data !== null && result.data !== undefined) {
-        userSpecificPosts(result);
-        setOriginalPostValues(result.data);
-      }
+    
+    fetchAllReposts().then((reposts) => {
+      fetchAllPosts().then((result1) => {
+        const userPostsAndReposts = reposts
+          .map((repost) => {
+            const originalPost = result1.data.find((post) => {
+              return post.id === repost.postid;
+            });
+            if (
+              originalPost &&
+              repost.users &&
+              repost.users.username.trim().toLowerCase() ===
+                user.trim().toLowerCase()
+            ) {
+              return {
+                ...originalPost,
+                repostAuthor: repost.users,
+                repostQuote: repost.quote,
+                repostCreatedAt: repost.created_at,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean)
+          .concat(
+            result1.data.filter(
+              (post) => !reposts.some((repost) => repost.postid === post.id)
+            )
+          )
+          .sort((a, b) => {
+            const dateA = new Date(
+              a.repostQuote ? a.repostCreatedAt : a.created_at
+            );
+            const dateB = new Date(
+              b.repostQuote ? b.repostCreatedAt : b.created_at
+            );
+            return dateB - dateA;
+          });
+        userSpecificPosts(userPostsAndReposts);
+        setOriginalPostValues(userPostsAndReposts);
+      });
     });
-  }, [userNumId]);
+
+    // fetchAllPosts().then((result) => {
+    //   if (result.data !== null && result.data !== undefined) {
+    //     userSpecificPosts(result);
+    //     setOriginalPostValues(result.data);
+    //   }
+    // });
+    const handleRouteChange = () => {
+      setValuesLoaded(false); // Reset state on route change
+      if (userBasicInfo && userBasicInfo.avatar) {
+        setImgSrc(userBasicInfo.avatar);
+        setValuesLoaded(true);
+      }
+    };
+
+    router.events.on("routeChangeStart", handleRouteChange);
+
+    // Cleanup listener on component unmount
+    return () => {
+      router.events.off("routeChangeStart", handleRouteChange);
+    };
+  }, [userNumId, userBasicInfo, valuesLoaded]);
 
   return (
     <>
@@ -362,11 +474,16 @@ export default function User({ user }) {
                         <span className="flex flex-row justify-start items-center space-x-0.5">
                           <span className="relative h-8 w-8 flex">
                             <Image
-                              src={userBasicInfo.avatar}
+                              src={imgSrc}
                               alt="user"
                               width={35}
                               height={35}
                               className="border border-white rounded-full"
+                              onError={() =>
+                                setImgSrc(
+                                  "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                                )
+                              }
                             />
                           </span>
                           <span className="font-semibold text-[0.85rem] pr-2">
@@ -386,6 +503,7 @@ export default function User({ user }) {
                               </div>
                             ) : (
                               <PlusIcon
+                                ymk={false}
                                 alreadyFollowed={alreadyFollowed}
                                 setAlreadyFollowed={setAlreadyFollowed}
                                 followerUserId={userNumId}
@@ -400,8 +518,8 @@ export default function User({ user }) {
                             userPostValues !== undefined && (
                               <span>{`${userPostValues.length} Posts`}</span>
                             )}
-                          <span>{followerObject.length} Following</span>
-                          <span>{followingObject.length} Followers</span>
+                          <span onClick={()=>{setClickFollower(false); setClickFollowing(true)}}>{followerObject.length} Following</span>
+                          <span onClick={()=>{setClickFollowing(false); setClickFollower(true)}}>{followingObject.length} Followers</span>
                         </span>
                       </span>
                       <p className="pb-2 max-h-10 break-words overflow-auto">
@@ -412,254 +530,390 @@ export default function User({ user }) {
                     </span>
                   </span>
                 </span>
-                <span className="text-white w-full h-fit flex flex-row items-center space-x-1 font-semibold">
-                  <span
-                    onClick={() => {
-                      setOpenPremium(false);
-                    }}
-                    className={`flex space-x-1 flex-row h-fit w-1/2 cursor-pointer flex flex-row py-2.5 sm:py-4 justify-center items-center rounded-lg ${
-                      !openPremium
-                        ? "bg-pastelGreen"
-                        : "bg-white border border-gray-200 text-gray-400"
-                    }`}
-                  >
-                    <span>Public</span>
-                    <span>Content</span>
-                  </span>
-                  <span
-                    onClick={() => {
-                      setOpenPremium(true);
-                      getMangas();
-                    }}
-                    className={`w-1/2 cursor-pointer py-2.5 sm:py-4 rounded-lg flex justify-center items-center ${
-                      openPremium
-                        ? "bg-pastelGreen"
-                        : "bg-white border border-gray-200 text-gray-400"
-                    }`}
-                  >
-                    <svg
-                      width="20px"
-                      height="20px"
-                      viewBox="0 0 16 16"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      stroke={openPremium ? "white" : "#94a3b8"}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.5"
-                      className="pr-1"
-                    >
-                      <rect
-                        height="7.5"
-                        width="10.5"
-                        y="6.75"
-                        x="2.75"
-                        fill={openPremium ? "white" : "#94a3b8"}
-                      />
-                      <path d="m4.75 6.25s-1-4.5 3.25-4.5 3.25 4.5 3.25 4.5" />
-                    </svg>
+                {clickFollower || clickFollowing && <svg
+                  onClick={() => {
+                    setClickFollower(false)
+                    setClickFollowing(false)
+                  }}
+                  width="35px"
+                  height="35px"
+                  viewBox="0 0 48 48"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="my-2 cursor-pointer"
+                >
+                  <rect
+                    width={48}
+                    height={48}
+                    fill="white"
+                    fillOpacity={0.01}
+                  />
+                  <path
+                    d="M31 36L19 24L31 12"
+                    stroke="gray"
+                    strokeWidth={4}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>}
 
-                    <span className="space-x-1 flex flex-row h-fit">
-                      <span>Premium</span>
-                      <span>Content</span>
+                {clickFollower || clickFollowing ? (
+                  <span
+                    className={`${
+                      darkMode ? "text-white" : "text-black"
+                    } flex flex-col`}
+                  >
+                    <span className="flex flex-row justify-center items-center space-x-2">
+                      <span  onClick={()=>{setClickFollower(false); setClickFollowing(true)}} className={`${clickFollowing && 'border-b shadow-xl'} cursor-pointer`}>Following</span>
+                      <span onClick={()=>{setClickFollowing(false); setClickFollower(true)}} className={`${clickFollower && 'border-b shadow-xl'} cursor-pointer`}>Followers</span>
                     </span>
+                    
+
+                    {clickFollowing && followerObject.length > 0 &&
+                      followerObject.map((fobj) => {
+                        return (
+                          <span key={fobj.id} className="p-2">
+                            <span onClick={()=>{setClickFollower(false); setClickFollowing(false); router.push(getUserFromId(fobj.following_userid).username)}} className="flex flex-row justify-between items-center">
+                              <span className="cursor-pointer flex flex-row justify-center items-center">
+                                <span className="relative h-8 w-8 flex space-x-1.5">
+                                  <Image
+                                    src={
+                                      getUserFromId(fobj.following_userid)
+                                        .avatar
+                                    }
+                                    alt="user"
+                                    width={30}
+                                    height={30}
+                                    className="border border-white rounded-full"
+                                    // onError={() => handleImageError(os.id)}
+                                  />
+                                </span>
+                                <span>
+                                  {
+                                    getUserFromId(fobj.following_userid)
+                                      .username
+                                  }
+                                </span>
+                              </span>
+                              {/* <span>{getUserFromId(fobj.following_userid).username}</span> */}
+                            </span>
+                          </span>
+                        );
+                      })}
+                      {clickFollower && followingObject.length > 0 &&
+                      followingObject.map((fobj) => {
+                        return (
+                          <span key={fobj.id} className="p-2">
+                            <span onClick={()=>{setClickFollower(false); setClickFollowing(false); router.push(getUserFromId(fobj.follower_userid).username)}} className="flex flex-row justify-between items-center">
+                              <span className="cursor-pointer flex flex-row justify-center items-center">
+                                <span className="relative h-8 w-8 flex space-x-1.5">
+                                  <Image
+                                    src={
+                                      getUserFromId(fobj.follower_userid)
+                                        .avatar
+                                    }
+                                    alt="user"
+                                    width={30}
+                                    height={30}
+                                    className="border border-white rounded-full"
+                                    // onError={() => handleImageError(os.id)}
+                                  />
+                                </span>
+                                <span>
+                                  {
+                                    getUserFromId(fobj.follower_userid)
+                                      .username
+                                  }
+                                </span>
+                              </span>
+                              {/* <span>{getUserFromId(fobj.following_userid).username}</span> */}
+                            </span>
+                          </span>
+                        );
+                      })}
                   </span>
-                </span>
-                {!itsMe && (
-                  <span className="px-1 flex flex-col space-y-1 text-slate-500">
-                    <span>
-                      Joined on {getDateJoined(userBasicInfo.created_at)}
-                    </span>
-                    <span className="flex flex-row w-full justify-between items-center">
-                      <span className="space-x-0.5 flex flex-row items-center">
-                        <svg
-                          fill="#94a3b8"
-                          height="18px"
-                          width="18px"
-                          id="Icons"
-                          xmlns="http://www.w3.org/2000/svg"
-                          xmlnsXlink="http://www.w3.org/1999/xlink"
-                          viewBox="0 0 32 32"
-                          xmlSpace="preserve"
-                        >
-                          <path d="M29,14h-2.2c-0.2-1.3-0.6-2.5-1.3-3.7c-0.7-1.3-0.5-3,0.6-4.1c0.4-0.4,0.4-1,0-1.4c-2-2-5.2-2-7.3-0.1C17.7,4.2,16.3,4,15,4 c-3.9,0-7.5,1.9-9.8,5c-1.5,2-2.2,4.5-2.2,7c0,2.2,0.6,4.3,1.7,6.1l0.1,0.2c-0.1,0.1-0.2,0.1-0.3,0.1C4.2,22.5,4,22.3,4,22 c0-0.6-0.4-1-1-1s-1,0.4-1,1c0,1.4,1.1,2.5,2.5,2.5c0.5,0,1-0.2,1.4-0.4l3.3,5.4C9.3,29.8,9.6,30,10,30h4c0.3,0,0.6-0.1,0.8-0.4 c0.2-0.2,0.3-0.5,0.2-0.8L14.8,28c0.4,0,0.9,0,1.3,0L16,28.8c0,0.3,0,0.6,0.2,0.8S16.7,30,17,30h4c0.3,0,0.7-0.2,0.8-0.5l2-3.1 c2.4-0.9,4.5-2.2,5.9-3.7c0.2-0.2,0.3-0.4,0.3-0.7V15C30,14.4,29.6,14,29,14z M14.9,14.5h1.3c1.6,0,2.9,1.3,2.9,3 c0,1.5-1.1,2.7-2.5,2.9V21c0,0.6-0.4,1-1,1s-1-0.4-1-1v-0.6c-1.4-0.2-2.5-1.4-2.5-2.9c0-0.6,0.4-1,1-1s1,0.4,1,1 c0,0.5,0.4,0.9,0.9,0.9h1.3c0.5,0,0.9-0.4,0.9-0.9c0-0.5-0.4-1-0.9-1h-1.3c-1.6,0-2.9-1.3-2.9-3c0-1.5,1.1-2.7,2.5-2.9V10 c0-0.6,0.4-1,1-1s1,0.4,1,1v0.6c1.4,0.2,2.5,1.4,2.5,2.9c0,0.6-0.4,1-1,1s-1-0.4-1-1c0-0.5-0.4-0.9-0.9-0.9h-1.3 c-0.5,0-0.9,0.4-0.9,0.9C14,14.1,14.4,14.5,14.9,14.5z" />
-                        </svg>
-                        <span>{`send ${userBasicInfo.username} san a tip`}</span>
+                ) : (
+                  <>
+                    <span className="text-white w-full h-fit flex flex-row items-center space-x-1 font-semibold">
+                      <span
+                        onClick={() => {
+                          setOpenPremium(false);
+                        }}
+                        className={`flex space-x-1 flex-row h-fit w-1/2 cursor-pointer flex flex-row py-2.5 sm:py-4 justify-center items-center rounded-lg ${
+                          !openPremium
+                            ? "bg-pastelGreen"
+                            : "bg-white border border-gray-200 text-gray-400"
+                        }`}
+                      >
+                        <span>Public</span>
+                        <span>Content</span>
                       </span>
                       <span
                         onClick={() => {
-                          if (userData === undefined || userData === null) {
-                            PageLoadOptions().fullPageReload("/signin");
-                            return;
-                          }
-                          setOpenTipModal(true);
+                          setOpenPremium(true);
+                          getMangas();
                         }}
-                        className="cursor-pointer text-xs sm:text-sm font-bold py-1 px-2 bg-pastelGreen text-white border-2 border-white shadow-xl rounded-2xl"
+                        className={`w-1/2 cursor-pointer py-2.5 sm:py-4 rounded-lg flex justify-center items-center ${
+                          openPremium
+                            ? "bg-pastelGreen"
+                            : "bg-white border border-gray-200 text-gray-400"
+                        }`}
                       >
-                        Send Tip
+                        <svg
+                          width="20px"
+                          height="20px"
+                          viewBox="0 0 16 16"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          stroke={openPremium ? "white" : "#94a3b8"}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.5"
+                          className="pr-1"
+                        >
+                          <rect
+                            height="7.5"
+                            width="10.5"
+                            y="6.75"
+                            x="2.75"
+                            fill={openPremium ? "white" : "#94a3b8"}
+                          />
+                          <path d="m4.75 6.25s-1-4.5 3.25-4.5 3.25 4.5 3.25 4.5" />
+                        </svg>
+
+                        <span className="space-x-1 flex flex-row h-fit">
+                          <span>Premium</span>
+                          <span>Content</span>
+                        </span>
                       </span>
                     </span>
-                  </span>
-                )}
-                {openPremium ? (
-                  mangaLoading ? (
-                    <span className="h-screen">
-                <Lottie animationData={loadscreen} />
-              </span>
-                  ) : (
-                    <span className="text-xs md:text-sm flex flex-col w-full justify-center space-y-4">
-                      {mangaObjects && mangaObjects.length > 0 ? (
-                        <>
-                          {!itsMe ? (
+                    {!itsMe && (
+                      <span className="px-1 flex flex-col space-y-1 text-slate-500">
+                        <span>
+                          Joined on {getDateJoined(userBasicInfo.created_at)}
+                        </span>
+                        <span className="flex flex-row w-full justify-between items-center">
+                          <span className="space-x-0.5 flex flex-row items-center">
+                            <svg
+                              fill="#94a3b8"
+                              height="18px"
+                              width="18px"
+                              id="Icons"
+                              xmlns="http://www.w3.org/2000/svg"
+                              xmlnsXlink="http://www.w3.org/1999/xlink"
+                              viewBox="0 0 32 32"
+                              xmlSpace="preserve"
+                            >
+                              <path d="M29,14h-2.2c-0.2-1.3-0.6-2.5-1.3-3.7c-0.7-1.3-0.5-3,0.6-4.1c0.4-0.4,0.4-1,0-1.4c-2-2-5.2-2-7.3-0.1C17.7,4.2,16.3,4,15,4 c-3.9,0-7.5,1.9-9.8,5c-1.5,2-2.2,4.5-2.2,7c0,2.2,0.6,4.3,1.7,6.1l0.1,0.2c-0.1,0.1-0.2,0.1-0.3,0.1C4.2,22.5,4,22.3,4,22 c0-0.6-0.4-1-1-1s-1,0.4-1,1c0,1.4,1.1,2.5,2.5,2.5c0.5,0,1-0.2,1.4-0.4l3.3,5.4C9.3,29.8,9.6,30,10,30h4c0.3,0,0.6-0.1,0.8-0.4 c0.2-0.2,0.3-0.5,0.2-0.8L14.8,28c0.4,0,0.9,0,1.3,0L16,28.8c0,0.3,0,0.6,0.2,0.8S16.7,30,17,30h4c0.3,0,0.7-0.2,0.8-0.5l2-3.1 c2.4-0.9,4.5-2.2,5.9-3.7c0.2-0.2,0.3-0.4,0.3-0.7V15C30,14.4,29.6,14,29,14z M14.9,14.5h1.3c1.6,0,2.9,1.3,2.9,3 c0,1.5-1.1,2.7-2.5,2.9V21c0,0.6-0.4,1-1,1s-1-0.4-1-1v-0.6c-1.4-0.2-2.5-1.4-2.5-2.9c0-0.6,0.4-1,1-1s1,0.4,1,1 c0,0.5,0.4,0.9,0.9,0.9h1.3c0.5,0,0.9-0.4,0.9-0.9c0-0.5-0.4-1-0.9-1h-1.3c-1.6,0-2.9-1.3-2.9-3c0-1.5,1.1-2.7,2.5-2.9V10 c0-0.6,0.4-1,1-1s1,0.4,1,1v0.6c1.4,0.2,2.5,1.4,2.5,2.9c0,0.6-0.4,1-1,1s-1-0.4-1-1c0-0.5-0.4-0.9-0.9-0.9h-1.3 c-0.5,0-0.9,0.4-0.9,0.9C14,14.1,14.4,14.5,14.9,14.5z" />
+                            </svg>
+                            <span>{`send ${userBasicInfo.username} san a tip`}</span>
+                          </span>
+                          <span
+                            onClick={() => {
+                              if (userData === undefined || userData === null) {
+                                PageLoadOptions().fullPageReload("/signin");
+                                return;
+                              }
+                              setOpenTipModal(true);
+                            }}
+                            className="cursor-pointer text-xs sm:text-sm font-bold py-1 px-2 bg-pastelGreen text-white border-2 border-white shadow-xl rounded-2xl"
+                          >
+                            Send Tip
+                          </span>
+                        </span>
+                      </span>
+                    )}
+                    {openPremium ? (
+                      mangaLoading ? (
+                        <span className="h-screen">
+                          <Lottie
+                            animationData={
+                              darkMode ? darkloadscreen : loadscreen
+                            }
+                          />
+                        </span>
+                      ) : (
+                        <span className="text-xs md:text-sm flex flex-col w-full justify-center space-y-4">
+                          {mangaObjects && mangaObjects.length > 0 ? (
                             <>
-                              <span className="flex flex-row justify-start items-center text-start">
-                                <span></span>
-                                <p className="text-slate-500">
-                                  {
-                                    "Premium content can be unlocked by purchasing them. Supporting mangakas by purchasing their work ensures their livelihood and encourages them to continue creating amazing stories for us to enjoy."
-                                  }
-                                </p>
-                              </span>
-                              {userBasicInfo.subprice ? (
-                                <span className="bg-white rounded-lg px-4 py-6 flex flex-row justify-between items-center">
-                                  <span className="font-semibold flex flex-col">
-                                    <span className="text-slate-400">
-                                      {`Subscribe to ${userBasicInfo.username} now and unlock all premium content`}
-                                    </span>
-                                    <span className="text-green-400">
-                                      {`$${parseFloat(
-                                        userBasicInfo.subprice
-                                      ).toFixed(2)} per month`}
-                                    </span>
+                              {!itsMe ? (
+                                <>
+                                  <span className="flex flex-row justify-start items-center text-start">
+                                    <span></span>
+                                    <p className="text-slate-500">
+                                      {
+                                        "Premium content can be unlocked by purchasing them. Supporting mangakas by purchasing their work ensures their livelihood and encourages them to continue creating amazing stories for us to enjoy."
+                                      }
+                                    </p>
                                   </span>
-                                  {subscribedUser ? (
-                                    <span className="cursor-pointer font-semibold flex h-fit rounded-lg p-3.5 bg-gray-500 bg-opacity-40 text-white">
-                                      <span>SUBSCRIBED</span>
+                                  {userBasicInfo.subprice ? (
+                                    <span
+                                      className={`${
+                                        darkMode ? "bg-[#1e1f24]" : "bg-white"
+                                      } rounded-lg px-4 py-6 flex flex-row justify-between items-center`}
+                                    >
+                                      <span className="font-semibold flex flex-col">
+                                        <span className="text-slate-400">
+                                          {`Subscribe to ${userBasicInfo.username} now and unlock all premium content`}
+                                        </span>
+                                        <span className="text-green-400">
+                                          {`$${parseFloat(
+                                            userBasicInfo.subprice
+                                          ).toFixed(2)} per month`}
+                                        </span>
+                                      </span>
+                                      {subscribedUser ? (
+                                        <span className="cursor-pointer font-semibold flex h-fit rounded-lg p-3.5 bg-gray-500 bg-opacity-40 text-white">
+                                          <span>SUBSCRIBED</span>
+                                        </span>
+                                      ) : (
+                                        <span
+                                          onClick={() => {
+                                            subscribeToPublisher();
+                                          }}
+                                          className="cursor-pointer font-semibold flex flex-row h-fit space-x-1 rounded-lg p-3.5 bg-pastelGreen text-white"
+                                        >
+                                          <span>SUBSCRIBE</span>
+                                          <span>NOW</span>
+                                        </span>
+                                      )}
                                     </span>
                                   ) : (
-                                    <span
-                                      onClick={() => {
-                                        subscribeToPublisher();
-                                      }}
-                                      className="cursor-pointer font-semibold flex flex-row h-fit space-x-1 rounded-lg p-3.5 bg-pastelGreen text-white"
-                                    >
-                                      <span>SUBSCRIBE</span>
-                                      <span>NOW</span>
-                                    </span>
+                                    mangaObjects.length > 0 && (
+                                      <span className="italic rounded-lg px-2 flex flex-row justify-between items-center">
+                                        {userBasicInfo.username} has no active
+                                        or free subscription plan but you can
+                                        buy their mangas and comics
+                                      </span>
+                                    )
                                   )}
-                                </span>
-                              ) : (mangaObjects.length > 0 && <span className="italic rounded-lg px-2 flex flex-row justify-between items-center">
-                                {userBasicInfo.username} has no active or free subscription plan but you can buy their mangas and comics
-                                  </span>
+                                </>
+                              ) : (
+                                <span className="w-full text-slate-500 text-center text-base md:text-base">{`You ${
+                                  userBasicInfo.subprice ? "" : "currently"
+                                } charge your subscribers ${
+                                  userBasicInfo.subprice
+                                    ? "$" +
+                                      parseFloat(
+                                        userBasicInfo.subprice
+                                      ).toFixed(2)
+                                    : "nothing"
+                                } per month`}</span>
                               )}
+                              <div className="h-fit grid gap-2 grid-cols-2">
+                                {mangaObjects.length > 0 &&
+                                  mangaObjects.map((mangaSeries) => {
+                                    return (
+                                      <span
+                                        key={mangaSeries.id}
+                                        onClick={() => {
+                                          readManga(mangaSeries);
+                                        }}
+                                        className="cursor-pointer h-[250px] w-[160px] relative rounded-lg overflow-hidden"
+                                      >
+                                        <Image
+                                          src={mangaSeries.cover}
+                                          alt="Post"
+                                          height={500}
+                                          width={500}
+                                        />
+                                        <div className="absolute inset-0 bg-black bg-opacity-70 text-white flex flex-col justify-between items-start">
+                                          <span className="p-1 w-full flex flex-row justify-between items-center">
+                                            <span className="w-fit text-xs font-semibold py-1 px-1.5 bg-pastelGreen rounded">
+                                              {`$${parseFloat(
+                                                mangaSeries.price
+                                              ).toFixed(2)}`}
+                                            </span>
+                                            <span className="text-xs font-medium text-gray-200 pr-1.5">
+                                              {`${mangaSeries.pages} Pages`}
+                                            </span>
+                                            { itsMe && <span onClick={()=>{deleteManga(mangaSeries)}}><BinSvg pixels={"20px"}/></span>}
+                                          </span>
+                                          <span className="p-2 flex flex-col">
+                                            <span className="text-sm font-semibold">
+                                              {`${mangaSeries.name}`}
+                                            </span>
+                                            {mangaSeries.description && (
+                                              <span className="text-[11px] leading-tight">
+                                                {`${mangaSeries.description}...`}
+                                              </span>
+                                            )}
+                                          </span>
+                                        </div>
+                                      </span>
+                                    );
+                                  })}
+                              </div>
                             </>
                           ) : (
-                            <span className="w-full text-slate-500 text-center text-base md:text-base">{`You ${
-                              userBasicInfo.subprice ? "" : "currently"
-                            } charge your subscribers ${
-                              userBasicInfo.subprice
-                                ? "$" +
-                                  parseFloat(userBasicInfo.subprice).toFixed(2)
-                                : "nothing"
-                            } per month`}</span>
-                          )}
-                          <div className="h-fit grid gap-2 grid-cols-2">
-                            {mangaObjects.length > 0 &&
-                              mangaObjects.map((mangaSeries) => {
-                                return (
-                                  <span
-                                    key={mangaSeries.id}
-                                    onClick={() => {
-                                      readManga(mangaSeries);
-                                    }}
-                                    className="cursor-pointer h-[250px] w-[160px] relative rounded-lg overflow-hidden"
-                                  >
-                                    <Image
-                                      src={mangaSeries.cover}
-                                      alt="Post"
-                                      height={500}
-                                      width={500}
-                                    />
-                                    <div className="absolute inset-0 bg-black bg-opacity-70 text-white flex flex-col justify-between items-start">
-                                      <span className="p-1 w-full flex flex-row justify-between items-center">
-                                        <span className="w-fit text-xs font-semibold py-1 px-1.5 bg-pastelGreen rounded">
-                                          {`$${parseFloat(
-                                            mangaSeries.price
-                                          ).toFixed(2)}`}
-                                        </span>
-                                        <span className="text-xs font-medium text-gray-200 pr-1.5">
-                                          {`${mangaSeries.pages} Pages`}
-                                        </span>
-                                      </span>
-                                      <span className="p-2 flex flex-col">
-                                        <span className="text-sm font-semibold">
-                                          {`${mangaSeries.name}`}
-                                        </span>
-                                        {mangaSeries.description && (
-                                          <span className="text-[11px] leading-tight">
-                                            {`${mangaSeries.description}...`}
-                                          </span>
-                                        )}
-                                      </span>
-                                    </div>
-                                  </span>
-                                );
-                              })}
-                          </div>
-                        </>
-                      ) : (
-                        <span className="w-full flex flex-col justify-center text-center text-slate-500">
-                          <span>{`${itsMe ? "You" : "This user"} currently ${
-                            itsMe ? "have" : "has"
-                          } no premium mangas`}</span>
-                          {itsMe && (
-                            <span className="font-semibold">
-                              {
-                                "Are you a creator? Unlock passive earnings with Animebook by publishing your mangas. From the hottest shonen adventures to the most captivating shojo narratives, your subscribers are eager to immerse themselves in your creations"
-                              }
+                            <span className="w-full flex flex-col justify-center text-center text-slate-500">
+                              <span>{`${
+                                itsMe ? "You" : "This user"
+                              } currently ${
+                                itsMe ? "have" : "has"
+                              } no premium mangas`}</span>
+                              {itsMe && (
+                                <span className="font-semibold">
+                                  {
+                                    "Are you a creator? Unlock passive earnings with Animebook by publishing your mangas. From the hottest shonen adventures to the most captivating shojo narratives, your subscribers are eager to immerse themselves in your creations"
+                                  }
+                                </span>
+                              )}
                             </span>
                           )}
-                        </span>
-                      )}
 
-                      {itsMe &&
-                        (userData.address ? (
-                          <span className="space-x-2 border border-black bg-white border-dashed rounded-lg p-4 flex justify-center items-center">
-                            <span
-                              onClick={() => {
-                                router.push("/publishmanga");
-                              }}
-                              className="text-white font-semibold bg-pastelGreen py-3 px-5 cursor-pointer rounded-xl"
-                            >
-                              Publish
-                            </span>
-                            <span
-                              onClick={() => {
-                                router.push("/subscriptionplan");
-                              }}
-                              className="text-pastelGreen font-semibold bg-transparent border-2 border-pastelGreen py-2.5 px-4 cursor-pointer rounded-xl"
-                            >
-                              Edit subscription plan
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="text-center w-full text-[0.8rem] font-semibold text-gray-700">
-                            Go to settings and add a payout wallet address first
-                          </span>
-                        ))}
-                    </span>
-                  )
-                ) : (  
-                    userPostValues && userPostValues.length > 0 ? <Posts /> : <span className="w-full text-gray-600 text-center">{"Nanimonai! No posts found"}</span>
-                  
+                          {itsMe &&
+                            (userData.address ? (
+                              <span
+                                className={`space-x-2 border border-black ${
+                                  darkMode ? "bg-[#1e1f24]" : "bg-white"
+                                } border-dashed rounded-lg p-4 flex justify-center items-center`}
+                              >
+                                <span
+                                  onClick={() => {
+                                    router.push("/publishmanga");
+                                  }}
+                                  className="text-white font-semibold bg-pastelGreen py-3 px-5 cursor-pointer rounded-xl"
+                                >
+                                  Publish
+                                </span>
+                                <span
+                                  onClick={() => {
+                                    router.push("/subscriptionplan");
+                                  }}
+                                  className="text-pastelGreen font-semibold bg-transparent border-2 border-pastelGreen py-2.5 px-4 cursor-pointer rounded-xl"
+                                >
+                                  Edit subscription plan
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="text-center w-full text-[0.8rem] font-semibold text-gray-700">
+                                Go to settings and add a payout wallet address
+                                first
+                              </span>
+                            ))}
+                        </span>
+                      )
+                    ) : userPostValues && userPostValues.length > 0 ? (
+                      <Posts />
+                    ) : (
+                      <span className="w-full text-gray-600 text-center">
+                        {"Nanimonai! No posts found"}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
           ) : (
             <div className="text-start text-slate-500 w-full py-2 space-y-5 px-2 lg:pl-lPostCustom lg:pr-rPostCustom mt-2 lg:mt-20 flex flex-col">
-              {userNotFound ? <span>No such user</span> : <span className="-ml-2 h-6 w-8">
-                <Lottie animationData={animationData} />
-              </span>}
+              {userNotFound ? (
+                <span>No such user</span>
+              ) : (
+                <span className="-ml-2 h-6 w-8">
+                  <Lottie animationData={animationData} />
+                </span>
+              )}
             </div>
           )}
 
@@ -669,7 +923,7 @@ export default function User({ user }) {
         </section>
         {sideBarOpened && <SideBar />}
         <MobileNavBar />
-        {mgComic && (
+        {mgComic && !deletionModal && (
           <div
             id={openManga ? "manga-modal" : "invisible"}
             className="w-11/12 sm:w-10/12 flex justify-center"
@@ -728,7 +982,7 @@ export default function User({ user }) {
             <PopupModal
               success={"6"}
               username={userBasicInfo.username}
-              useruuid={userBasicInfo.useruuid}
+              useruuid={userData.useruuid}
               destSolAddress={
                 userBasicInfo.solAddress ? userBasicInfo.solAddress : null
               }
@@ -745,6 +999,27 @@ export default function User({ user }) {
           </>
         )}
 
+        {
+          deletionModal && <>
+        <span className="absolute m-auto w-fit inset-0 h-fit top-0 flex flex-col items-center justify-center bg-white p-4 rounded">
+          <span>{`Are you sure you want to delete your ${deletionModal.name} series?`}</span>
+          <span className="z-50 w-full mt-4 flex flex-row justify-between items-center px-4">
+            <span onClick={()=>{setDeletionModal(null); setOpenManga(false)}} className="bg-gray-400 w-[80px] px-2 py-1.5 rounded-lg text-white text-center font-medium">Cancel</span>
+            <span onClick={()=>{deleteMangaFromDB(deletionModal.id)}} className="bg-red-400 w-[80px] px-2 py-1.5 rounded-lg text-white text-center font-medium">Yes</span>
+          </span>
+        </span>
+          
+          <div
+              onClick={() => {
+                setDeletionModal(null);
+                setOpenManga(false)
+              }}
+              // id="tip-overlay"
+              className="fixed inset-0 bg-transparent"
+            ></div>
+            </>
+        }
+
         {openPurchaseModal && (
           <>
             <PopupModal
@@ -752,6 +1027,7 @@ export default function User({ user }) {
               username={userBasicInfo.username}
               mangaImage={mgComic.cover}
               sourceAddress={userNumId}
+              useruuid={userData.useruuid}
               destinationAddress={userBasicInfo.address}
               userDestinationId={userBasicInfo.id}
               mangaPrice={mgComic.price}
@@ -780,6 +1056,29 @@ export default function User({ user }) {
             <div
               onClick={() => {
                 setDeletePost(null);
+              }}
+              id="overlay"
+              className="bg-black bg-opacity-80"
+            ></div>
+          </>
+        )}
+
+        {openSub && (
+          <>
+            <PopupModal
+              success={"9"}
+              username={userBasicInfo.username}
+              avatar={userBasicInfo.avatar}
+              subprice={userBasicInfo.subprice}
+              useruuid={userData.useruuid}
+              destinationAddress={userBasicInfo.address}
+              userDestinationId={userBasicInfo.id}
+              setSubscribedUser={setSubscribedUser}
+              setOpenSub={setOpenSub}
+            />
+            <div
+              onClick={() => {
+                setOpenSub(false);
               }}
               id="overlay"
               className="bg-black bg-opacity-80"

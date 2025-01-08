@@ -62,7 +62,7 @@ export const PostActions = ({
 
       <div
         onClick={() => {
-          router.push(`/comments/${id}`);
+          router.push(`${users.username}/post/${id}`);
         }}
         className="flex items-center space-x-2"
       >
@@ -133,6 +133,7 @@ const Explore = () => {
     userNumId,
     originalPostValues,
     hashtagList,
+    setHashtagList,
     originalExplorePosts,
     setOriginalExplorePosts,
     explorePosts,
@@ -170,7 +171,6 @@ const Explore = () => {
   };
 
   const getSelectedHashTag = (htag) => {
-    console.log(htag[0]);
     if (htag[0] === chosenTag) {
       setChosenTag(null);
       setExplorePosts(originalExplorePosts);
@@ -183,7 +183,6 @@ const Explore = () => {
           post[0].media !== null &&
           post[0].media !== undefined
       );
-      console.log(selectedTag);
       setExplorePosts(selectedTag);
     }
   };
@@ -326,6 +325,22 @@ const Explore = () => {
     setFetchLoaded(true);
     setOriginalExplorePosts(postObj);
     setExplorePosts(postObj);
+
+    if (typeof window !== "undefined") {
+      // Extract the hashtag from the URL
+      const hash = window.location.hash;
+      if (hash){
+        setExplorePosts(postObj.filter(
+          (post) =>
+            post[0].content.toLowerCase().includes(hash.toLowerCase()) &&
+            post[0].media !== null &&
+            post[0].media !== undefined
+        ))
+        setChosenTag(hash)
+      }
+     
+    }
+  
   };
 
   const postToggle = (nextPost) => {
@@ -439,6 +454,7 @@ const Explore = () => {
   };
 
   useEffect(() => {
+      
     if (originalPostValues && !fetchLoaded) {
       fetchExplorePosts();
     }

@@ -58,7 +58,7 @@ const HyperlinkCard = ({ url }) => {
         <span>{metadata.title}</span>
         <p>{metadata.description}</p>
       </div>
-      <p className="pt-1 text-xs font-semibold text-gray-700">{url}</p>
+      <p className="pt-1 text-xs font-semibold text-blue-400">{url}</p>
     </div>
   );
 };

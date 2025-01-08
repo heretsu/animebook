@@ -47,7 +47,8 @@ const LargeRightBar = () => {
     setChosenTag,
     userData,
     communities,
-    routedUser
+    routedUser, 
+    darkMode
   } = useContext(UserContext);
 
   const toggleContentFilter = (postContents) => {
@@ -240,9 +241,16 @@ const LargeRightBar = () => {
         });
       }
     });
-    const trendingTagsWithMedia = Object.entries(tagsWithMediaCount).sort(
-      (a, b) => b[1] - a[1]
-    );
+    // const trendingTagsWithMedia = Object.entries(tagsWithMediaCount).sort(
+    //   (a, b) => b[1] - a[1]
+    // );
+
+    //random
+    const trendingTagsWithMedia = Object.entries(tagsWithMediaCount)
+  .filter(([tag, count]) => count >= 20) // Include only tags with at least 20 posts
+  .sort(() => 0.5 - Math.random())
+  .sort(() => 0.5 - Math.random());
+  
     const trendingAllTags = Object.entries(allTagsCount).sort(
       (a, b) => b[1] - a[1]
     );
@@ -274,25 +282,27 @@ const LargeRightBar = () => {
     }
   };
 
+  const [searchedWord, setSearchedWord] = useState('')
   const searchForItem = (e) => {
+    setSearchedWord(e.target.value)
     if (e.target.value !== "") {
       if (!postValues || !allUserObject || !originalPostValues) {
         getAllSearchData();
       }
       const foundPosts =
-        router.pathname === "/profile/[user]"
-          ? originalPostValues
-            ? originalPostValues.filter((post) => {
-                if (
-                  post.users.username.toLowerCase() === routedUser.toLowerCase()
-                ) {
-                  return post.content
-                    .toLowerCase()
-                    .includes(e.target.value.toLowerCase());
-                }
-              })
-            : []
-          : originalPostValues
+        // router.pathname === "/profile/[user]"
+        //   ? originalPostValues
+        //     ? originalPostValues.filter((post) => {
+        //         if (
+        //           post.users.username.toLowerCase() === routedUser.toLowerCase()
+        //         ) {
+        //           return post.content
+        //             .toLowerCase()
+        //             .includes(e.target.value.toLowerCase());
+        //         }
+        //       })
+        //     : [] :
+           originalPostValues
           ? originalPostValues.filter((post) =>
               post.content.toLowerCase().includes(e.target.value.toLowerCase())
             )
@@ -329,7 +339,22 @@ const LargeRightBar = () => {
       .join(" ");
   };
 
+  const [imgSrcs, setImgSrcs] = useState('');
+  const [valuesLoaded, setValuesLoaded] = useState(false)
+
+  const handleImageError = (id) => {
+    setImgSrcs((prev) => ({
+      ...prev,
+      [id]: "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+    }));
+  };
+
+
   useEffect(() => {
+    if (openUsers && !valuesLoaded){
+      setImgSrcs(openUsers.reduce((acc, user) => ({ ...acc, [user.id]: user.avatar }), {})      )
+      setValuesLoaded(true)
+    }
     if (originalPostValues !== null && originalPostValues !== undefined) {
       fetchAllHashTags();
     }
@@ -337,15 +362,15 @@ const LargeRightBar = () => {
       setSliceIndex(sliceIndex + 1);
     }
     fetchYouMayKnow();
-  }, [originalPostValues, alreadyFollowed, userData]);
+  }, [valuesLoaded, openUsers, originalPostValues, alreadyFollowed, userData]);
 
   return (
     <div className="h-screen overflow-scroll pb-22 flex">
       <div className="h-full flex flex-col rounded-xl w-72 pb-8 px-6 space-y-2">
         {router.pathname !== "/search" && (
-          <span className="bg-white flex flex-col justify-center items-center p-2">
+          <span className={`${darkMode ? "bg-[#1e1f24]" : "bg-white"} flex flex-col justify-center items-center p-2`}>
             {
-              <span className="p-2 w-full flex flex-row items-center border border-gray-200 bg-gray-100">
+              <span className={`${darkMode ? 'bg-zinc-800' : 'bg-gray-100'} p-2 w-full flex flex-row items-center`}>
                 <svg
                   className="w-4 h-4 text-slate-400"
                   aria-hidden="true"
@@ -362,10 +387,11 @@ const LargeRightBar = () => {
                   />
                 </svg>
                 <input
+                value={searchedWord}
                   onChange={searchForItem}
                   onClick={getAllSearchData}
                   type="search"
-                  className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+                  className={`w-full text-sm ${darkMode ? 'text-white' : 'text-gray-500'} bg-transparent border-none focus:ring-0 placeholder-gray-400`}
                   placeholder="Search for users and more..."
                 />
               </span>
@@ -376,28 +402,30 @@ const LargeRightBar = () => {
                   <span className="w-full flex flex-col">
                     <span
                       onClick={() => {
-                        if (
-                          router.pathname !== "/explore" &&
-                          openSuggestions.foundPosts &&
-                          openSuggestions.foundPosts.length === 0
-                        ) {
-                          return;
-                        } else {
-                          setPostValues(openSuggestions.foundPosts);
-                        }
-                        if (
-                          router.pathname === "/explore" &&
-                          openSuggestions.foundExplorePosts &&
-                          openSuggestions.foundExplorePosts.length === 0
-                        ) {
-                          return;
-                        } else {
-                          setExplorePosts(openSuggestions.foundExplorePosts);
-                        }
+                        router.push(`/search?${searchedWord}`)
+                        // if (
+                        //   router.pathname !== "/explore" &&
+                        //   openSuggestions.foundPosts &&
+                        //   openSuggestions.foundPosts.length === 0
+                        // ) {
+                        //   return;
+                        // } else {
+                        //   router.push('/search/')
+                        //   setPostValues(openSuggestions.foundPosts);
+                        // }
+                        // if (
+                        //   router.pathname === "/explore" &&
+                        //   openSuggestions.foundExplorePosts &&
+                        //   openSuggestions.foundExplorePosts.length === 0
+                        // ) {
+                        //   return;
+                        // } else {
+                        //   setExplorePosts(openSuggestions.foundExplorePosts);
+                        // }
 
-                        setOpenSuggestions(null);
+                        // setOpenSuggestions(null);
                       }}
-                      className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                      className={`${darkMode ? 'text-white' : 'text-black'} p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium`}
                     >
                       {`${
                         router.pathname === "/explore"
@@ -417,7 +445,7 @@ const LargeRightBar = () => {
                         setOpenSuggestions(null);
                         setOpenUsers(users);
                       }}
-                      className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                      className={`${darkMode ? 'text-white' : 'text-black'} p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium`}
                     >
                       {`${openSuggestions.foundUsers.length} users found`}
                     </span>
@@ -430,7 +458,7 @@ const LargeRightBar = () => {
                         onClick={() => {
                           setOpenUsers(null);
                         }}
-                        className="cursor-pointer text-sm text-slate-400 hover:text-pastelGreen border border-gray-200 bg-gray-100 py-0.5 px-1.5 rounded-2xl"
+                        className={`cursor-pointer text-sm hover:text-pastelGreen border ${darkMode ? 'border-white bg-white text-black' : 'border-gray-200 bg-gray-100 text-slate-400'} py-0.5 px-1.5 rounded-2xl`}
                       >
                         {"clear"}
                       </span>
@@ -444,16 +472,17 @@ const LargeRightBar = () => {
                             onClick={() => {
                               fullPageReload(`/profile/${os.username}`);
                             }}
-                            className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                            className={`${darkMode ? 'text-white' : 'text-black'} p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium`}
                           >
                             <span className="relative h-8 w-8 flex">
-                              <Image
-                                src={os.avatar}
+                              {valuesLoaded && <Image
+                                src={imgSrcs[os.id]}
                                 alt="user"
                                 width={30}
                                 height={30}
                                 className="border border-white rounded-full"
-                              />
+                                onError={() => handleImageError(os.id)}
+                              />}
                             </span>
                             <span>{os.username}</span>
                           </span>
@@ -471,10 +500,10 @@ const LargeRightBar = () => {
           hashtagList !== null &&
           hashtagList !== undefined &&
           hashtagList.trending?.length > 0 && (
-            <span className="bg-white pt-2 px-2">
+            <span className={`${darkMode ? 'bg-[#1e1f24]' : 'bg-white'} pt-2 px-2`}>
               <p
                 id="anime-book-font"
-                className="pb-1 text-xl text-gray-600 text-start font-semibold"
+                className={`pb-1 text-xl ${darkMode ? 'text-white' : 'text-gray-600'} text-start font-semibold`}
               >
                 TRENDING HASHTAGS
               </p>
@@ -482,7 +511,7 @@ const LargeRightBar = () => {
                 return (
                   <div
                     key={tag}
-                    className="py-1.5 border-b border-gray-100 text-sm flex flex-row justify-between"
+                    className={`py-1.5 border-b ${darkMode ? 'border-black ' : 'border-gray-100'}text-sm flex flex-row justify-between`}
                   >
                     <span
                       onClick={() => {
@@ -504,10 +533,10 @@ const LargeRightBar = () => {
         {youMayKnow !== null &&
           youMayKnow !== undefined &&
           youMayKnow.length > 0 && (
-            <span className="bg-white pt-2 px-2">
+            <span className={`${darkMode ? 'bg-[#1e1f24]' : 'bg-white'} pt-2 px-2`}>
               <p
                 id="anime-book-font"
-                className="text-xl text-gray-600 text-start font-semibold"
+                className={`text-xl ${darkMode ? 'text-white' : 'text-gray-600'} text-start font-semibold`}
               >
                 {router.pathname === "/search"
                   ? "Follow Others"
@@ -521,7 +550,7 @@ const LargeRightBar = () => {
                     return (
                       <span
                         key={thisUser.id}
-                        className="py-1.5 border-b border-gray-200 flex flex-row justify-between items-center"
+                        className={`py-1.5 border-b ${darkMode ? 'border-black' : 'border-gray-200'} flex flex-row justify-between items-center`}
                       >
                         <span
                           onClick={() => {
@@ -538,12 +567,14 @@ const LargeRightBar = () => {
                               className="rounded-full"
                             />
                           </span>
-                          <span className="text-sm font-semibold">
+                          <span className={`${darkMode ? 'text-white' : 'text-black'} text-sm font-semibold`}>
                             {thisUser.username}
                           </span>
                         </span>
 
                         <PlusIcon
+                        
+                          ymk={true}
                           sideBar={true}
                           alreadyFollowed={alreadyFollowed}
                           setAlreadyFollowed={setAlreadyFollowed}
@@ -563,10 +594,10 @@ const LargeRightBar = () => {
         {communities !== null &&
           communities !== undefined &&
           communities.length > 0 && (
-            <span className="bg-white pt-2 px-2 pb-4 flex flex-col">
+            <span className={`${darkMode ? 'bg-[#1e1f24]' : 'bg-white'} pt-2 px-2 pb-4 flex flex-col`}>
               <p
                 id="anime-book-font"
-                className="text-xl text-gray-600 text-start font-semibold"
+                className={`text-xl ${darkMode ? 'text-white' : 'text-gray-600'} text-start font-semibold`}
               >
                 COMMUNITY OF THE DAY
               </p>
@@ -587,7 +618,7 @@ const LargeRightBar = () => {
                     className="object-cover"
                   />
                 </span>
-                <span id="anime-book-font" className="w-full p-2 bg-slate-100">
+                <span id="anime-book-font" className={`w-full p-2 ${darkMode ? 'bg-black text-white': 'bg-slate-100'}`}>
                   {formatGroupName(communities[0].name)}
                 </span>
               </span>
@@ -595,15 +626,15 @@ const LargeRightBar = () => {
           )}
 
         {router.pathname !== "/search" && (
-          <span className="bg-white p-2 text-sm flex flex-col items-start space-y-3">
+          <span className={`${darkMode ? 'bg-[#1e1f24]' : 'bg-white'} p-2 text-sm flex flex-col items-start space-y-3`}>
             <p
               id="anime-book-font"
-              className="text-xl text-gray-600 text-start font-semibold"
+              className={`text-xl ${darkMode ? 'text-white' : 'text-gray-600'} text-start font-semibold`}
             >
               CONTENT PREFERENCES
             </p>
 
-            <span className="flex flex-row items-center justify-start space-x-2">
+            <span className={`${darkMode ? 'text-white' : 'text-black'} flex flex-row items-center justify-start space-x-2`}>
               <input
                 type="checkbox"
                 value=""
@@ -617,11 +648,11 @@ const LargeRightBar = () => {
 
                   toggleContentFilter(newState);
                 }}
-                className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
+                className={`w-4 h-4 text-pastelGreen ${darkMode ? 'bg-black' : 'bg-white'} border-pastelGreen rounded focus:text-pastelGreen focus:ring-0`}
               />
               <span>Images</span>
             </span>
-            <span className="flex flex-row items-center justify-start space-x-2">
+            <span className={`${darkMode ? 'text-white' : 'text-black'} flex flex-row items-center justify-start space-x-2`}>
               <input
                 type="checkbox"
                 value=""
@@ -635,12 +666,12 @@ const LargeRightBar = () => {
 
                   toggleContentFilter(newState);
                 }}
-                className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
+                className={`w-4 h-4 text-pastelGreen ${darkMode ? 'bg-black' : 'bg-white'} border-pastelGreen rounded focus:text-pastelGreen focus:ring-0`}
               />
               <span>Videos</span>
             </span>
             {router.pathname === "/home" && (
-              <span className="flex flex-row items-center justify-start space-x-2">
+              <span className={`${darkMode ? 'text-white' : 'text-black'} flex flex-row items-center justify-start space-x-2`}>
                 <input
                   type="checkbox"
                   value=""
@@ -654,13 +685,13 @@ const LargeRightBar = () => {
 
                     toggleContentFilter(newState);
                   }}
-                  className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
+                  className={`w-4 h-4 text-pastelGreen ${darkMode ? 'bg-black' : 'bg-white'} border-pastelGreen rounded focus:text-pastelGreen focus:ring-0`}
                 />
                 <span>Stories</span>
               </span>
             )}
             {router.pathname === "/home" && (
-              <span className="flex flex-row items-center justify-start space-x-2">
+              <span className={`${darkMode ? 'text-white' : 'text-black'} flex flex-row items-center justify-start space-x-2`}>
                 <input
                   type="checkbox"
                   value=""
@@ -674,7 +705,7 @@ const LargeRightBar = () => {
 
                     toggleContentFilter(newState);
                   }}
-                  className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
+                  className={`w-4 h-4 text-pastelGreen ${darkMode ? 'bg-black' : 'bg-white'} border-pastelGreen rounded focus:text-pastelGreen focus:ring-0`}
                 />
                 <span>People</span>
               </span>

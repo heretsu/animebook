@@ -6,7 +6,52 @@ import { UserContext } from "@/lib/userContext";
 import Spinner from "./spinner";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 
+export function GifPicker({ onGifSelect }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [gifs, setGifs] = useState([]);
+
+  const fetchGifs = async () => {
+    const response = await fetch(
+      `https://api.giphy.com/v1/gifs/search?api_key=${process.env.NEXT_PUBLIC_GIPHY_API_KEY}&q=${searchTerm}&limit=10`
+    );
+    const data = await response.json();
+    setGifs(data.data);
+  };
+
+  return (
+    <div className="gif-picker">
+      {/* <input
+        type="text"
+        placeholder="Search GIFs"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && fetchGifs()}
+      />
+      <div className="gif-grid w-full bg-blue-200">
+        {gifs.map((gif) => (
+          <img
+            key={gif.id}
+            src={gif.images.fixed_height.url}
+            alt={gif.title}
+            onClick={() => onGifSelect(gif.images.fixed_height.url)}
+            className="gif-item"
+          />
+        ))}
+      </div> */}
+    </div>
+  );
+}
+
 const PostContainer = ({communityId, community}) => {
+
+  const [showGifPicker, setShowGifPicker] = useState(false);
+
+  const handleGifSelect = (gifUrl) => {
+    setInputValue((prev) => `${prev} ${gifUrl}`);
+    setShowGifPicker(false); // Close the GIF picker
+  };
+
+
   const { fullPageReload } = PageLoadOptions();
   const { userNumId } = useContext(UserContext);
   const router = useRouter();
@@ -273,6 +318,7 @@ const PostContainer = ({communityId, community}) => {
           className="px-8 h-18 resize-none w-full px-2 text-black border-none focus:outline-none focus:ring-0"
         />
       )}
+      <GifPicker onGifSelect={handleGifSelect} />
       <span className="pb-2 flex flex-col">
         {postLoading && (selectedMedia || content.trim() !== '') ? (
           <span className="mx-auto">

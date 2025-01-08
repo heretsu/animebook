@@ -15,6 +15,7 @@ import CommunityCommentItem from "@/components/communityCommentItem";
 import SideBar from "@/components/sideBar";
 import Lottie from "lottie-react";
 import loadscreen from "@/assets/loadscreen.json";
+import darkloadscreen from "@/assets/darkloadscreen.json"
 
 
 export const getServerSideProps = async (context) => {
@@ -29,7 +30,7 @@ export const getServerSideProps = async (context) => {
 
 const Community = ({ community }) => {
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, communityInputRef, sideBarOpened } =
+  const { userNumId, communityInputRef, sideBarOpened, darkMode } =
     useContext(UserContext);
   const [reentry, setReentry] = useState(false);
   const [joined, setJoined] = useState(false);
@@ -110,7 +111,7 @@ const Community = ({ community }) => {
     const posts = await supabase
       .from("community_posts")
       .select(
-        "id, created_at, content, media, communityid, users(id, avatar, username, created_at, cover, bio)"
+        "id, created_at, content, media, communityid, users(id, avatar, username, created_at, cover, bio, ki)"
       )
       .eq("communityid", data[0].id)
       .order("created_at", { ascending: false });
@@ -339,7 +340,7 @@ const Community = ({ community }) => {
                 )}
               </div>
             ) : (
-              <div className="w-full mt-2 lg:mt-20 flex flex-col">
+              <div className={`${darkMode ? 'text-white' : 'text-black'} w-full mt-2 lg:mt-20 flex flex-col`}>
                 <span className="relative flex h-[100px] w-full">
                   <Image
                     src={communityDetails.cover}
@@ -431,7 +432,7 @@ const Community = ({ community }) => {
                 <span className="py-4 flex flex-row justify-between">
                   <span className="font-medium">Comments</span>
                   <span className="space-x-2">
-                    <span className="font-semibold text-sm text-black">
+                    <span className="font-semibold text-sm">
                       {"Sort by:"}
                     </span>
                     <span className="cursor-pointer text-sm text-white py-1.5 px-2.5 bg-gray-400 rounded-xl">
@@ -439,7 +440,7 @@ const Community = ({ community }) => {
                     </span>
                   </span>
                 </span>
-                <span className="mb-4 text-sm bg-white bg-opacity-50 space-y-0.5 p-2 rounded-lg border border-slate-300">
+                <span className={`${darkMode ? 'bg-gray-700' : 'bg-white bg-opacity-50'} mb-4 text-sm space-y-0.5 p-2 rounded-lg border border-slate-300`}>
                   <textarea
                     ref={communityInputRef}
                     onChange={(e) => {
@@ -453,7 +454,7 @@ const Community = ({ community }) => {
                     }}
                     maxLength={1900}
                     placeholder="Write a comment"
-                    className="resize-none text-sm bg-transparent text-gray-900 rounded-xl w-full bg-transparent border-none focus:ring-0"
+                    className={`${darkMode ? 'text-white' : 'text-gray-900'} resize-none text-sm bg-transparent rounded-xl w-full bg-transparent border-none focus:ring-0`}
                   />
                   <span className="text-white font-medium flex flex-row justify-end space-x-2">
                     <span
@@ -495,7 +496,7 @@ const Community = ({ community }) => {
           </div>
         ) : (
           <span className="w-full italic text-sm text-gray-800 pb-2 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
-          <Lottie animationData={loadscreen} />
+          <Lottie animationData={darkMode ? darkloadscreen : loadscreen} />
         </span>
         )}
       </section>

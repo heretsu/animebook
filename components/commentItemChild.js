@@ -5,6 +5,7 @@ import { useContext } from "react";
 import { UserContext } from "@/lib/userContext";
 import CommentConfig from "./commentConfig";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import { BinSvg } from "./communityPostCard";
 
 export default function CommentItemChild({ commentChild }) {
   const { fullPageReload } = PageLoadOptions();
@@ -55,6 +56,17 @@ export default function CommentItemChild({ commentChild }) {
       });
   };
 
+  const deleteComment = () => {
+    supabase
+          .from("comments")
+          .delete()
+          .eq("id", commentChild.id)
+          .eq("userid", userNumId)
+          .then((res) => {
+            setLikes(null)
+          });
+  }
+
   const replyComment = (parentCommentId, commentOwner) => {
     if (userData === undefined || userData === null){
       fullPageReload('/signin');
@@ -63,7 +75,8 @@ export default function CommentItemChild({ commentChild }) {
     setCommentMsg(`@${commentOwner} `);
     setParentId(parentCommentId);
     inputRef.current.focus();
-  };
+  };  
+  const [imgSrc, setImgSrc] = useState(commentChild.users.avatar)
   
   useEffect(() => {
     fetchCommentLikes();
@@ -78,11 +91,12 @@ export default function CommentItemChild({ commentChild }) {
             fullPageReload(`/profile/${commentChild.users.username}`);
           }} className="relative h-8 w-8 flex">
           <Image
-            src={commentChild.users.avatar}
+            src={imgSrc}
             alt="user"
             width={35}
             height={35}
             className="rounded-full"
+            onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
           />
         </span>
 
@@ -136,6 +150,7 @@ export default function CommentItemChild({ commentChild }) {
               </svg>
             )}
             <span className="text-sm">{likes.length}</span>
+            {commentChild.users.id === userNumId && <span onClick={()=>{deleteComment()}} className="ml-12 cursor-pointer flex flex-row justify-end"> <BinSvg pixels={"18px"} /></span>}
           </span>
         </span>
       </span>

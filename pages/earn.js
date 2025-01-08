@@ -9,7 +9,7 @@ import supabase from "@/hooks/authenticateUser";
 
 const Earn = () => {
   const [tapped, setTapped] = useState(true);
-  const { userData } = useContext(UserContext);
+  const { userData, darkMode} = useContext(UserContext);
 
   const dailyKiTap = async () => {
     setTapped(true);
@@ -42,7 +42,7 @@ const Earn = () => {
   }, [userData]);
   return (userData && 
     <main> 
-      <section className="mb-5 flex flex-row space-x-2 w-full">
+      <section className={`${darkMode ? 'text-white' : 'text-black'} mb-5 flex flex-row space-x-2 w-full`}>
         <NavBar />
         <div className="w-full pb-2 space-y-8 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
           <span className="mx-auto font-medium text-sm">

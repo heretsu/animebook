@@ -8,8 +8,10 @@ import DbUsers from "@/hooks/dbUsers";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import { useRouter } from "next/router";
 import NavBar, { MobileNavBar } from "@/components/navBar";
+
 export const getServerSideProps = async (context) => {
-  const { comments } = context.query;
+  const { postid } = context.query;
+  const comments = postid
   return {
     props: {
       comments,
@@ -111,9 +113,12 @@ export default function Comments({ comments }) {
   return (
     <main className={`${darkMode ? 'text-white' : 'text-black'} w-full`}>
       <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
+      
         <div className="w-full py-2 px-2 flex flex-col">
+            
           {postReferenced ? (
             <div className="flex flex-col md:flex-row">
+                
               <span
               onClick={() => {
                 if (postReferenced.media && postReferenced.media.toLowerCase().endsWith("webp") ||
@@ -218,7 +223,7 @@ export default function Comments({ comments }) {
                   />
                 </svg>
 
-                <span className="hidden md:flex">
+                <span className="w-full hidden md:flex">
                   <PostCard
                     id={postid}
                     content={postReferenced.content}

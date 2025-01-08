@@ -9,8 +9,11 @@ import ConnectionData from "@/lib/connectionData";
 import DbUsers from "@/hooks/dbUsers";
 import Onboard from "@/components/onboard";
 import Relationships from "@/hooks/relationships";
+import TOS, { Policy } from "@/components/agreements";
 
 export default function App({ Component, pageProps }) {
+  const [agreementMade, setAgreementMade] = useState(false);
+  const [darkMode, setDarkMode] = useState(undefined);
   const { fetchAllPosts, fetchAllReposts } = DbUsers();
   const router = useRouter();
   const [youMayKnow, setYouMayKnow] = useState(null);
@@ -57,6 +60,7 @@ export default function App({ Component, pageProps }) {
 
   const [deletePost, setDeletePost] = useState(null);
   const [playVideo, setPlayVideo] = useState(false);
+  const [unreadMessagesLength, setUnreadMessagesLength] = useState(null)
 
   const inputRef = useRef(null);
   const communityInputRef = useRef(null);
@@ -126,6 +130,39 @@ export default function App({ Component, pageProps }) {
     return array;
   }
 
+  const fetchUnreadChat = async (userNumId) => {
+    const response = await supabase
+      .from("conversations")
+      .select()
+      .eq('receiverid', userNumId)
+      .order("created_at", { ascending: false });
+
+    const messages = response.data;
+    // setEntireMessages(messages);
+    const latestMessages = new Map();
+
+    const createConversationKey = (senderId, receiverId) => {
+      return [senderId, receiverId].sort().join("-");
+    };
+
+    messages.forEach((message) => {
+      const conversationKey = createConversationKey(
+        message.senderid,
+        message.receiverid
+      );
+      if (!latestMessages.has(conversationKey)) {
+        latestMessages.set(conversationKey, message);
+      }
+    });
+
+    const lastChats = Array.from(latestMessages.values());
+
+    return lastChats.filter(
+      (lc) =>
+        (lc.receiverid === userNumId && !lc.rdelete) && !lc.isread
+    );
+  };
+
   const checkIfUserExistsAndUpdateData = async (user) => {
     try {
       const dbresponse = await supabase.from("users").select("*");
@@ -133,7 +170,6 @@ export default function App({ Component, pageProps }) {
       if (dbresponse.error) {
         console.error("ERROR FROM OUTER USER ID CHECK: ", dbresponse.error);
       } else {
-        
         setAllUsers(dbresponse.data);
         const data = dbresponse.data.find((u) => u.useruuid === user.id);
         /*
@@ -195,6 +231,10 @@ export default function App({ Component, pageProps }) {
               }
 
               setUserNumId(res.data[0].id);
+              setDarkMode(res.data[0].theme);
+              // if (res.data[0].theme) {
+              //   localStorage.getItem("darkMode");
+              // }
               setUserData({
                 preferred_username: res.data[0].username,
                 picture: user.user_metadata.picture
@@ -300,9 +340,11 @@ export default function App({ Component, pageProps }) {
             setOnboarding(true);
           }
         } else {
+          setAgreementMade(data.agreedpolicies)
           fetchFollowingAndFollowers(data.id);
           setUserNumId(data.id);
           setAddress(data.address);
+          setDarkMode(data.theme);
           setUserData({
             preferred_username: data.username,
             picture: user.user_metadata.picture
@@ -314,8 +356,13 @@ export default function App({ Component, pageProps }) {
           if (router.pathname !== "/profile/[user]") {
             fetchAllReposts().then((reposts) => {
               fetchAllPosts().then((result1) => {
-                fetchCommunities().then((secondResult) => {
+                fetchCommunities().then(async (secondResult) => {
                   if (secondResult !== undefined && secondResult !== null) {
+                    if (!unreadMessagesLength && unreadMessagesLength !== 0) {
+                      const unreadMsg = await fetchUnreadChat(data.id)
+                      setUnreadMessagesLength(unreadMsg.length)
+                    }
+
                     setCommunities(
                       [...secondResult.data].sort(
                         (a, b) => b.membersLength - a.membersLength
@@ -435,21 +482,44 @@ export default function App({ Component, pageProps }) {
     }
   };
 
+  const agreeToTerms = async () => {
+   const agreeStatus = await supabase.from('users').update({agreedpolicies: true}).eq('useruuid', userData.useruuid)
+   if (!agreeStatus.error){
+    setAgreementMade(true)
+   }
+  }
+
+  const [allowUnloggedView, setAllowUnloggedView] = useState(false)
   useEffect(() => {
+
+    if (darkMode) {
+      document.body.style.backgroundColor = "black";
+      document.documentElement.classList.add("dark");
+      document.documentElement.style.backgroundColor = "black";
+      localStorage.setItem("darkmode", true)
+    } else {
+      document.body.style.backgroundColor = "#e8edf1";
+      document.documentElement.classList.remove("dark");
+      document.documentElement.style.backgroundColor = "#e8edf1";
+      localStorage.setItem("darkmode", false)
+    }
     if (
       [
         "/home",
         "/explore",
+        "/explore/[hashtag]",
         "/search",
         "/communities",
         "/communities/[community]",
         "/notifications",
         "/profile/[user]",
         "/comments/[comments]",
+        "[username]/post/[postid]",
         "/inbox",
         "/inbox/[message]",
         "/settings",
         "/earn",
+        "/reports",
         "/leaderboard",
         "/create",
         "/publishmanga",
@@ -467,6 +537,7 @@ export default function App({ Component, pageProps }) {
               checkIfUserExistsAndUpdateData(session.user);
             }
           } else {
+            setAllowUnloggedView(true)
             if (router.pathname !== "/profile/[user]") {
               fetchAllReposts().then((reposts) => {
                 fetchAllPosts().then((result1) => {
@@ -563,11 +634,15 @@ export default function App({ Component, pageProps }) {
         });
       }
     }
-  }, [address, router.pathname, router, subscribed]);
+  }, [darkMode, address, router.pathname, router, subscribed]);
 
   return (
-    <UserContext.Provider
+    (darkMode !== undefined || router.pathname === '/signin' || allowUnloggedView || onboarding) && <UserContext.Provider
       value={{
+        unreadMessagesLength,
+        setUnreadMessagesLength,
+        darkMode,
+        setDarkMode,
         allUsers,
         youMayKnow,
         setYouMayKnow,
@@ -675,6 +750,7 @@ export default function App({ Component, pageProps }) {
           "/publishmanga",
           "/settings",
           "/earn",
+          "/reports",
           "/leaderboard",
           "/subscriptionplan",
           "/inbox",
@@ -687,7 +763,26 @@ export default function App({ Component, pageProps }) {
             </div>
           ) : subscribed ? (
             userData ? (
-              <Component {...pageProps} />
+              agreementMade ? (
+                <Component {...pageProps} />
+              ) : userData && !userData.agreedpolicies && (
+                <span className={`${darkMode && 'text-white'} flex flex-col space-y-2 py-2`}>
+                  <span className="font-medium flex flex-col text-center justify-center items-center">
+                    <p>{"By signing in to Animebook,"}</p>
+                    <p>{
+                      "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
+                    }</p>
+                  </span>
+                  <span onClick={()=>{agreeToTerms()}} className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg">
+                    I Agree
+                  </span>
+                  <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
+                    <TOS darkMode={darkMode}/>
+                    <Policy darkMode={darkMode}/>
+                  </span>
+                  
+                </span>
+              )
             ) : (
               <div className="pt-8">
                 <DappLogo size={"default"} />
@@ -704,9 +799,26 @@ export default function App({ Component, pageProps }) {
           )
         ) : onboarding ? (
           <Onboard allUsers={allUsers} me={oauthDetails} />
-        ) : (
+        ) : userData && agreementMade ? (
           <Component {...pageProps} />
-        )}
+        ) : userData && !userData.agreedpolicies ? (
+          <span className={`${darkMode && 'text-white'} flex flex-col space-y-2 py-2`}>
+            <span className="font-medium flex flex-col text-center justify-center items-center">
+              <p>{"By signing in to Animebook,"}</p>
+              <p>{
+                "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
+              }</p>
+            </span>
+            <span onClick={()=>{agreeToTerms()}} className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg">
+              I Agree
+            </span>
+            <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
+              <TOS darkMode={darkMode}/>
+              <Policy darkMode={darkMode}/>
+            </span>
+            
+          </span>
+        ) : <Component {...pageProps} />}
       </span>
     </UserContext.Provider>
   );

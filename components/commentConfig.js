@@ -34,7 +34,7 @@ const CommentConfig = ({ text, tags }) => {
       setPostValues(selectedTag);
 
       if (
-        ["/comments/[comments]", "/profile/[user]"].includes(router.pathname)
+        ["/comments/[comments]", "[username]/post/[postid]", "/profile/[user]"].includes(router.pathname)
       ) {
         router.push("/home");
       }

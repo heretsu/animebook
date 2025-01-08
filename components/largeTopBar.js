@@ -27,6 +27,7 @@ export const TopBarObjects = () => {
     setTagsFilter,
     originalExplorePosts,
     setExplorePosts,
+    darkMode,
     userData,
     routedUser,
   } = useContext(UserContext);
@@ -81,25 +82,27 @@ export const TopBarObjects = () => {
     }
   };
 
+  const [searchValue, setSearchValue] = useState('')
   const searchForItem = (e) => {
     if (e.target.value !== "") {
       if (!postValues || !allUserObject || !originalPostValues) {
         getAllSearchData();
       }
+      setSearchValue(e.target.value)
       const foundPosts =
-        router.pathname === "/profile/[user]"
-          ? originalPostValues
-            ? originalPostValues.filter((post) => {
-                if (
-                  post.users.username.toLowerCase() === routedUser.toLowerCase()
-                ) {
-                  return post.content
-                    .toLowerCase()
-                    .includes(e.target.value.toLowerCase());
-                }
-              })
-            : []
-          : originalPostValues
+        // router.pathname === "/profile/[user]"
+        //   ? originalPostValues
+        //     ? originalPostValues.filter((post) => {
+        //         if (
+        //           post.users.username.toLowerCase() === routedUser.toLowerCase()
+        //         ) {
+        //           return post.content
+        //             .toLowerCase()
+        //             .includes(e.target.value.toLowerCase());
+        //         }
+        //       })
+        //     : [] :
+           originalPostValues
           ? originalPostValues.filter((post) =>
               post.content.toLowerCase().includes(e.target.value.toLowerCase())
             )
@@ -184,6 +187,8 @@ export const TopBarObjects = () => {
     openUsers,
     setOpenUsers,
     setExplorePosts,
+    darkMode,
+    searchValue
   };
 };
 
@@ -203,13 +208,15 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
     setExplorePosts,
     openUsers,
     setOpenUsers,
+    darkMode,
+    searchValue
   } = TopBarObjects();
   const { fullPageReload } = PageLoadOptions();
 
   return (
     <div id="fixed-topbar" className="lg:hidden flex flex-col">
       <div
-        className={`py-1.5 px-2 flex flex-row w-full justify-between space-x-2 bg-white`}
+        className={`py-1.5 px-2 flex flex-row w-full justify-between space-x-2 ${darkMode ? 'bg-[#1e1f24]' : 'bg-white'}`}
       >
         {userData && userData.picture && <span
           onClick={() => {
@@ -226,7 +233,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
           />
         </span>}
         <span className="w-full flex flex-row items-center space-x-3">
-          <span className="py-0 pl-3 w-full flex flex-row items-center rounded-lg bg-gray-100">
+          <span className={`py-0 pl-3 w-full flex flex-row items-center rounded-lg ${darkMode ? 'bg-zinc-800' : 'bg-gray-100'}`}>
             <svg
               className="w-4 h-3 text-gray-500"
               aria-hidden="true"
@@ -243,10 +250,11 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
               />
             </svg>
             <input
+              
               onChange={searchForItem}
               onClick={getAllSearchData}
               type="search"
-              className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+              className={`w-full text-sm ${darkMode ? 'text-white' : 'text-gray-500'} bg-transparent border-none focus:ring-0 placeholder-gray-400`}
               placeholder="Search for users, images, hashtags and more!"
             />
           </span>
@@ -254,7 +262,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
         </span>
 
         {(openSuggestions !== null || openUsers !== null) && (
-          <span id="mobile-suggests" className="flex flex-col">
+          <span id="mobile-suggests" className={`${darkMode ? 'bg-[#1e1f24]' : 'bg-white'} flex flex-col`}>
             {openSuggestions !== null && (
               <span className="w-full flex flex-col">
                 <span
@@ -266,7 +274,8 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
                     ) {
                       return;
                     } else {
-                      setPostValues(openSuggestions.foundPosts);
+                      router.push(`/search?${searchValue}`)
+                      // setPostValues(openSuggestions.foundPosts);
                     }
                     if (
                       router.pathname === "/explore" &&
@@ -275,12 +284,13 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
                     ) {
                       return;
                     } else {
-                      setExplorePosts(openSuggestions.foundExplorePosts);
+                      router.push(`/search?${searchValue}`)
+                      // setExplorePosts(openSuggestions.foundExplorePosts);
                     }
 
                     setOpenSuggestions(null);
                   }}
-                  className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                  className={`p-2 ${darkMode ? 'text-white' : 'text-black'} flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium`}
                 >
                   {`${
                     router.pathname === "/explore"
@@ -300,8 +310,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
                     setOpenSuggestions(null);
                     setOpenUsers(users);
                   }}
-                  className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
-                >
+                  className={`p-2 ${darkMode ? 'text-white' : 'text-black'} flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium`}                >
                   {`${openSuggestions.foundUsers.length} users found`}
                 </span>
               </span>
@@ -315,7 +324,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
                     onClick={() => {
                       fullPageReload(`/profile/${os.username}`);
                     }}
-                    className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                    className={`p-2 flex flex-row ${darkMode ? 'text-white' : 'text-black'} items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium`}
                   >
                     <span className="relative h-8 w-8 flex">
                       <Image
@@ -378,7 +387,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
 
 const LargeTopBar = ({ relationship }) => {
   const router = useRouter();
-  const { followingPosts, changePostsDisplayed, getAllPosts } = TopBarObjects();
+  const { followingPosts, changePostsDisplayed, getAllPosts, searchValue } = TopBarObjects();
   return (
     <>
       {router.pathname !== "/explore" &&

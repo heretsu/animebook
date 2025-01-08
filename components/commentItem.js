@@ -6,6 +6,7 @@ import { UserContext } from "@/lib/userContext";
 import CommentItemChild from "./commentItemChild";
 import CommentConfig from "./commentConfig";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import { BinSvg } from "./communityPostCard";
 
 export default function CommentItem({comment}) {
   const {fullPageReload} = PageLoadOptions()
@@ -55,6 +56,16 @@ export default function CommentItem({comment}) {
         }
       });
   };
+  const deleteComment = () => {
+    supabase
+          .from("comments")
+          .delete()
+          .eq("id", comment.id)
+          .eq("userid", userNumId)
+          .then((res) => {
+            setLikes(null)
+          });
+  }
 
   const openChildComments = () => {
     if (commentChildren === null) {
@@ -75,6 +86,7 @@ export default function CommentItem({comment}) {
     setParentId(parentCommentId);
     inputRef.current.focus();
   };
+  const [imgSrc, setImgSrc] = useState(comment.users.avatar)
 
   useEffect(() => {
     fetchCommentLikes();
@@ -87,11 +99,12 @@ export default function CommentItem({comment}) {
 
         <span onClick={()=>{fullPageReload(`/profile/${comment.users.username}`)}} className="relative h-8 w-8 flex">
           <Image
-            src={comment.users.avatar}
+            src={imgSrc}
             alt="user"
             width={35}
             height={35}
             className="rounded-full"
+            onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
           />
         </span>
 
@@ -99,6 +112,8 @@ export default function CommentItem({comment}) {
             <p className="w-full text-normal font-semibold">
               {comment.users.username}
             </p>
+            
+             
             <p className="w-full"><CommentConfig text={comment.content} tags={false}/></p>
             <span className="py-1 flex flex-row items-center w-full">
               <span
@@ -156,7 +171,9 @@ export default function CommentItem({comment}) {
               <span className="text-sm">
                 {commentValues.filter((a) => a.parentid === comment.id).length}
               </span>
+              {comment.users.id === userNumId && <span onClick={()=>{deleteComment()}} className="ml-3 cursor-pointer flex flex-row justify-end"> <BinSvg pixels={"20px"} /></span>}
             </span>
+            
           </span>
         </span>
         {commentChildren !== null &&

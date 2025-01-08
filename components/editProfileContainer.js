@@ -42,7 +42,7 @@ const EditProfileContainer = () => {
   const ercABI = ErcTwentyToken.abi;
   const { connectToWallet } = ConnectionData();
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, setPostJustMade, address, userData } =
+  const { userNumId, setPostJustMade, address, userData, darkMode } =
     useContext(UserContext);
   const router = useRouter();
   const [bio, setBio] = useState("");
@@ -229,11 +229,17 @@ const EditProfileContainer = () => {
     }
   }
   const [conAddress, setConAddress] = useState(null);
+  const [valuesLoaded, setValuesLoaded] = useState(false)
 
+  const [imgSrc, setImgSrc] = useState('')
   useEffect(() => {
     // connectToWallet().then((addr) => {
     //   setConAddress(addr);
     // });
+    if (userData && userData.avatar && !valuesLoaded){
+      setImgSrc(userData.avatar)
+      setValuesLoaded(true)
+    }
     if (!solBalance) {
       getBalances();
     }
@@ -244,11 +250,11 @@ const EditProfileContainer = () => {
         URL.revokeObjectURL(selectedMedia);
       }
     };
-  }, [selectedMedia, solBalance]);
+  }, [selectedMedia, solBalance, userData]);
   return (
     <>
       {userData !== null && userData !== undefined && (
-        <div className="text-gray-600 flex flex-col space-y-4 rounded-xl shadow-lg w-full bg-white justify-center items-center">
+        <div className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-gray-600'} flex flex-col space-y-4 rounded-xl shadow-lg w-full justify-center items-center`}>
           {selectedMedia ? (
             <label
               htmlFor="input-file"
@@ -350,11 +356,12 @@ const EditProfileContainer = () => {
                 >
                   <div className="relative h-[35px] w-[35px] cursor-pointer">
                     <Image
-                      src={userData.avatar}
+                      src={imgSrc}
                       alt="user avatar"
                       height={35}
                       width={35}
                       className="rounded-full"
+                      onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
                     />
                     <span className="rounded-full absolute inset-0 flex bg-black bg-opacity-60 justify-center items-center">
                       <CloudSvg pixels={"20px"} />
@@ -381,7 +388,7 @@ const EditProfileContainer = () => {
                 }}
                 maxLength={160}
                 placeholder={userData.bio}
-                className="px-4 h-15 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${darkMode ? 'bg-gray-500' : 'bg-gray-200'} px-4 h-15 rounded-xl resize-none w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
               />
             </span>
 
@@ -396,7 +403,7 @@ const EditProfileContainer = () => {
                 // value=""
                 disabled
                 value={newAddress ? newAddress : userData.address}
-                className=" mt-1 px-4 text-sm text-center cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${darkMode ? 'bg-gray-500' : 'bg-gray-200'} mt-1 px-4 text-sm text-center cursor-not-allowed rounded-xl resize-none w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
               />
               <span className="text-[0.75rem]">
                 {
@@ -405,8 +412,9 @@ const EditProfileContainer = () => {
               </span>
               <div
                 onClick={() => {
+                  // connectToWallet()
                   // open()
-                  // updateAddress();
+                  updateAddress();
                 }}
                 className="w-full pb-2 text-center underline text-orange-500 cursor-pointer"
               >
@@ -466,8 +474,7 @@ const EditProfileContainer = () => {
                 // value=""
                 disabled
                 value={userData.solAddress}
-                className="mt-1 px-4 text-center text-sm cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
-              />
+                className={`${darkMode ? 'bg-gray-500' : 'bg-gray-200'} mt-1 px-4 text-sm text-center cursor-not-allowed rounded-xl resize-none w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}              />
             </span>
 
             <span className="pt-2 pb-3 flex flex-col">
@@ -480,7 +487,7 @@ const EditProfileContainer = () => {
                   onClick={() => {
                     updateProfile();
                   }}
-                  className="w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold border rounded-lg"
+                  className={`${darkMode ? 'border-none' : 'border'} w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold rounded-lg`}
                 >
                   Save changes
                 </span>
