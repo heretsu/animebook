@@ -17,12 +17,13 @@ import { ethers } from "ethers";
 import ConnectionData from "@/lib/connectionData";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import SideBar from "@/components/sideBar";
-import Lottie from "lottie-react";
 import animationData from "@/assets/kianimation.json";
 import loadscreen from "@/assets/loadscreen.json";
 import darkloadscreen from "@/assets/darkloadscreen.json";
 import DappLibrary from "@/lib/dappLibrary";
 import { BinSvg } from "@/components/communityPostCard";
+import dynamic from "next/dynamic";
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export const getServerSideProps = async (context) => {
   const { user } = context.query;

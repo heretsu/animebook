@@ -8,7 +8,7 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import Spinner from "./spinner";
 import ConnectionData from "@/lib/connectionData";
 import { ethers } from "ethers";
-import { formatUnits } from "ethers";
+import { formatUnits } from "@ethersproject/units";
 import ErcTwentyToken from "@/lib/static/ErcTwentyToken.json";
 
 const {

@@ -10,10 +10,11 @@ import DappLibrary from "@/lib/dappLibrary";
 import { useRouter } from "next/router";
 import ReactPlayer from "react-player";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
-import Lottie from "lottie-react";
 import animationData from "@/assets/kianimation.json";
 import PopupModal from "./popupModal";
 import UnfollowButton from "./unfollowButton";
+import dynamic from "next/dynamic";
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export const BinSvg = ({ pixels }) => {
   return (

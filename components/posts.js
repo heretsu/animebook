@@ -6,10 +6,11 @@ import Spinner from "./spinner";
 import PlusIcon from "./plusIcon";
 import Image from "next/image";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
-import Lottie from "lottie-react";
 import loadscreen from "@/assets/loadscreen.json";
 import darkloadscreen from "@/assets/darkloadscreen.json";
 import UnfollowButton from "./unfollowButton";
+import dynamic from "next/dynamic";
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 const Posts = () => {
   const {

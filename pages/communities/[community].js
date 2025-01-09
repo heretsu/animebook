@@ -13,9 +13,10 @@ import PostContainer from "@/components/postContainer";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import CommunityCommentItem from "@/components/communityCommentItem";
 import SideBar from "@/components/sideBar";
-import Lottie from "lottie-react";
 import loadscreen from "@/assets/loadscreen.json";
 import darkloadscreen from "@/assets/darkloadscreen.json"
+import dynamic from "next/dynamic";
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 
 export const getServerSideProps = async (context) => {

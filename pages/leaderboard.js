@@ -1,11 +1,12 @@
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import animeBookLogo from "@/assets/animeBookLogo.png";
 import animationData from "@/assets/kianimation.json";
-import Lottie from "lottie-react";
 import Image from "next/image";
 import { useEffect, useState, useContext } from "react";
 import { UserContext } from "@/lib/userContext";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import dynamic from "next/dynamic";
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 const Leaderboard = () => {
   const { userData, allUsers, darkMode } = useContext(UserContext);

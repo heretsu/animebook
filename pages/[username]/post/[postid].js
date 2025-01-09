@@ -11,15 +11,14 @@ import NavBar, { MobileNavBar } from "@/components/navBar";
 
 export const getServerSideProps = async (context) => {
   const { postid } = context.query;
-  const comments = postid
   return {
     props: {
-      comments,
+      comments: postid,
     },
   };
 };
 
-export default function Comments({ comments }) {
+export default function Postid({ comments }) {
   const videoRef = useRef(null);
   const router = useRouter();
   const postid = comments;

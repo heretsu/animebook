@@ -492,7 +492,6 @@ export default function App({ Component, pageProps }) {
   const [allowUnloggedView, setAllowUnloggedView] = useState(false)
   useEffect(() => {
 
-    console.log(localStorage.getItem('darkmode'))
     if (darkMode) {
       document.body.style.backgroundColor = "black";
       document.documentElement.classList.add("dark");
@@ -515,7 +514,7 @@ export default function App({ Component, pageProps }) {
         "/notifications",
         "/profile/[user]",
         "/comments/[comments]",
-        "[username]/post/[postid]",
+        "/[username]/post/[postid]",
         "/inbox",
         "/inbox/[message]",
         "/settings",
