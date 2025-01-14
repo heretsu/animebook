@@ -44,6 +44,7 @@ export default function PostCard({
   repostAuthor,
   repostQuote,
   repostCreatedAt,
+  allPosts,
 }) {
   const videoRef = useRef(null);
   const router = useRouter();
@@ -79,7 +80,7 @@ export default function PostCard({
   const [pressTimeout, setPressTimeout] = useState(null);
   const [quoteContent, setQuoteContent] = useState(null);
   const [openTipPost, setOpenTipPost] = useState(false);
-  const [openPostOptions, setOpenPostOptions] = useState(false)
+  const [openPostOptions, setOpenPostOptions] = useState(false);
 
   const [ref, isBeingViewed] = PostInViewport({
     threshold: 0.5,
@@ -375,8 +376,50 @@ export default function PostCard({
     }
   };
 
-  const [imgSrc, setImgSrc] = useState(repostAuthor && repostAuthor.avatar)
-  const [imgSrcOrigin, setImgSrcOrigin] = useState(users && users.avatar)
+  const [postCount, setPostCount] = useState(null);
+
+  function userSpecificPosts() {
+    if (allPosts) {
+      const filteredUserPosts = allPosts.filter((r) => {
+        return r.users.useruuid === users.useruuid;
+      });
+      setPostCount(filteredUserPosts.length);
+    }
+  }
+
+  const [thumbnail, setThumbnail] = useState(null);
+  const generateThumbnail = () => {
+    const video = videoRef.current;
+
+    if (!video) return;
+
+    // Move the video to a specific time (e.g., 1 second)
+    video.currentTime = 1;
+
+    // Wait for the video to seek to the correct frame
+    video.addEventListener("seeked", () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Set canvas dimensions to match the video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw the current frame of the video onto the canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Get the thumbnail as a data URL
+      const thumbnailDataURL = canvas.toDataURL("image/jpeg", 0.8); // 80% quality
+
+      // Set the thumbnail state
+      setThumbnail(thumbnailDataURL);
+    });
+    video.currentTime = 2;
+  };
+
+  const [imgSrc, setImgSrc] = useState(repostAuthor && repostAuthor.avatar);
+  const [imgSrcOrigin, setImgSrcOrigin] = useState(users && users.avatar);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (users.id !== myProfileId) {
@@ -386,6 +429,8 @@ export default function PostCard({
           setAlreadyFollowed(
             !!res.data.find((rel) => rel.follower_userid === myProfileId)
           );
+
+          userSpecificPosts();
         }
       });
     }
@@ -409,7 +454,9 @@ export default function PostCard({
       <div
         ref={ref}
         className={`${
-          router.pathname !== ("/comments/[comments]" || "/[username]/post/[postid]") && "shadow-xl"
+          router.pathname !==
+            ("/comments/[comments]" || "/[username]/post/[postid]") &&
+          "shadow-xl"
         } ${!media && "w-full"} ${
           darkMode ? "bg-[#1e1f24] text-white" : "bg-white text-black"
         } space-y-1 py-4 px-3 flex flex-col justify-center text-start`}
@@ -436,7 +483,11 @@ export default function PostCard({
                   width={35}
                   height={35}
                   className="rounded-full object-cover"
-                  onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
+                  onError={() =>
+                    setImgSrc(
+                      "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                    )
+                  }
                 />
               </span>
 
@@ -473,43 +524,154 @@ export default function PostCard({
 
         <span className="flex flex-row justify-between items-center">
           <span
-            onClick={() => {
-              fullPageReload(`/profile/${users.username}`, 'window');
-            }}
-            className="cursor-pointer flex flex-row justify-start items-center space-x-0"
-          >
-            <span className="relative h-9 w-9 flex">
-              <Image
-                src={imgSrcOrigin}
-                alt="user profile"
-                width={35}
-                height={35}
-                className="rounded-full object-cover"
-                onError={() => setImgSrcOrigin("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
-              />
-            </span>
+            // onClick={() => {
 
-            <span className="flex flex-col">
-              <span className="flex flex-row">
-                <span className="pl-2 pr-1 font-semibold">
-                  {users.username}
-                </span>
-                <span className="text-[0.7rem] text-gray-400">
-                  {postTimeAgo(created_at)}
-                </span>
+            //   // fullPageReload(`/profile/${users.username}`, 'window');
+            // }}
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`cursor-pointer flex flex-row justify-start items-center space-x-0 transition-transform duration-500 ${
+              isExpanded ? "scale-110 w-full" : "scale-100"
+            }`}
+          >
+            {!isExpanded && (
+              <span className="relative h-9 w-9 flex">
+                <Image
+                  src={imgSrcOrigin}
+                  alt="user profile"
+                  width={35}
+                  height={35}
+                  className="rounded-full object-cover"
+                  onError={() =>
+                    setImgSrcOrigin(
+                      "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                    )
+                  }
+                />
               </span>
-              <span className="flex flex-row items-center">
-                <span className="h-6 w-8">
-                  <Lottie animationData={animationData} />
+            )}
+
+            <span className={`flex flex-col ${isExpanded && "w-full"}`}>
+              {!isExpanded && (
+                <span className="flex flex-row">
+                  <span className="pl-2 pr-1 font-semibold">
+                    {users.username}
+                  </span>
+
+                  <span className="text-[0.7rem] text-gray-400">
+                    {postTimeAgo(created_at)}
+                  </span>
                 </span>
-                <span className="absolute pl-6 text-xs font-bold text-blue-400">
-                  {parseFloat(parseFloat(users.ki).toFixed(2))}
+              )}
+              {!isExpanded && (
+                <span className="flex flex-row items-center">
+                  <span className="h-6 w-8">
+                    <Lottie animationData={animationData} />
+                  </span>
+                  <span className="absolute pl-6 text-xs font-bold text-blue-400">
+                    {parseFloat(parseFloat(users.ki).toFixed(2))}
+                  </span>
                 </span>
-              </span>
+              )}
+              {isExpanded && (
+                <span className="px-2 pt-2 pb-4 space-y-1 flex flex-col justify-center items-center">
+                  <span className="relative flex h-[120px] w-full">
+                    {users.cover ? (
+                      <Image
+                        src={users.cover}
+                        alt="user profile"
+                        fill={true}
+                        className="rounded-2xl object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-slate-900 rounded-2xl"></div>
+                    )}
+                    <span className="text-xs md:text-sm rounded-b-2xl absolute inset-0 flex flex-col justify-between text-white">
+                      <span className="absolute border border-gray-500 ml-2 mt-2 flex flex-row items-center justify-center rounded-2xl w-fit px-1 py-0.5 bg-gray-800 bg-opacity-70">
+                        <span className="-ml-2 h-6 w-8">
+                          <Lottie animationData={animationData} />
+                        </span>
+                        <span className="-ml-2 text-xs font-semibold text-white">
+                          {parseFloat(parseFloat(users.ki).toFixed(2))}
+                        </span>
+                      </span>
+                      <span className="w-full flex flex-row justify-end pt-2 pr-4"></span>
+                      <span className="rounded-b-2xl space-y-0.5 w-full p-1 bg-gray-800 bg-opacity-70">
+                        <span className="font-semibold flex flex-row w-full justify-between items-center">
+                          <span className="flex flex-row justify-start items-center space-x-0.5">
+                            <span className="relative h-5 w-5 flex">
+                              <Image
+                                src={imgSrcOrigin}
+                                alt="user profile"
+                                width={35}
+                                height={35}
+                                className="rounded-full object-cover"
+                                onError={() =>
+                                  setImgSrcOrigin(
+                                    "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                                  )
+                                }
+                              />
+                            </span>
+                            <span className="font-semibold text-xs pr-2">
+                              {users.username}
+                            </span>
+
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                            >
+                              {userData &&
+                                (users.id === myProfileId ? (
+                                  <span className="text-sm">You</span>
+                                ) : alreadyFollowed ? (
+                                  <UnfollowButton
+                                    alreadyFollowed={alreadyFollowed}
+                                    setAlreadyFollowed={setAlreadyFollowed}
+                                    followerUserId={myProfileId}
+                                    followingUserId={users.id}
+                                  />
+                                ) : (
+                                  <PlusIcon
+                                    ymk={false}
+                                    alreadyFollowed={alreadyFollowed}
+                                    setAlreadyFollowed={setAlreadyFollowed}
+                                    followerUserId={myProfileId}
+                                    followingUserId={users.id}
+                                    size={"19"}
+                                    color={"default"}
+                                  />
+                                ))}
+                            </span>
+                          </span>
+                          <span className="text-xs">
+                            {postCount !== null && postCount !== undefined && (
+                              <span>{`${postCount} Posts`}</span>
+                            )}
+                          </span>
+                        </span>
+                        <p className="text-xs pb-1 max-h-10 break-words overflow-auto">
+                          {users.bio !== null ? users.bio : "\u00A0"}
+                        </p>
+                      </span>
+                    </span>
+                  </span>
+                  <button
+                    className="w-full py-2 bg-blue-500 text-xs font-medium text-white rounded-md hover:bg-blue-600"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering the expansion toggle
+                      fullPageReload(`/profile/${users.username}`, "window");
+                    }}
+                  >
+                    View Full Profile
+                  </button>
+                </span>
+              )}
             </span>
           </span>
 
-          {userData &&
+          {!isExpanded &&
+            userData &&
             (users.id === myProfileId ? (
               <span onClick={deleteAction} className="cursor-pointer">
                 <BinSvg pixels={"20px"} />
@@ -529,7 +691,7 @@ export default function PostCard({
             ) : (
               <span className="flex flex-row space-x-0.5 justify-center items-center">
                 <PlusIcon
-                ymk={false}
+                  ymk={false}
                   alreadyFollowed={alreadyFollowed}
                   setAlreadyFollowed={setAlreadyFollowed}
                   followerUserId={myProfileId}
@@ -537,12 +699,12 @@ export default function PostCard({
                   size={"19"}
                   color={"default"}
                 />
-                
+
                 <svg
-                onClick={()=>{
-                  setOpenPostOptions(true)
-                }}
-                className="rotate-90 cursor-pointer"
+                  onClick={() => {
+                    setOpenPostOptions(true);
+                  }}
+                  className="rotate-90 cursor-pointer"
                   fill={darkMode ? "white" : "#000000"}
                   width="18px"
                   height="18px"
@@ -575,7 +737,10 @@ export default function PostCard({
             media.endsWith("3GP") ? (
               <span
                 onClick={() => {
-                  if (router.pathname !== ("/comments/[comments]" || "[username]/post/[postid]")) {
+                  if (
+                    router.pathname !==
+                    ("/comments/[comments]" || "[username]/post/[postid]")
+                  ) {
                     router.push(`/${users.username}/post/${id}`);
                   } else {
                     togglePlayPause();
@@ -583,17 +748,28 @@ export default function PostCard({
                 }}
                 className="relative cursor-pointer flex justify-center items-center bg-black w-full"
               >
-                <video
+                {!thumbnail && <video
                   className="relative max-h-[600px]"
                   src={media}
+                  crossOrigin="anonymous"
                   ref={videoRef}
                   height={600}
                   width={600}
                   loop
-                  onProgress={(e) => {
-                    loadVideoSnippet(e);
-                  }}
-                ></video>
+                  // onProgress={(e) => {
+                  //   loadVideoSnippet(e);
+                  // }}
+                  onLoadedData={generateThumbnail(videoRef.current)}
+                ></video>}
+                {thumbnail && (
+                    <Image
+                      src={thumbnail}
+                      alt="Video Thumbnail"
+                      width={600}
+                      height={600}
+                      className="rounded-lg object-cover"
+                    />
+                )}
                 {!playVideo && (
                   <svg
                     fill={"white"}
@@ -771,39 +947,41 @@ export default function PostCard({
           </div>
 
           <div className="space-x-3 w-fit flex flex-row justify-center items-center">
-          {userData && users.id !== myProfileId && <div
-              className="flex items-center"
-              onClick={() => {
-                setOpenTipPost(true);
-              }}
-            >
-              <svg
-                width="18px"
-                height="18px"
-                className="text-blue-500"
-                stroke={darkMode ? "white" : ""}
-                fill="currentColor"
-                id="Capa_1"
-                xmlns="http://www.w3.org/2000/svg"
-                xmlnsXlink="http://www.w3.org/1999/xlink"
-                x="0px"
-                y="0px"
-                viewBox="0 0 19.928 19.928"
-                style={{
-                  enableBackground: "new 0 0 19.928 19.928",
+            {userData && users.id !== myProfileId && (
+              <div
+                className="flex items-center"
+                onClick={() => {
+                  setOpenTipPost(true);
                 }}
-                xmlSpace="preserve"
               >
-                <g>
-                  <path
-                    style={{
-                      fill: "#010002",
-                    }}
-                    d="M11.273,3.18l-0.242-0.766c-0.096-0.305-0.228-0.603-0.393-0.884 c-0.545-0.926-1.18-1.328-1.425-1.352C9.122,0.373,9.136,1.12,9.701,2.081c0.538,0.916,1.165,1.318,1.417,1.351 C11.118,3.432,11.273,3.18,11.273,3.18z M13.731,2.081c0.564-0.961,0.578-1.708,0.488-1.903c-0.245,0.023-0.882,0.424-1.427,1.352 c-0.166,0.282-0.297,0.58-0.393,0.884L12.154,3.19l0.163,0.252C12.549,3.411,13.185,3.01,13.731,2.081z M11.381,3.927h2.02v2.818 h4.908V3.958H13.7c0.372-0.273,0.75-0.698,1.061-1.225c0.67-1.142,0.768-2.328,0.217-2.651C14.883,0.027,14.776,0,14.66,0 c-0.561,0-1.335,0.617-1.893,1.562c-0.186,0.319-0.324,0.639-0.42,0.945c-0.096-0.306-0.232-0.626-0.42-0.945 C11.372,0.617,10.595,0,10.033,0C9.92,0,9.812,0.027,9.716,0.082c-0.548,0.323-0.45,1.509,0.219,2.651 c0.311,0.527,0.691,0.952,1.062,1.225h-4.61v2.787h4.994V3.927z M12.974,2.705c0.087-0.278,0.208-0.55,0.359-0.81 c0.498-0.849,1.082-1.216,1.309-1.237c0.08,0.177,0.068,0.862-0.447,1.741c-0.502,0.852-1.084,1.218-1.295,1.246l-0.15-0.23 C12.75,3.415,12.974,2.705,12.974,2.705z M10.502,2.399c-0.516-0.879-0.53-1.564-0.446-1.741c0.224,0.021,0.807,0.389,1.306,1.237 c0.152,0.257,0.271,0.529,0.361,0.81l0.22,0.701l-0.142,0.23C11.569,3.607,10.996,3.238,10.502,2.399z M13.568,7.636v3.146 c0.364,0.184,0.465,0.516,0.465,0.516s0.072-0.034,0.072,1.479c0,1.514-0.324,1.568-0.537,1.616v0.824c0,0,2.462-0.796,3.928-2.65 c0.532-0.673,0.822-0.505,0.822-0.505l-0.01-4.426C18.308,7.636,13.568,7.636,13.568,7.636z M11.381,7.636H6.386v2.572 c1.209,0,3.428,0,4.994,0V7.636H11.381z M0.028,10.264h2.855v9.663H0.028V10.264z M18.054,13.379 c-0.113-0.044-0.23-0.061-0.349-0.041c-0.897,0.165-2.255,3.501-5.789,2.538c0,0-1.034-0.334-1.425-0.574 c-0.346-0.191-1.08-0.628-1.68-1.084h1.68h1.889c0,0,0.146,0.009,0.315-0.029c0.231-0.053,0.508-0.194,0.508-0.576 c0-0.66,0-1.647,0-1.647s-0.11-0.548-0.508-0.749c-0.091-0.046-0.194-0.075-0.315-0.075c-0.186,0-0.924,0-1.889,0 c-1.711,0-4.133,0-5.453,0c-0.581,0-0.949,0-0.949,0v7.026c0,0,5.602,1.758,7.578,1.758c0,0,4.939,0.22,8.234-3.624 C19.902,16.303,19.043,13.763,18.054,13.379z"
-                  />
-                </g>
-              </svg>
-            </div>}
+                <svg
+                  width="18px"
+                  height="18px"
+                  className="text-blue-500"
+                  stroke={darkMode ? "white" : ""}
+                  fill="currentColor"
+                  id="Capa_1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlnsXlink="http://www.w3.org/1999/xlink"
+                  x="0px"
+                  y="0px"
+                  viewBox="0 0 19.928 19.928"
+                  style={{
+                    enableBackground: "new 0 0 19.928 19.928",
+                  }}
+                  xmlSpace="preserve"
+                >
+                  <g>
+                    <path
+                      style={{
+                        fill: "#010002",
+                      }}
+                      d="M11.273,3.18l-0.242-0.766c-0.096-0.305-0.228-0.603-0.393-0.884 c-0.545-0.926-1.18-1.328-1.425-1.352C9.122,0.373,9.136,1.12,9.701,2.081c0.538,0.916,1.165,1.318,1.417,1.351 C11.118,3.432,11.273,3.18,11.273,3.18z M13.731,2.081c0.564-0.961,0.578-1.708,0.488-1.903c-0.245,0.023-0.882,0.424-1.427,1.352 c-0.166,0.282-0.297,0.58-0.393,0.884L12.154,3.19l0.163,0.252C12.549,3.411,13.185,3.01,13.731,2.081z M11.381,3.927h2.02v2.818 h4.908V3.958H13.7c0.372-0.273,0.75-0.698,1.061-1.225c0.67-1.142,0.768-2.328,0.217-2.651C14.883,0.027,14.776,0,14.66,0 c-0.561,0-1.335,0.617-1.893,1.562c-0.186,0.319-0.324,0.639-0.42,0.945c-0.096-0.306-0.232-0.626-0.42-0.945 C11.372,0.617,10.595,0,10.033,0C9.92,0,9.812,0.027,9.716,0.082c-0.548,0.323-0.45,1.509,0.219,2.651 c0.311,0.527,0.691,0.952,1.062,1.225h-4.61v2.787h4.994V3.927z M12.974,2.705c0.087-0.278,0.208-0.55,0.359-0.81 c0.498-0.849,1.082-1.216,1.309-1.237c0.08,0.177,0.068,0.862-0.447,1.741c-0.502,0.852-1.084,1.218-1.295,1.246l-0.15-0.23 C12.75,3.415,12.974,2.705,12.974,2.705z M10.502,2.399c-0.516-0.879-0.53-1.564-0.446-1.741c0.224,0.021,0.807,0.389,1.306,1.237 c0.152,0.257,0.271,0.529,0.361,0.81l0.22,0.701l-0.142,0.23C11.569,3.607,10.996,3.238,10.502,2.399z M13.568,7.636v3.146 c0.364,0.184,0.465,0.516,0.465,0.516s0.072-0.034,0.072,1.479c0,1.514-0.324,1.568-0.537,1.616v0.824c0,0,2.462-0.796,3.928-2.65 c0.532-0.673,0.822-0.505,0.822-0.505l-0.01-4.426C18.308,7.636,13.568,7.636,13.568,7.636z M11.381,7.636H6.386v2.572 c1.209,0,3.428,0,4.994,0V7.636H11.381z M0.028,10.264h2.855v9.663H0.028V10.264z M18.054,13.379 c-0.113-0.044-0.23-0.061-0.349-0.041c-0.897,0.165-2.255,3.501-5.789,2.538c0,0-1.034-0.334-1.425-0.574 c-0.346-0.191-1.08-0.628-1.68-1.084h1.68h1.889c0,0,0.146,0.009,0.315-0.029c0.231-0.053,0.508-0.194,0.508-0.576 c0-0.66,0-1.647,0-1.647s-0.11-0.548-0.508-0.749c-0.091-0.046-0.194-0.075-0.315-0.075c-0.186,0-0.924,0-1.889,0 c-1.711,0-4.133,0-5.453,0c-0.581,0-0.949,0-0.949,0v7.026c0,0,5.602,1.758,7.578,1.758c0,0,4.939,0.22,8.234-3.624 C19.902,16.303,19.043,13.763,18.054,13.379z"
+                    />
+                  </g>
+                </svg>
+              </div>
+            )}
 
             {copied ? (
               <span
@@ -913,9 +1091,8 @@ export default function PostCard({
           </>
         )}
 
-        {
-          openPostOptions && (
-            <>
+        {openPostOptions && (
+          <>
             <PopupModal
               success={"10"}
               useruuid={users.useruuid}
@@ -929,9 +1106,8 @@ export default function PostCard({
               }}
               id="tip-overlay"
             ></div>
-            </>
-          )
-        }
+          </>
+        )}
 
         {openTipPost && (
           <>

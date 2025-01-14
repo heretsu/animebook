@@ -1212,7 +1212,7 @@ const NavBar = () => {
               if (!userData) {
                 router.push("/signin");
               } else {
-                fullPageReload(`/profile/${userData.username}`);
+                fullPageReload(`/profile/${userData.username}`, 'window');
               }
             }}
             className={
@@ -1404,7 +1404,7 @@ const NavBar = () => {
           {userData && (
             <span
               onClick={() => {
-                fullPageReload(`/profile/${userData.username}`);
+                fullPageReload(`/profile/${userData.username}`, 'window');
               }}
               className="pl-3 relative flex flex-shrink-0"
             >
@@ -1429,7 +1429,7 @@ const NavBar = () => {
                   if (!userData) {
                     router.push("/signin");
                   } else {
-                    fullPageReload(`/profile/${userData.username}`);
+                    fullPageReload(`/profile/${userData.username}`, 'window');
                   }
                 }}
                 className="font-semibold"

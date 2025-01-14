@@ -106,13 +106,15 @@ export default function User({ user }) {
   };
 
   function userSpecificPosts(data) {
+    // console.log(data.find((r)=>{return r.id == 2542}))
     const filteredUserPosts = data.filter((r) => {
+      // console.log(r.id === 2542)
       return (
         r.users.username.trim().toLowerCase() === user.trim().toLowerCase() ||
         (r.repostAuthor &&
           r.repostAuthor.username &&
           r.repostAuthor.username.trim().toLowerCase() ===
-            user.trim().toLowerCase())
+            user.trim().toLowerCase()) 
       );
     });
     setPostValues(filteredUserPosts);
@@ -337,47 +339,44 @@ export default function User({ user }) {
           });
       }
     });
-
     
-    fetchAllReposts().then((reposts) => {
-      fetchAllPosts().then((result1) => {
-        const userPostsAndReposts = reposts
-          .map((repost) => {
-            const originalPost = result1.data.find((post) => {
-              return post.id === repost.postid;
-            });
-            if (
-              originalPost &&
-              repost.users &&
-              repost.users.username.trim().toLowerCase() ===
-                user.trim().toLowerCase()
-            ) {
-              return {
-                ...originalPost,
-                repostAuthor: repost.users,
-                repostQuote: repost.quote,
-                repostCreatedAt: repost.created_at,
-              };
-            }
-            return null;
-          })
-          .filter(Boolean)
-          .concat(
-            result1.data.filter(
-              (post) => !reposts.some((repost) => repost.postid === post.id)
-            )
-          )
-          .sort((a, b) => {
-            const dateA = new Date(
-              a.repostQuote ? a.repostCreatedAt : a.created_at
-            );
-            const dateB = new Date(
-              b.repostQuote ? b.repostCreatedAt : b.created_at
-            );
-            return dateB - dateA;
-          });
-        userSpecificPosts(userPostsAndReposts);
-        setOriginalPostValues(userPostsAndReposts);
+    fetchAllPosts().then((result1) => {
+      fetchAllReposts().then((reposts) => {
+        const userPostsAndReposts = result1.data.map((post) => {
+          const matchingRepost = reposts.find((repost) => repost.postid === post.id);
+    
+          if (
+            matchingRepost &&
+            matchingRepost.users &&
+            matchingRepost.users.username.trim().toLowerCase() ===
+              user.trim().toLowerCase()
+          ) {
+            return {
+              ...post,
+              repostAuthor: matchingRepost.users,
+              repostQuote: matchingRepost.quote,
+              repostCreatedAt: matchingRepost.created_at,
+            };
+          }
+    
+          return post;
+        });
+    
+        const sortedPosts = userPostsAndReposts.sort((a, b) => {
+          const dateA = new Date(
+            a.repostQuote ? a.repostCreatedAt : a.created_at
+          );
+          const dateB = new Date(
+            b.repostQuote ? b.repostCreatedAt : b.created_at
+          );
+          return dateB - dateA;
+        });
+        requestAnimationFrame(() => {
+          userSpecificPosts(sortedPosts);
+          setOriginalPostValues(sortedPosts);
+        });
+        //   userSpecificPosts(userPostsAndReposts);
+        // setOriginalPostValues(userPostsAndReposts);
       });
     });
 
@@ -387,6 +386,10 @@ export default function User({ user }) {
     //     setOriginalPostValues(result.data);
     //   }
     // });
+    if (userBasicInfo && userBasicInfo.avatar) {
+      setImgSrc(userBasicInfo.avatar);
+      setValuesLoaded(true);
+    }
     const handleRouteChange = () => {
       setValuesLoaded(false); // Reset state on route change
       if (userBasicInfo && userBasicInfo.avatar) {
@@ -531,7 +534,7 @@ export default function User({ user }) {
                     </span>
                   </span>
                 </span>
-                {clickFollower || clickFollowing && <svg
+                {(clickFollower || clickFollowing) && <svg
                   onClick={() => {
                     setClickFollower(false)
                     setClickFollowing(false)
@@ -595,6 +598,7 @@ export default function User({ user }) {
                                       .username
                                   }
                                 </span>
+                                
                               </span>
                               {/* <span>{getUserFromId(fobj.following_userid).username}</span> */}
                             </span>

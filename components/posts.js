@@ -87,7 +87,7 @@ const Posts = () => {
         (postValues.length > 0 ? (
           <>
             {visiblePosts.map((post) => (
-              <PostCard key={post.id} {...post} myProfileId={userNumId} />
+              <PostCard key={post.id} {...post} myProfileId={userNumId} allPosts={postValues} />
             ))}
             {visiblePosts.length < postValues.length && (
               <span>

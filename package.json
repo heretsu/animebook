@@ -11,6 +11,7 @@
   "dependencies": {
     "@coinbase/wallet-sdk": "^3.7.2",
     "@ethersproject/units": "^5.7.0",
+    "@ffmpeg/ffmpeg": "^0.12.15",
     "@rainbow-me/rainbowkit": "^2.2.1",
     "@solana/web3.js": "^1.95.5",
     "@supabase/supabase-js": "^2.43.4",

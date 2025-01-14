@@ -328,7 +328,7 @@ export default function Comments({ comments }) {
                     )
                   ) : (
                     <span className="w-full text-gray-500 text-center">
-                      fetching comments...
+                      fetching post...
                     </span>
                   )}
                 </div>
@@ -336,7 +336,7 @@ export default function Comments({ comments }) {
             </div>
           ) : (
             <span className="w-full text-gray-500 text-center">
-              {"fetching comments..."}
+              {"fetching post..."}
             </span>
           )}
         </div>

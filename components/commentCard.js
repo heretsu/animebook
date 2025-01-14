@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 
 export default function CommentCard({ openComments }) {
+  const {fullPageReload} = PageLoadOptions()
   const {
     userData,
     postIdForComment,
@@ -47,7 +48,7 @@ const [valuesLoaded, setValuesLoaded] = useState(false)
   const postComment = () => {
     setCommentPostLoading(true);
     if (userData === undefined || userData === null) {
-      PageLoadOptions().fullPageReload("/signin");
+      fullPageReload("/signin");
       return;
     }
     if (commentMsg !== "") {

@@ -167,6 +167,15 @@ const fetchPosts = () => {
     else if (mediaFile !== null) {
       for (const file of mediaFile) {
         const newName = Date.now() + file.name;
+        
+        const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+          if (file.type.startsWith("video/") && file.size > MAX_FILE_SIZE) {
+            setPostLoading(false);
+            setErrorMsg("Video exceeds 50MB");
+            return;
+          }
+
         const bucketResponse = await supabase.storage
           .from("mediastore")
           .upload(

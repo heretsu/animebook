@@ -19,7 +19,7 @@ import PopupModal from "@/components/popupModal";
 
 export default function Home() {
   const [storyUploading, setStoryUploading] = useState(false);
-  const { fetchStories, timeAgo, fetchViews } = DappLibrary();
+  const { fetchStories, timeAgo, fetchViews, getUserFromUsername } = DappLibrary();
   const [errorMsg, setErrorMsg] = useState("");
   const [mediaContent, setMediaContent] = useState("");
   const router = useRouter();
@@ -122,11 +122,11 @@ export default function Home() {
         const n = storyValues.find((ns) => {
           return ns.newIndex === currentStory.newIndex + 1;
         });
-        if (n === undefined){
-          console.log('end')
-          return
+        if (n === undefined) {
+          console.log("end");
+          return;
         }
-        setStoryIndex(0)
+        setStoryIndex(0);
         fetchViews(n.stories[0].dbIndex);
         setCurrentStory(n);
       }
@@ -139,24 +139,81 @@ export default function Home() {
         const ln = storyValues.find((ls) => {
           return ls.newIndex === currentStory.newIndex - 1;
         });
-        if (ln === undefined){
-          console.log('start')
-          return
+        if (ln === undefined) {
+          console.log("start");
+          return;
         }
-        setStoryIndex(ln.stories.length - 1)
+        setStoryIndex(ln.stories.length - 1);
         fetchViews(ln.stories[0].dbIndex);
         setCurrentStory(ln);
       }
     }
   };
 
+  const handleReferralAndUpdateUsers = async (userData, refData) => {
+    try {
+      // Insert referral record
+      const referralResponse = await supabase
+        .from("referrals")
+        .insert({
+          referrer: refData.username,
+          referee: userData.username,
+        });
+  
+      if (referralResponse.error) {
+        console.log(`Referral insert failed: ${referralResponse.error.message}`);
+        return
+      }
+  
+      // Update referrer's `ki` value
+      const referrerUpdateResponse = await supabase
+        .from("users")
+        .update({ ki: parseFloat(refData.ki) + 1.2 })
+        .eq("id", refData.id);
+  
+      if (referrerUpdateResponse.error) {
+        console.log(`Referrer update failed: ${referrerUpdateResponse.error.message}`);
+        return
+      }
+  
+      const userUpdateResponse = await supabase
+        .from("users")
+        .update({ ki: 1.2 })
+        .eq("id", userData.id);
+  
+      if (userUpdateResponse.error) {
+        console.log(`User update failed: ${userUpdateResponse.error.message}`);
+        return
+      }
+  
+    } catch (error) {
+      console.error("Error handling referral:", error.message);
+    }
+  };  
+
   useEffect(() => {
+
+    if (localStorage.getItem("referralCode") && userData) {
+      const referrer = localStorage.getItem("referralCode").replace("-san", "").trim();
+      if (referrer.toLowerCase().trim() === userData.username.toLowerCase().trim()){
+        localStorage.removeItem("referralCode");
+        return
+      }
+      const now = new Date();
+      const createdAt = new Date(userData.created_at);
+
+      if ((now - createdAt) / (1000 * 60) < 5) { //check if new user from 5 minutes ago
+        const refData = getUserFromUsername(referrer)
+        handleReferralAndUpdateUsers(userData, refData);
+        localStorage.removeItem("referralCode");
+      }
+    }
     if (currentStory !== null) {
       //using ... to destructure array else if done directly the original array will be mutated (reversed as well)
       const userStories = [...currentStory.stories].reverse();
       setStoryToView(userStories[storyIndex]);
     }
-  }, [currentStory]);
+  }, [currentStory, userData]);
 
   return (
     <main>
@@ -173,7 +230,7 @@ export default function Home() {
           </div>
           {userData && <Stories />}
           {userData && <SmallPostContainer />}
-          
+
           <Posts />
         </div>
 
@@ -239,7 +296,8 @@ export default function Home() {
           className="text-white relative flex flex-col w-full space-y-5 pb-16 px-1"
         >
           <div className="relative w-full h-screen flex justify-center">
-            {storyToView && storyToView.media !== null &&
+            {storyToView &&
+              storyToView.media !== null &&
               (storyToView.media.endsWith("mp4") ||
               storyToView.media.endsWith("MP4") ||
               storyToView.media.endsWith("mov") ||
@@ -410,20 +468,18 @@ export default function Home() {
         </>
       )}
 
-       {deletePost !== null && (
-          <>
-            <PopupModal
-              success={"7"}
-            />
-            <div
-              onClick={() => {
-                setDeletePost(null);
-              }}
-              id="overlay"
-              className="bg-black bg-opacity-80"
-            ></div>
-          </>
-        )}
+      {deletePost !== null && (
+        <>
+          <PopupModal success={"7"} />
+          <div
+            onClick={() => {
+              setDeletePost(null);
+            }}
+            id="overlay"
+            className="bg-black bg-opacity-80"
+          ></div>
+        </>
+      )}
     </main>
   );
 }

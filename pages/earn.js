@@ -6,11 +6,13 @@ import { useEffect, useState, useContext, useRef } from "react";
 import { UserContext } from "@/lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import dynamic from "next/dynamic";
+import PageLoadOptions from "@/hooks/pageLoadOptions";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 const Earn = () => {
+  const {fullPageReload} = PageLoadOptions()
   const [tapped, setTapped] = useState(true);
-  const { userData, darkMode} = useContext(UserContext);
+  const { userData, darkMode } = useContext(UserContext);
 
   const dailyKiTap = async () => {
     setTapped(true);
@@ -25,9 +27,33 @@ const Earn = () => {
         .eq("id", userData.id);
     }
   };
+  const [copyClicked, setCopyClicked] = useState(false);
+
+  const handleCopy = () => {
+    const referralCode = `animebook.io/signin?ref=${userData.username.toLowerCase()}-san`;
+    // Save to clipboard
+    navigator.clipboard.writeText(referralCode).then(() => {
+      setCopyClicked(true); // Set clicked state to true
+      // Reset after a short delay
+      setTimeout(() => setCopyClicked(false), 500);
+    });
+  };
+  const [referrals, setReferrals] = useState([])
+
+  const fetchReferrals = async () => {
+    const { data, error } = await supabase
+    .from("referrals") 
+    .select("*") 
+    .eq("referrer", userData.username.trim()); 
+
+    if (data) {
+      setReferrals(data)
+    }
+  }
 
   useEffect(() => {
     if (userData) {
+      fetchReferrals()
       const currentTime = new Date();
       const pastTime = new Date(userData.lastkiclaim);
       const timeDifference = currentTime - pastTime;
@@ -41,38 +67,80 @@ const Earn = () => {
       }
     }
   }, [userData]);
-  return (userData && 
-    <main> 
-      <section className={`${darkMode ? 'text-white' : 'text-black'} mb-5 flex flex-row space-x-2 w-full`}>
-        <NavBar />
-        <div className="w-full pb-2 space-y-8 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
-          <span className="mx-auto font-medium text-sm">
-            Current KI: {parseFloat(parseFloat(userData.ki).toFixed(2))}
-          </span>
+  return (
+    userData && (
+      <main>
+        <section
+          className={`${
+            darkMode ? "text-white" : "text-black"
+          } mb-5 flex flex-row space-x-2 w-full`}
+        >
+          <NavBar />
+          <div className="w-full pb-2 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
+            <span className="mb-8 mx-auto font-medium text-sm">
+              Current KI: {parseFloat(parseFloat(userData.ki).toFixed(2))}
+            </span>
 
-          { tapped ? <div
-            
-            className="cursor-pointer border-4 border-gray-300 shadow-xl rounded-full h-60 w-60 flex flex-row mx-auto items-center justify-center"
-          >
-            <span className="h-30 w-30">
-              <Lottie animationData={animationData} />
+            {tapped ? (
+              <div className="cursor-pointer border-4 border-gray-300 shadow-xl rounded-full h-60 w-60 flex flex-row mx-auto items-center justify-center">
+                <span className="h-30 w-30">
+                  <Lottie animationData={animationData} />
+                </span>
+              </div>
+            ) : (
+              <div
+                onClick={() => {
+                  dailyKiTap();
+                }}
+                className="cursor-pointer border-4 border-blue-300 shadow-xl rounded-full h-60 w-60 flex flex-row mx-auto items-center justify-center"
+              >
+                <span className="absolute border-2 shadow-xl border-blue-400 rounded-full h-60 w-60 animate-ping"></span>
+                <span className="h-30 w-30">
+                  <Lottie animationData={animationData} />
+                </span>
+              </div>
+            )}
+            <span className="my-8 mx-auto font-semibold">
+              {tapped ? "Next claim in 24 hours" : "Claim Today's KI"}
             </span>
-          </div> : <div
-            onClick={() => {
-              dailyKiTap();
-            }}
-            className="cursor-pointer border-4 border-blue-300 shadow-xl rounded-full h-60 w-60 flex flex-row mx-auto items-center justify-center"
-          >
-            <span className="absolute border-2 shadow-xl border-blue-400 rounded-full h-60 w-60 animate-ping"></span>
-            <span className="h-30 w-30">
-              <Lottie animationData={animationData} />
+            <span className="flex flex-row items-center space-x-1">
+              <span>{"Referral code:"}</span>{" "}
+              <span>{`animebook.io/signin?ref=${userData.username.toLowerCase()}-san`}</span>
+              <svg
+                onClick={() => {
+                  handleCopy();
+                }}
+                className={`cursor-pointer ${copyClicked && 'bg-blue-400 rounded'}`}
+                width="18px"
+                height="18px"
+                viewBox="0 0 24 24"
+                fill="#3b82f6"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-4H4a2 2 0 0 1-2-2V4zm8 12v4h10V10h-4v4a2 2 0 0 1-2 2h-4zm4-2V4H4v10h10z"
+                  fill="#3b82f6"
+                />
+              </svg>
             </span>
-          </div> }
-          <span className="mx-auto font-semibold">{tapped ? "Next claim in 24 hours" : "Claim Today's KI"}</span>
-        </div>
-      </section>
-      <MobileNavBar />
-    </main>
+            <span className="mt-4 flex flex-col">
+              <span className="text-lg font-medium">{`Referrals ${referrals.length}`}</span>
+              <ol className={`mt-1 px-8 py-2 ${darkMode ? 'bg-slate-900' : 'bg-slate-300'} rounded-lg`}>
+              {referrals && referrals.length > 0 && referrals.map((invite)=>{
+                return (
+                  <li className="cursor-default" onClick={()=>{fullPageReload(`/profile/${invite.referee}`)}} key={invite.id}>
+                    {invite.referee}
+                  </li>
+                )
+              })}
+              </ol>
+    
+            </span>
+          </div>
+        </section>
+        <MobileNavBar />
+      </main>
+    )
   );
 };
 export default Earn;

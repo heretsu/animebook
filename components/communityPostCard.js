@@ -9,8 +9,6 @@ import DappLibrary from "@/lib/dappLibrary";
 import { useRouter } from "next/router";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import animationData from "@/assets/kianimation.json";
-
-
 import dynamic from "next/dynamic";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 

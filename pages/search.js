@@ -201,9 +201,10 @@ const Search = () => {
                   </span>
                   <span
                     onClick={() => {
-                      setPostValues(openSuggestions.foundPosts);
-                      setOpenSuggestions(null);
-                      setTopicSelected(true);
+                      // setPostValues(openSuggestions.foundPosts);
+                      // setOpenSuggestions(null);
+                      // setTopicSelected(true);
+                      fullPageReload(`/search?${searchedHash}`, 'window')
                     }}
                     className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
                   >
@@ -255,6 +256,7 @@ const Search = () => {
                   setSearchInitialized(true)
                   setTopicSelected(false);
                   setPostValues(originalPostValues);
+                  
                 }}
                 width="30px"
                 height="30px"

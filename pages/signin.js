@@ -3,8 +3,10 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import ConnectionData from "@/lib/connectionData";
 import { useEffect, useState, useContext} from "react";
 import { UserContext } from "@/lib/userContext";
+import { useRouter } from "next/router";
 
 const Signin = () => {
+  const router = useRouter()
   const {darkMode} = useContext(UserContext)
   const { address, connectToWallet } = ConnectionData();
   const { fullPageReload } = PageLoadOptions();
@@ -37,12 +39,12 @@ const Signin = () => {
                 // options: {
                 //   redirectTo: "https://localhost:3000/home",
                 // },
-                options: {
-                  redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
-                },
                 // options: {
-                //   redirectTo: "https://animebook.io/home",
+                //   redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
                 // },
+                options: {
+                  redirectTo: "https://animebook.io/home",
+                },
               })
               .catch((e) => {
                 console.log(e);
@@ -55,12 +57,12 @@ const Signin = () => {
                 // options: {
                 //   redirectTo: "https://localhost:3000/home",
                 // },
-                options: {
-                  redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
-                },
                 // options: {
-                //   redirectTo: "https://animebook.io/home",
+                //   redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
                 // },
+                options: {
+                  redirectTo: "https://animebook.io/home",
+                },
               })
               .catch((e) => {
                 console.log(e);
@@ -84,12 +86,12 @@ const Signin = () => {
           // options: {
           //   redirectTo: "http://localhost:3000/home",
           // },
-          options: {
-            redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
-          },
           // options: {
-          //   redirectTo: "https://animebook.io/home",
+          //   redirectTo: "https://animebook-cypherp0nk.vercel.app/home",
           // },
+          options: {
+            redirectTo: "https://animebook.io/home",
+          },
         });
       }
     } catch (error) {
@@ -97,11 +99,17 @@ const Signin = () => {
       throw "could not sign in";
     }
   };
+
   useEffect(() => {
+    const { ref } = router.query;
+    
+    if (ref) {
+      localStorage.setItem("referralCode", ref);
+    }
     if (navigator.userAgent.includes("MetaMaskMobile")) {
       connectToWallet();
     }
-  }, []);
+  }, [router.query]);
 
   return (
     <div className="pt-8 px-6 w-full h-full rounded-t-xl">

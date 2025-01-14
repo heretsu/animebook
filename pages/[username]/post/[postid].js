@@ -332,7 +332,7 @@ export default function Postid({ comments }) {
                     )
                   ) : (
                     <span className="w-full text-gray-500 text-center">
-                      fetching comments...
+                      fetching post...
                     </span>
                   )}
                 </div>
@@ -340,7 +340,7 @@ export default function Postid({ comments }) {
             </div>
           ) : (
             <span className="w-full text-gray-500 text-center">
-              {"fetching comments..."}
+              {"fetching post..."}
             </span>
           )}
         </div>
