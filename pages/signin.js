@@ -93,7 +93,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img1}
+            src={img5}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -121,7 +121,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img1}
+            src={im6}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -135,7 +135,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img4}
+            src={img7}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -151,7 +151,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img3}
+            src={img8}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -165,7 +165,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img2}
+            src={img9}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -179,7 +179,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img1}
+            src={img10}
             alt="Anime Image 1"
             height={500}
             width={500}
