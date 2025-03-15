@@ -783,7 +783,7 @@ const Signin = () => {
         )}
       </div>
       <div className="hidden md:flex w-1/2">
-        <AnimeGrid img1={img1} img2={img2} img3={img3} img4={img4} img4={img5} img4={img6} img4={img7} img4={img8} img4={img9} img4={img10} />
+        <AnimeGrid img1={img1} img2={img2} img3={img3} img4={img4} img5={img5} img6={img6} img7={img7} img8={img8} img9={img9} img10={img10} />
       </div>
     </div>
   );
