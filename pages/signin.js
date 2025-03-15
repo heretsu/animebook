@@ -121,7 +121,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={im6}
+            src={img6}
             alt="Anime Image 1"
             height={500}
             width={500}
