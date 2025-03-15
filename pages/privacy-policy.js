@@ -1,5 +1,6 @@
 import NavBar, { MobileNavBar } from "@/components/navBar";
 const PrivacyPolicy = () => {
+  
   return (
     <main>
       <section className="mb-5 flex flex-row space-x-2 w-full">

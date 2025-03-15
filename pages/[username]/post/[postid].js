@@ -8,6 +8,9 @@ import DbUsers from "@/hooks/dbUsers";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import { useRouter } from "next/router";
 import NavBar, { MobileNavBar } from "@/components/navBar";
+import LargeTopBar, { SmallTopBar } from "@/components/largeTopBar";
+import PopupModal from "@/components/popupModal";
+import LargeRightBar from "@/components/largeRightBar";
 
 export const getServerSideProps = async (context) => {
   const { postid } = context.query;
@@ -24,6 +27,8 @@ export default function Postid({ comments }) {
   const postid = comments;
   const [viewMedia, setViewMedia] = useState(false);
   const {
+    deletePost,
+    setDeletePost,
     userData,
     userNumId,
     commentValues,
@@ -33,8 +38,11 @@ export default function Postid({ comments }) {
     parentId,
     setParentId,
     inputRef,
-    darkMode
+    newListOfComments,
+    setNewListOfComments,
+    darkMode,
   } = useContext(UserContext);
+  const [valuesLoaded, setValuesLoaded] = useState(false)
   const [errorMsg, setErrorMsg] = useState("");
   const [commentPostLoading, setCommentPostLoading] = useState(false);
   const [postReferenced, setPostReferenced] = useState(null);
@@ -54,7 +62,7 @@ export default function Postid({ comments }) {
     const { data } = await supabase
       .from("comments")
       .select(
-        "id, created_at, content, posts(id), users(id, avatar, username), parentid"
+        "id, created_at, content, posts(id), users(id, avatar, username), parentid, media"
       )
       .eq("postid", postid)
       .order("created_at", { ascending: false });
@@ -66,30 +74,6 @@ export default function Postid({ comments }) {
       setCommentPostLoading(false);
     } else {
       setErrorMsg("Failed to get comments");
-    }
-  };
-
-  const postComment = () => {
-    if (userData === undefined || userData === null) {
-      PageLoadOptions().fullPageReload("/signin");
-      return;
-    }
-    setCommentPostLoading(true);
-    if (commentMsg !== "") {
-      supabase
-        .from("comments")
-        .insert({
-          postid: postid,
-          content: commentMsg,
-          userid: userNumId,
-          parentid: commentMsg.startsWith("@") ? parentId : null,
-        })
-        .then(async () => {
-          await fetchSinglePostComments();
-        });
-    } else {
-      setErrorMsg("You haven't made a comment yet. Try again");
-      setCommentPostLoading(false);
     }
   };
 
@@ -106,237 +90,195 @@ export default function Postid({ comments }) {
   };
 
   useEffect(() => {
-    fetchSinglePostComments();
-  }, [postid]);
+    if (!valuesLoaded){
+      fetchSinglePostComments();
+      setValuesLoaded(true)
+    }
+    if (newListOfComments) {
+      setCommentValues(newListOfComments);
+      setNewListOfComments(null);
+    }
+  }, [valuesLoaded, commentValues, postid, newListOfComments]);
 
   return (
-    <main className={`${darkMode ? 'text-white' : 'text-black'} w-full`}>
-      <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
-      
-        <div className="w-full py-2 px-2 flex flex-col">
-            
+    <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
+      <div className="hidden lg:block block z-40 sticky top-0">
+        <LargeTopBar relationship={false} />
+      </div>
+      <div className="lg:hidden block z-40 sticky top-0">
+        <SmallTopBar relationship={false} />
+      </div>
+      <section className="mb-5 flex lg:flex-row lg:space-x-2 w-full">
+        <NavBar />
+        <div className="w-full pb-2 space-y-8 lg:pl-[16rem] lg:pr-[18rem] xl:pl-[18rem] xl:pr-[20rem] flex flex-col">
           {postReferenced ? (
-            <div className="flex flex-col md:flex-row">
-                
-              <span
-              onClick={() => {
-                if (postReferenced.media && postReferenced.media.toLowerCase().endsWith("webp") ||
-                postReferenced.media.toLowerCase().endsWith("jpg") ||
-                postReferenced.media.toLowerCase().endsWith("jpeg") ||
-                postReferenced.media.toLowerCase().endsWith("png") ||
-                postReferenced.media.toLowerCase().endsWith("svg") ||
-                postReferenced.media.toLowerCase().endsWith("gif")){
-                  setViewMedia(true);
-                }
-                
-              }}
-                className={
-                  postReferenced.media
-                    ? "hidden md:flex h-screen w-full bg-black items-center justify-center"
-                    : "w-0"
-                }
-              >
-                {postReferenced.media &&
-                  (postReferenced.media.endsWith("mp4") ||
-                  postReferenced.media.endsWith("MP4") ||
-                  postReferenced.media.endsWith("mov") ||
-                  postReferenced.media.endsWith("MOV") ||
-                  postReferenced.media.endsWith("3gp") ||
-                  postReferenced.media.endsWith("3GP") ? (
-                    <span
-                      onClick={togglePlayPause}
-                      className="relative cursor-pointer flex justify-center items-center bg-black w-full"
-                    >
-                      <video
-                        className="max-h-screen max-w-[100%] m-auto"
-                        ref={videoRef}
-                        src={postReferenced.media}
-                        height={600}
-                        width={600}
-                        loop
-                      ></video>
-                      {!playVideo && (
-                        <svg
-                          fill="white"
-                          width="70px"
-                          height="70px"
-                          viewBox="0 0 36 36"
-                          preserveAspectRatio="xMidYMid meet"
-                          xmlns="http://www.w3.org/2000/svg"
-                          xmlnsXlink="http://www.w3.org/1999/xlink"
-                          className="absolute m-auto bg-black bg-opacity-20 p-2 rounded-full"
-                        >
-                          <title>{"play-solid"}</title>
-                          <path
-                            className="clr-i-solid clr-i-solid-path-1"
-                            d="M32.16,16.08,8.94,4.47A2.07,2.07,0,0,0,6,6.32V29.53a2.06,2.06,0,0,0,3,1.85L32.16,19.77a2.07,2.07,0,0,0,0-3.7Z"
-                          />
-                          <rect
-                            x={0}
-                            y={0}
-                            width={36}
-                            height={36}
-                            fillOpacity={0}
-                          />
-                        </svg>
-                      )}
-                    </span>
-                  ) : (
-                    <Image
-                      src={postReferenced.media}
-                      alt="post"
-                      width={600}
-                      height={600}
-                      className="object-contain w-full max-w-[100%] m-auto"
-                    />
-                  ))}
-              </span>
-              <div
-                className={`${
-                  !postReferenced.media ? "w-full" : "md:w-1/3"
-                } min-h-screen md:max-h-screen rounded-xl md:rounded-none flex flex-col`}
-              >
-                <svg
+            <div
+              id="scrollbar-remove"
+              className={`w-full min-h-screen overflow-y-scroll md:max-h-screen rounded-xl md:rounded-none flex flex-col`}
+            >
+              <span className="h-12 my-2 flex flex-row items-center justify-between space-x-2">
+                <span
                   onClick={() => {
                     router.push("/home");
                   }}
-                  width="35px"
-                  height="35px"
-                  viewBox="0 0 48 48"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="my-2 cursor-pointer"
+                  className={`border rounded ${
+                    darkMode
+                      ? "bg-[#1E1F24] border-[#292C33] text-white"
+                      : "bg-white border-[#EEEDEF] text-black"
+                  } h-full w-fit py-1 px-1.5 text-[0.7rem] cursor-pointer flex flex-row justify-center items-center space-x-1`}
                 >
-                  <rect
-                    width={48}
-                    height={48}
-                    fill="white"
-                    fillOpacity={0.01}
-                  />
-                  <path
-                    d="M31 36L19 24L31 12"
-                    stroke="gray"
-                    strokeWidth={4}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-
-                <span className="w-full hidden md:flex">
-                  <PostCard
-                    id={postid}
-                    content={postReferenced.content}
-                    created_at={postReferenced.created_at}
-                    users={postReferenced.users}
-                    myProfileId={userNumId}
-                  />
-                </span>
-                <span className="flex md:hidden">
-                  <PostCard
-                    id={postid}
-                    media={postReferenced.media}
-                    content={postReferenced.content}
-                    created_at={postReferenced.created_at}
-                    users={postReferenced.users}
-                    myProfileId={userNumId}
-                  />
-                </span>
-                <div className="my-3 px-2 space-x-2 flex flex-row items-center h-fit">
-                  {userData && (
-                    <span className="flex h-8 w-8">
-
-                    
-                      <Image
-                        src={userData.avatar}
-                        alt="user profile"
-                        height={35}
-                        width={35}
-                        className="relative rounded-full"
-                      />
-                      </span>
-                    
-                  )}
-                  <div className={`${darkMode ? 'bg-gray-700 border-slate-700 text-white' : 'bg-slate-100 border-slate-200 text-gray-800'} border w-full flex flex-row items-center justify-center pr-2`}>
-                    <input
-                      ref={inputRef}
-                      value={commentMsg}
-                      onChange={(e) => {
-                        setCommentMsg(e.target.value);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          postComment();
-                        }
-                      }}
-                      className="focus:border-none focus:outline-none focus:ring-0 rounded-xl w-full bg-transparent border border-transparent focus:ring-0"
-                      placeholder="Leave a comment"
-                    />
-                    {commentPostLoading ? (
-                      <span className="flex items-center justify-center my-auto font-bold text-lg text-slate-400 h-full">
-                        {"..."}
-                      </span>
-                    ) : (
-                      <svg
-                        onClick={() => {
-                          postComment();
-                        }}
-                        className="cursor-pointer"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={26}
-                        height={26}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke={darkMode ? "#e2e8f0" : "#000000"}
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                  >
+                    <g id="previous" transform="translate(-62 -41)">
+                      <g
+                        id="Gruppe_3288"
+                        data-name="Gruppe 3288"
+                        transform="translate(62 41)"
                       >
-                        <line x1={22} y1={2} x2={11} y2={13} />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                {errorMsg !== "" && (
-                  <span className="pt-1 text-sm w-full flex flex-row justify-center items-center">
+                        <path
+                          id="Pfad_4744"
+                          data-name="Pfad 4744"
+                          d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm2.707,16.293a1,1,0,1,1-1.414,1.414l-5-5a1,1,0,0,1,0-1.414l5-5a1,1,0,0,1,1.414,1.414L10.414,12Z"
+                          fill={darkMode ? "white" : "#292c33"}
+                        />
+                      </g>
+                    </g>
+                  </svg>
+                  <span>Go Back</span>
+                </span>
+
+                <span
+                  className={`text-xs w-fit border rounded ${
+                    darkMode
+                      ? "bg-[#1E1F24] border-[#292C33] text-white"
+                      : "bg-white border-[#EEEDEF] text-black"
+                  } p-2 h-full flex flex-1 flex-row justify-between items-center space-x-1`}
+                >
+                  <span className="flex flex-row items-center space-x-1">
                     <svg
-                      fill="red"
-                      width="20px"
-                      height="20px"
-                      viewBox="0 -8 528 528"
                       xmlns="http://www.w3.org/2000/svg"
+                      width="17.637"
+                      height="17.615"
+                      viewBox="0 0 23.637 23.615"
                     >
-                      <title>{"fail"}</title>
-                      <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
+                      <path
+                        id="about"
+                        d="M12.808,1A11.791,11.791,0,0,0,2.416,18.393l-1.36,4.533a1.312,1.312,0,0,0,1.257,1.69,1.337,1.337,0,0,0,.378-.055L7.223,23.2A11.808,11.808,0,1,0,12.808,1Zm0,5.248A1.312,1.312,0,1,1,11.5,7.56,1.312,1.312,0,0,1,12.808,6.248Zm1.312,13.12H12.808A1.312,1.312,0,0,1,11.5,18.055V12.808a1.312,1.312,0,1,1,0-2.624h1.312A1.312,1.312,0,0,1,14.12,11.5v5.248a1.312,1.312,0,1,1,0,2.624Z"
+                        transform="translate(-1 -1)"
+                        fill={darkMode ? "white" : "#292c33"}
+                      />
                     </svg>
-                    <p className="text-red-500">{errorMsg}</p>
+                    <span>{"Participate in this discussion!"}</span>
                   </span>
-                )}
-                <div className={`${darkMode ? 'bg-[#1e1f24]' : 'bg-white'} flex flex-col pb-2 md:min-h-0 md:h-full md:overflow-scroll rounded-xl px-2 space-y-2`}>
-                  <span className="p-2 w-full border-b border-gray-400 text-center font-semibold text-base">
-                    Comments
+
+                  <span
+                    // onClick={() => communityInputRef.current.scrollIntoView({ behavior: 'smooth' })}
+                    className={`flex flex-row space-x-1 cursor-pointer text-sm text-white bg-[#EB4463] py-0.5 font-medium items-center px-3 rounded`}
+                  >
+                    <span>Comment</span>
+                    <span>now</span>
                   </span>
-                  {commentValues !== null && commentValues !== undefined ? (
-                    commentValues.length > 0 ? (
-                      commentValues.map((comment) => {
-                        return (
-                          <>
-                            <CommentItem key={comment.id} comment={comment} />
-                          </>
-                        );
-                      })
-                    ) : (
-                      <span className="w-full text-gray-500 text-center">
-                        Be the first to comment
-                      </span>
-                    )
-                  ) : (
-                    <span className="w-full text-gray-500 text-center">
-                      fetching post...
-                    </span>
-                  )}
-                </div>
-              </div>
+                </span>
+              </span>
+
+              <span className="flex w-full items-center justify-center">
+                <PostCard
+                  id={postid}
+                  media={postReferenced.media}
+                  content={postReferenced.content}
+                  created_at={postReferenced.created_at}
+                  users={postReferenced.users}
+                  myProfileId={userNumId}
+                />
+              </span>
+
+              <span className="text-sm px-3 flex flex-row justify-between">
+                <span
+                  className={`font-semibold ${
+                    darkMode ? "text-white" : "text-black"
+                  }`}
+                >
+                  All Comments
+                </span>
+                <span className="space-x-2 flex flex-row items-center">
+                  <span className={darkMode ? "text-white" : "text-black"}>
+                    Sort by:
+                  </span>
+                  <select
+                    onChange={(e) => {
+                      // if (!cryptoCommunities || cryptoCommunities.length === 0){
+                      //   return
+                      // }
+                      // const value = e.target.value;
+                      // setCryptoCommunities((prevCommunities) => {
+                      //   let sortedCommunities = [...prevCommunities];
+                      //   if (value === "most_recent") {
+                      //     sortedCommunities.sort(
+                      //       (a, b) =>
+                      //         new Date(b.created_at) - new Date(a.created_at)
+                      //     );
+                      //   } else if (value === "most_joined") {
+                      //     sortedCommunities.sort(
+                      //       (a, b) => b.membersLength - a.membersLength
+                      //     );
+                      //   } else{
+                      //     sortedCommunities.sort(
+                      //       (a, b) => b.membersLength - a.membersLength
+                      //     );
+                      //   }
+                      //   return sortedCommunities;
+                      // });
+                    }}
+                    className={`${
+                      darkMode ? "text-white" : "text-black"
+                    } text-sm font-medium bg-transparent w-fit pr-0 border-none focus:outline-none focus:ring-0 focus:ring-none appearance-none`}
+                  >
+                    <option value="default">Default</option>
+                    <option value="most_recent">Recent</option>
+                  </select>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="8.582"
+                    height="9.821"
+                    viewBox="0 0 8.582 9.821"
+                    fill={darkMode ? "white" : "black"}
+                  >
+                    <g id="up-arrow" transform="translate(0)">
+                      <g
+                        id="Gruppe_3153"
+                        data-name="Gruppe 3153"
+                        transform="translate(0)"
+                      >
+                        <path
+                          id="Pfad_1769"
+                          data-name="Pfad 1769"
+                          d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
+                          transform="translate(-32.307 0)"
+                          fill="#292c33"
+                        />
+                      </g>
+                    </g>
+                  </svg>
+                </span>
+              </span>
+              <span className="mb-16 lg:mb-0">
+                {commentValues &&
+                  commentValues.map((comment) => {
+                    return (
+                      <CommentItem
+                        key={comment.id}
+                        comment={comment}
+                        comments={commentValues}
+                        setCommentMsg={setCommentMsg}
+                        setParentId={setParentId}
+                      />
+                    );
+                  })}
+              </span>
             </div>
           ) : (
             <span className="w-full text-gray-500 text-center">
@@ -344,13 +286,15 @@ export default function Postid({ comments }) {
             </span>
           )}
         </div>
+        <div className="hidden lg:block sticky right-2 top-20 heighto">
+          <LargeRightBar />
+        </div>
       </section>
       {
         <div
           id={viewMedia ? "explorer-modal" : "invisible"}
           className="h-screen text-white w-full p-2"
         >
-          
           <span className="m-auto relative">
             {postReferenced && postReferenced.media && (
               <Image
@@ -365,13 +309,12 @@ export default function Postid({ comments }) {
         </div>
       }
       <div
-        
         id={viewMedia ? "stories-cancel" : "invisible"}
         className="cursor-pointer text-white font-bold justify-end items-center mt-4"
       >
         <span
           onClick={() => {
-            setViewMedia(false)
+            setViewMedia(false);
           }}
           className="bg-pastelGreen text-xl py-1 px-2 rounded-lg"
         >
@@ -389,7 +332,19 @@ export default function Postid({ comments }) {
           ></div>
         </>
       )}
-      <MobileNavBar/> 
+      {deletePost !== null && (
+        <>
+          <PopupModal success={"7"} />
+          <div
+            onClick={() => {
+              setDeletePost(null);
+            }}
+            id="overlay"
+            className="bg-black bg-opacity-80"
+          ></div>
+        </>
+      )}
+      <MobileNavBar />
     </main>
   );
 }

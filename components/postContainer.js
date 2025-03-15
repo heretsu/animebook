@@ -51,7 +51,7 @@ const PostContainer = ({ communityId, community }) => {
   };
 
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId } = useContext(UserContext);
+  const { userNumId, darkMode } = useContext(UserContext);
   const router = useRouter();
   const [content, setContent] = useState("");
   const [mediaContent, setMediaContent] = useState("");
@@ -174,7 +174,7 @@ const PostContainer = ({ communityId, community }) => {
     };
   }, [selectedMedia]);
   return (
-    <div className="p-4 flex flex-col space-y-4 rounded-xl shadow-lg w-full bg-white justify-center items-center">
+    <div className={`p-4 flex flex-col space-y-4 rounded-xl shadow-lg w-full bg-white justify-center items-center`}>
       <span className="flex flex-row w-full justify-center space-x-2">
         <span
           onClick={() => {
@@ -184,7 +184,7 @@ const PostContainer = ({ communityId, community }) => {
           }}
           className={`cursor-pointer rounded py-1 px-2 text-center ${
             mediaPost
-              ? "bg-pastelGreen text-white"
+              ? "bg-[#EB4463] text-white"
               : "bg-gray-100 border border-gray-200 text-gray-500"
           }`}
         >
@@ -198,7 +198,7 @@ const PostContainer = ({ communityId, community }) => {
           }}
           className={`cursor-pointer rounded py-1 px-2 text-center ${
             !mediaPost
-              ? "bg-pastelGreen text-white"
+              ? "bg-[#EB4463] text-white"
               : "bg-gray-100 border border-gray-200 text-gray-500"
           }`}
         >
@@ -332,7 +332,7 @@ const PostContainer = ({ communityId, community }) => {
             onClick={() => {
               createPost();
             }}
-            className="w-fit mx-auto hover:shadow cursor-pointer px-12 py-1 bg-pastelGreen text-center text-white font-bold border rounded-lg"
+            className="w-fit mx-auto hover:shadow cursor-pointer px-12 py-1 bg-[#EB4463] text-center text-white font-bold border rounded-lg"
           >
             Post
           </span>

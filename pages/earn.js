@@ -1,5 +1,4 @@
 import NavBar, { MobileNavBar } from "@/components/navBar";
-import animeBookLogo from "@/assets/animeBookLogo.png";
 import animationData from "@/assets/kianimation.json";
 import Image from "next/image";
 import { useEffect, useState, useContext, useRef } from "react";
@@ -7,10 +6,16 @@ import { UserContext } from "@/lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import dynamic from "next/dynamic";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import LargeTopBar from "@/components/largeTopBar";
+import FancyBg from "@/components/fancyBg";
+import tipImage from "@/assets/tipImage.png";
+import circlesImage from "@/assets/circlesImage.png";
+import Yuki from "@/components/yuki";
+import LargeRightBar from "@/components/largeRightBar";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 const Earn = () => {
-  const {fullPageReload} = PageLoadOptions()
+  const { fullPageReload } = PageLoadOptions();
   const [tapped, setTapped] = useState(true);
   const { userData, darkMode } = useContext(UserContext);
 
@@ -38,22 +43,22 @@ const Earn = () => {
       setTimeout(() => setCopyClicked(false), 500);
     });
   };
-  const [referrals, setReferrals] = useState([])
+  const [referrals, setReferrals] = useState([]);
 
   const fetchReferrals = async () => {
     const { data, error } = await supabase
-    .from("referrals") 
-    .select("*") 
-    .eq("referrer", userData.username.trim()); 
+      .from("referrals")
+      .select("*")
+      .eq("referrer", userData.username.trim());
 
     if (data) {
-      setReferrals(data)
+      setReferrals(data);
     }
-  }
+  };
 
   useEffect(() => {
     if (userData) {
-      fetchReferrals()
+      fetchReferrals();
       const currentTime = new Date();
       const pastTime = new Date(userData.lastkiclaim);
       const timeDifference = currentTime - pastTime;
@@ -69,40 +74,93 @@ const Earn = () => {
   }, [userData]);
   return (
     userData && (
-      <main>
+      <main className={`${darkMode ? "bg-black" : "bg-[#F9F9F9]"}`}>
+        <div className="hidden lg:block block z-40 sticky top-0">
+          <LargeTopBar relationship={false} />
+        </div>
         <section
           className={`${
             darkMode ? "text-white" : "text-black"
           } mb-5 flex flex-row space-x-2 w-full`}
         >
           <NavBar />
-          <div className="w-full pb-2 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
-            <span className="mb-8 mx-auto font-medium text-sm">
-              Current KI: {parseFloat(parseFloat(userData.ki).toFixed(2))}
+          <div className="w-full pb-2 pl-2 pr-4 lg:pl-[16rem] mt-4 lg:pr-[18rem] xl:pl-[18rem] xl:pr-[20rem] flex flex-col">
+            <span
+              className={`border ${
+                darkMode
+                  ? "bg-[#1E1F24] border-[#292C33]"
+                  : "bg-white border-[#EEEDEF]"
+              } text-sm flex flex-row justify-start items-center p-3 rounded`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="21.637"
+                height="21.615"
+                viewBox="0 0 23.637 23.615"
+                fill={darkMode ? "white" : "black"}
+              >
+                <path
+                  id="about"
+                  d="M12.808,1A11.791,11.791,0,0,0,2.416,18.393l-1.36,4.533a1.312,1.312,0,0,0,1.257,1.69,1.337,1.337,0,0,0,.378-.055L7.223,23.2A11.808,11.808,0,1,0,12.808,1Zm0,5.248A1.312,1.312,0,1,1,11.5,7.56,1.312,1.312,0,0,1,12.808,6.248Zm1.312,13.12H12.808A1.312,1.312,0,0,1,11.5,18.055V12.808a1.312,1.312,0,1,1,0-2.624h1.312A1.312,1.312,0,0,1,14.12,11.5v5.248a1.312,1.312,0,1,1,0,2.624Z"
+                  transform="translate(-1 -1)"
+                />
+              </svg>
+              <span className="pl-3 font-light">
+                {`Your KI balance: ${parseFloat(
+                  parseFloat(userData.ki).toFixed(2)
+                )} KI`}
+              </span>
             </span>
 
-            {tapped ? (
-              <div className="cursor-pointer border-4 border-gray-300 shadow-xl rounded-full h-60 w-60 flex flex-row mx-auto items-center justify-center">
-                <span className="h-30 w-30">
-                  <Lottie animationData={animationData} />
+            <span className="pl-8 text-white mt-7 rounded-xl border border-black h-48 flex flex-row items-center justify-between w-full bg-gradient-to-b from-teal-400 via-blue-500 to-indigo-600 bg-green-800 relative w-fit">
+              {/* Left Section: Text & Button */}
+              <span className="flex flex-col space-y-1 w-full">
+                {/* Title */}
+                <span className="font-bold leading-tight text-lg xl:text-xl flex flex-row space-x-1">
+                  <span>{"Earn"}</span>
+                  <span>{"&"}</span>
+                  <span>{"Shop"}</span>
                 </span>
-              </div>
-            ) : (
-              <div
-                onClick={() => {
-                  dailyKiTap();
-                }}
-                className="cursor-pointer border-4 border-blue-300 shadow-xl rounded-full h-60 w-60 flex flex-row mx-auto items-center justify-center"
-              >
-                <span className="absolute border-2 shadow-xl border-blue-400 rounded-full h-60 w-60 animate-ping"></span>
-                <span className="h-30 w-30">
-                  <Lottie animationData={animationData} />
+
+                {/* Description */}
+                <span className="leading-tight font-medium text-xs xl:text-sm flex flex-col justify-start w-full">
+                  <span className="flex flex-row space-x-1">
+                    <span>{"Earn"}</span>
+                    <span>{"KI"}</span>
+                    <span>{"by"}</span>
+                    <span>{"interacting"}</span>
+                    <span>{"on"}</span>
+                    <span>{"Animebook!"}</span>
+                  </span>
+                  <span>
+                    {
+                      "You can swap your KI for amazing products or Luffy Tokens!"
+                    }
+                  </span>
                 </span>
-              </div>
-            )}
-            <span className="my-8 mx-auto font-semibold">
-              {tapped ? "Next claim in 24 hours" : "Claim Today's KI"}
+
+                {/* Claim Button */}
+                <span id="z-20"
+                  onClick={() => {
+                    if (!tapped) {
+                      dailyKiTap();
+                      console.log('tapp')
+                    }
+                  }}
+                  className={`w-fit text-xs lg:text-[0.7rem] font-semibold ${
+                    tapped ? "text-gray-300 bg-gray-700" : "text-black bg-white"
+                  } rounded py-2 px-5 sm:px-7`}
+                >
+                  {tapped ? "Next claim in 24 hours" : "Claim Today's KI"}
+                </span>
+              </span>
+
+              {/* Right Section: Yuki (Overflow Allowed) */}
+              <span className="w-fit -ml-16 h-full flex items-center justify-start relative">
+                <Yuki className={"-mt-10 bottom-0 h-48 xl:h-56 w-auto"} />
+              </span>
             </span>
+
             <span className="flex flex-row items-center space-x-1">
               <span>{"Referral code:"}</span>{" "}
               <span>{`animebook.io/signin?ref=${userData.username.toLowerCase()}-san`}</span>
@@ -110,7 +168,9 @@ const Earn = () => {
                 onClick={() => {
                   handleCopy();
                 }}
-                className={`cursor-pointer ${copyClicked && 'bg-blue-400 rounded'}`}
+                className={`cursor-pointer ${
+                  copyClicked && "bg-blue-400 rounded"
+                }`}
                 width="18px"
                 height="18px"
                 viewBox="0 0 24 24"
@@ -123,19 +183,159 @@ const Earn = () => {
                 />
               </svg>
             </span>
+
+            <span className="py-2 font-bold">
+              {"How to earn with Animebook"}
+            </span>
+            <span className="w-full flex flex-row space-x-4">
+              <span
+                className={`w-fit flex flex-col border ${
+                  darkMode
+                    ? "bg-[#1e1f24] border-[#292C33]"
+                    : "bg-white border-[#EEEDEF]"
+                } rounded-lg p-7 items-start`}
+              >
+                <span className="text-lg font-semibold flex flex-row">
+                  <span>KI Points</span>
+                  <span className="h-8 w-12">
+                    <Lottie animationData={animationData} />
+                  </span>
+                </span>
+                <span
+                  className={`text-xs ${
+                    darkMode ? "text-white" : "text-[#5D6879]"
+                  } w-fit flex flex-col`}
+                >
+                  <span>{"Complete daily tasks and earn KI points"}</span>
+                </span>
+              </span>
+
+              <span
+                className={`w-fit flex flex-col border w-fit ${
+                  darkMode
+                    ? "bg-[#1e1f24] border-[#292C33]"
+                    : "bg-white border-[#EEEDEF]"
+                } rounded-lg p-7 items-start`}
+              >
+                <span className="space-x-1 text-lg font-semibold flex flex-row">
+                  <span>Tips</span>
+                  <span className="flex h-8 w-8">
+                    <Image
+                      src={tipImage}
+                      alt="user profile"
+                      height={35}
+                      width={35}
+                      className="relative rounded-full"
+                    />
+                  </span>
+                </span>
+                <span
+                  className={`text-xs ${
+                    darkMode ? "text-white" : "text-[#5D6879]"
+                  } w-fit flex flex-col`}
+                >
+                  <span>{"Receive tips from users and get paid!"}</span>
+                </span>
+              </span>
+              <span
+                className={`hidden lg:block w-1/2 flex flex-col border ${
+                  darkMode
+                    ? "bg-[#1e1f24] border-[#292C33]"
+                    : "bg-white border-[#EEEDEF]"
+                } rounded-lg p-7 items-start`}
+              >
+                <span className="space-x-2 text-lg font-semibold flex flex-row">
+                  <span>Sell your art</span>
+                  <span className="flex h-8 w-8">
+                    <Image
+                      src={circlesImage}
+                      alt="user profile"
+                      height={35}
+                      width={35}
+                      className="relative rounded-full"
+                    />
+                  </span>
+                </span>
+                <span
+                  className={`text-xs ${
+                    darkMode ? "text-white" : "text-[#5D6879]"
+                  } w-fit flex flex-col`}
+                >
+                  <span>
+                    {
+                      "Sell your art, manga, and more, and get paid instantly for every purchase or subscription!"
+                    }
+                  </span>
+                </span>
+              </span>
+            </span>
+            <span
+              className={`lg:hidden mt-2 w-1/2 flex flex-col border ${
+                darkMode
+                  ? "bg-[#1e1f24] border-[#292C33]"
+                  : "bg-white border-[#EEEDEF]"
+              } rounded-lg p-7 items-start`}
+            >
+              <span className="space-x-2 text-lg font-semibold flex flex-row">
+                <span>Sell your art</span>
+                <span className="flex h-8 w-8">
+                  <Image
+                    src={circlesImage}
+                    alt="user profile"
+                    height={35}
+                    width={35}
+                    className="relative rounded-full"
+                  />
+                </span>
+              </span>
+              <span
+                className={`text-xs ${
+                  darkMode ? "text-white" : "text-[#5D6879]"
+                } w-fit flex flex-col`}
+              >
+                <span>
+                  {
+                    "Sell your art, manga, and more, and get paid instantly for every purchase or subscription!"
+                  }
+                </span>
+              </span>
+            </span>
+
+            <span className="py-2 flex flex-col justify-start items-start">
+              <span className="pb-2 font-medium text-lg">Shop</span>
+              <span className="rounded-xl py-8 bg-gradient-to-b from-teal-400 via-blue-500 to-indigo-600 bg-green-800 text-xl text-white font-semibold opacity-70 w-full text-center justify-center">
+                {"Coming Soon!"}
+              </span>
+            </span>
+
             <span className="mt-4 flex flex-col">
               <span className="text-lg font-medium">{`Referrals ${referrals.length}`}</span>
-              <ol className={`mt-1 px-8 py-2 ${darkMode ? 'bg-slate-900' : 'bg-slate-300'} rounded-lg`}>
-              {referrals && referrals.length > 0 && referrals.map((invite)=>{
-                return (
-                  <li className="cursor-default" onClick={()=>{fullPageReload(`/profile/${invite.referee}`)}} key={invite.id}>
-                    {invite.referee}
-                  </li>
-                )
-              })}
+              <ol
+                className={`mt-1 px-8 py-2 ${
+                  darkMode ? "bg-slate-900" : "bg-slate-300"
+                } rounded-lg`}
+              >
+                {referrals &&
+                  referrals.length > 0 &&
+                  referrals.map((invite) => {
+                    return (
+                      <li
+                        className="cursor-default"
+                        onClick={() => {
+                          fullPageReload(`/profile/${invite.referee}`);
+                        }}
+                        key={invite.id}
+                      >
+                        {invite.referee}
+                      </li>
+                    );
+                  })}
               </ol>
-    
             </span>
+          </div>
+
+          <div className="hidden lg:block sticky right-2 top-20 heighto">
+            <LargeRightBar />
           </div>
         </section>
         <MobileNavBar />

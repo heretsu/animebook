@@ -7,23 +7,33 @@ import CommentItemChild from "./commentItemChild";
 import CommentConfig from "./commentConfig";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import { BinSvg } from "./communityPostCard";
+import PopupModal from "./popupModal";
 
-export default function CommentItem({comment}) {
-  const {fullPageReload} = PageLoadOptions()
-  const {userNumId, commentValues, setCommentMsg, setParentId, inputRef, userData} = useContext(UserContext)
+export default function CommentItem({
+  comment,
+  comments,
+  setCommentMsg,
+  setParentId,
+}) {
+  const [openPostOptions, setOpenPostOptions] = useState(false);
+  const { fullPageReload } = PageLoadOptions();
+  const { userNumId, commentValues, inputRef, userData, darkMode } =
+    useContext(UserContext);
   const [likes, setLikes] = useState(null);
   const [liked, setLiked] = useState(false);
   const [reentry, setReentry] = useState(false);
   const [commentChildren, setCommentChildren] = useState(null);
 
   const likeComment = (id) => {
-    if (userData === undefined || userData === null){
-      fullPageReload('/signin');
+    if (userData === undefined || userData === null) {
+      fullPageReload("/signin");
       return;
     }
     if (reentry) {
       setReentry(false);
       if (liked) {
+        setLiked(false);
+        setLikes(likes ? likes.filter((lk) => lk.userid !== userNumId) : []);
         supabase
           .from("comment_likes")
           .delete()
@@ -33,10 +43,16 @@ export default function CommentItem({comment}) {
             fetchCommentLikes();
           });
       } else {
+        setLiked(true);
+        setLikes(
+          likes
+            ? [...likes, { commentid: id, userid: userNumId }]
+            : [{ commentid: id, userid: userNumId }]
+        );
         supabase
           .from("comment_likes")
           .insert({ commentid: id, userid: userNumId })
-          .then(() => {
+          .then((res) => {
             fetchCommentLikes();
           });
       }
@@ -56,16 +72,17 @@ export default function CommentItem({comment}) {
         }
       });
   };
+
   const deleteComment = () => {
     supabase
-          .from("comments")
-          .delete()
-          .eq("id", comment.id)
-          .eq("userid", userNumId)
-          .then((res) => {
-            setLikes(null)
-          });
-  }
+      .from("comments")
+      .delete()
+      .eq("id", comment.id)
+      .eq("userid", userNumId)
+      .then((res) => {
+        setLikes(null);
+      });
+  };
 
   const openChildComments = () => {
     if (commentChildren === null) {
@@ -78,111 +95,247 @@ export default function CommentItem({comment}) {
   };
 
   const replyComment = (parentCommentId, commentOwner) => {
-    if (userData === undefined || userData === null){
-      fullPageReload('/signin');
+    if (userData === undefined || userData === null) {
+      fullPageReload("/signin");
       return;
     }
     setCommentMsg(`@${commentOwner} `);
     setParentId(parentCommentId);
     inputRef.current.focus();
   };
-  const [imgSrc, setImgSrc] = useState(comment.users.avatar)
+  const [imgSrc, setImgSrc] = useState(comment.users.avatar);
 
   useEffect(() => {
     fetchCommentLikes();
-  }, []);
+    if (commentValues) {
+      setCommentChildren(
+        commentValues.filter((a) => a.parentid === comment.id).reverse()
+      );
+    }
+  }, [commentValues]);
   return (
     likes !== null &&
     comment.parentid === null && (
-      <span className="space-y-2">
-        <span className="flex flex-row items-center space-x-2">
-
-        <span onClick={()=>{fullPageReload(`/profile/${comment.users.username}`)}} className="relative h-8 w-8 flex">
-          <Image
-            src={imgSrc}
-            alt="user"
-            width={35}
-            height={35}
-            className="rounded-full"
-            onError={() => setImgSrc("https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png")}
-          />
-        </span>
-
-          <span className="text-start space-x-1 flex flex-col items-center w-fit rounded py-1 px-2 bg-pastelGreen text-white">
-            <p className="w-full text-normal font-semibold">
-              {comment.users.username}
-            </p>
-            
-             
-            <p className="w-full"><CommentConfig text={comment.content} tags={false}/></p>
-            <span className="py-1 flex flex-row items-center w-full">
+      <span
+        className={`mb-0 border-b ${
+          darkMode ? "border-[#292C33]" : "border-[#D0D3DB]"
+        } space-y-0 flex flex-col`}
+      >
+        <span
+          className={`bg-transparent ${
+            darkMode ? "text-white" : "text-black"
+          } pt-2 px-3 flex flex-col justify-center text-start`}
+        >
+          <span className="flex flex-row justify-between items-center">
+            <span className="cursor-pointer flex flex-row justify-start items-start space-x-0,">
               <span
                 onClick={() => {
-                  replyComment(comment.id, comment.users.username);
+                  fullPageReload(`/profile/${comment.users.username}`, 'window');
                 }}
-                className="cursor-pointer font-semibold underline"
+                className="relative h-6 w-6 flex flex-shrink-0"
               >
-                reply
+                <Image
+                  src={imgSrc}
+                  alt="user profile"
+                  width={30}
+                  height={30}
+                  className="rounded-full object"
+                  onError={() =>
+                    setImgSrc(
+                      "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                    )
+                  }
+                />
               </span>
-              {liked ? (
-                <svg
-                  onClick={() => {
-                    likeComment(comment.id);
-                  }}
-                  className="cursor-pointer text-red-400 ml-4 mr-1"
-                  width="16px"
-                  height="16px"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  viewBox="0 0 20 18"
-                >
-                  <path d="M17.947 2.053a5.209 5.209 0 0 0-3.793-1.53A6.414 6.414 0 0 0 10 2.311 6.482 6.482 0 0 0 5.824.5a5.2 5.2 0 0 0-3.8 1.521c-1.915 1.916-2.315 5.392.625 8.333l7 7a.5.5 0 0 0 .708 0l7-7a6.6 6.6 0 0 0 2.123-4.508 5.179 5.179 0 0 0-1.533-3.793Z" />
-                </svg>
-              ) : (
-                <svg
-                  onClick={() => {
-                    likeComment(comment.id);
-                  }}
-                  className="cursor-pointer ml-4 mr-1"
-                  fill="white"
-                  width="16px"
-                  height="16px"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M20.16,5A6.29,6.29,0,0,0,12,4.36a6.27,6.27,0,0,0-8.16,9.48l6.21,6.22a2.78,2.78,0,0,0,3.9,0l6.21-6.22A6.27,6.27,0,0,0,20.16,5Zm-1.41,7.46-6.21,6.21a.76.76,0,0,1-1.08,0L5.25,12.43a4.29,4.29,0,0,1,0-6,4.27,4.27,0,0,1,6,0,1,1,0,0,0,1.42,0,4.27,4.27,0,0,1,6,0A4.29,4.29,0,0,1,18.75,12.43Z" />
-                </svg>
-              )}
-              <span className="text-sm">{likes.length}</span>
-              <svg
-                onClick={() => {
-                  openChildComments();
-                }}
-                className="cursor-pointer ml-4 mr-1"
-                fill="white"
-                width="16px"
-                height="16px"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M8,11a1,1,0,1,0,1,1A1,1,0,0,0,8,11Zm4,0a1,1,0,1,0,1,1A1,1,0,0,0,12,11Zm4,0a1,1,0,1,0,1,1A1,1,0,0,0,16,11ZM12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.26,6.33l-2,2a1,1,0,0,0-.21,1.09A1,1,0,0,0,3,22h9A10,10,0,0,0,12,2Zm0,18H5.41l.93-.93a1,1,0,0,0,.3-.71,1,1,0,0,0-.3-.7A8,8,0,1,1,12,20Z" />
-              </svg>
-              <span className="text-sm">
-                {commentValues.filter((a) => a.parentid === comment.id).length}
+
+              <span className="ml-0.5 flex flex-col items-start">
+                {comment.media ? (
+                  <span className="w-full flex flex-row justify-start items-start">
+                    <span className="text-sm font-semibold">{`${comment.users.username} :`}</span>
+                    <span className="flex flex-col items-start justify-start">
+                      <span className="flex justify-start items-start w-40 h-40 mr-2">
+                        <Image
+                          src={comment.media}
+                          alt="user profile"
+                          width={200}
+                          height={200}
+                          className="object-top object-contain"
+                        />
+                      </span>
+
+                      <CommentConfig text={comment.content} tags={true} />
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-sm break-words overflow-wrap break-word">
+                    <CommentConfig
+                      username={comment.users.username}
+                      text={comment.content}
+                      tags={true}
+                    />
+                  </span>
+                )}
+
+                <span className="ml-1 -mt-2 flex flex-row items-center space-x-2 pr-4">
+                  <span
+                    className={`${
+                      darkMode ? "text-[#6A6B71]" : "text-[#728198]"
+                    } flex flex-row items-center items-center space-x-1`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12.004"
+                      height="14.17"
+                      viewBox="0 0 13.004 15.17"
+                    >
+                      <g id="ICON" transform="translate(-7.833 -3.5)">
+                        <path
+                          id="Pfad_4726"
+                          data-name="Pfad 4726"
+                          d="M18.646,16.365a7.552,7.552,0,0,1-1.37,1.089.383.383,0,1,0,.39.66A9.607,9.607,0,0,0,19.7,16.377a5.561,5.561,0,0,0,.54-.618.522.522,0,0,0,.078-.408.416.416,0,0,0-.2-.246,6.57,6.57,0,0,0-.816-.26,8.934,8.934,0,0,0-2.842-.366.383.383,0,1,0,.019.766,8.31,8.31,0,0,1,2.379.268,15.1,15.1,0,0,1-1.495.343c-3.041.638-5.881.1-7.309-2.967C8.888,10.376,9.183,7.076,9.1,4.372a.383.383,0,1,0-.766.024c.087,2.8-.182,6.214,1.032,8.818,1.6,3.435,4.754,4.108,8.161,3.393.375-.079.751-.149,1.119-.241Z"
+                          fill="#728198"
+                          stroke="#728198"
+                          stroke-width="1"
+                          fill-rule="evenodd"
+                        />
+                      </g>
+                    </svg>
+                    <span
+                      onClick={() => {
+                        replyComment(comment.id, comment.users.username);
+                      }}
+                      className="text-sm cursor-pointer underline"
+                    >
+                      Reply
+                    </span>
+                  </span>
+
+                  <span className="flex flex-row items-center space-x-2 pr-4 py-2">
+                    <span className="cursor-pointer flex items-center space-x-1">
+                      <svg
+                        onClick={() => {
+                          if (userData) {
+                            likeComment(comment.id);
+                          } else {
+                            fullPageReload("/signin");
+                          }
+                        }}
+                        className="cursor-pointer"
+                        fill={
+                          liked ? "#EB4463" : darkMode ? "#42494F" : "#adb6c3"
+                        }
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14px"
+                        height="14px"
+                        viewBox="0 0 18.365 16.178"
+                      >
+                        <path
+                          id="heart_1_"
+                          data-name="heart (1)"
+                          d="M18.365,6.954A5.271,5.271,0,0,1,16.8,10.719L9.767,17.564a.847.847,0,0,1-1.169,0L1.569,10.727A5.33,5.33,0,1,1,9.1,3.181l.083.083.083-.083a5.33,5.33,0,0,1,9.1,3.773Z"
+                          transform="translate(0 -1.62)"
+                          fill={
+                            liked ? "#EB4463" : darkMode ? "#42494F" : "#adb6c3"
+                          }
+                        />
+                      </svg>
+
+                      <span
+                        className={`py-0.5 px-2 text-sm ${
+                          darkMode
+                            ? "text-[#AFB1B2]"
+                            : "text-[#728198]"
+                        }`}
+                      >
+                        {likes.length}
+                      </span>
+                    </span>
+
+                    <span
+                      onClick={() => {
+                        openChildComments();
+                      }}
+                      className="cursor-pointer flex items-center space-x-0.5 justify-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14.002"
+                        height="14"
+                        viewBox="0 0 16.002 16"
+                      >
+                        <path
+                          id="comment"
+                          d="M.671,11.2.01,15.149a.743.743,0,0,0,.2.64A.732.732,0,0,0,.73,16a.748.748,0,0,0,.124-.007L4.8,15.331A7.863,7.863,0,0,0,8,16,8,8,0,1,0,0,8,7.863,7.863,0,0,0,.671,11.2Z"
+                          fill={darkMode ? "#42494F" : "#adb6c3"}
+                        />
+                      </svg>
+
+                      <span
+                        className={`text-sm font-normal ${
+                          darkMode ? "text-[#AFB1B2]" : "text-[#728198]"
+                        }`}
+                      >
+                        {
+                          comments.filter((c) => c.parentid === comment.id)
+                            .length
+                        }
+                      </span>
+                    </span>
+                    <svg
+                      onClick={() => {
+                        setOpenPostOptions(true);
+                      }}
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12.522"
+                      height="14"
+                      viewBox="0 0 12.522 16"
+                      className="pl-1"
+                    >
+                      <path
+                        id="flag_1_"
+                        data-name="flag (1)"
+                        d="M16.451,7.12a1.317,1.317,0,0,0-.663.18,1.342,1.342,0,0,0-.664,1.16V22.2a.83.83,0,0,0,.859.915h.935a.83.83,0,0,0,.858-.915V16.883c3.494-.236,5.131,2.288,9.143,1.093.513-.153.726-.362.726-.86V10.683c0-.367-.341-.8-.726-.661C23.09,11.343,21,9.042,17.776,9.015V8.461a1.34,1.34,0,0,0-.663-1.16,1.313,1.313,0,0,0-.662-.18Z"
+                        transform="translate(-15.124 -7.12)"
+                        fill={darkMode ? "#42494F" : "#adb6c3"}
+                      />
+                    </svg>
+                  </span>
+                </span>
               </span>
-              {comment.users.id === userNumId && <span onClick={()=>{deleteComment()}} className="ml-3 cursor-pointer flex flex-row justify-end"> <BinSvg pixels={"20px"} /></span>}
             </span>
-            
           </span>
         </span>
         {commentChildren !== null &&
           commentChildren.length > 0 &&
           commentChildren.map((commentChild) => {
-            return(
-              <CommentItemChild key={commentChild.id} commentChild={commentChild}/>
-            )
+            return (
+              <CommentItemChild
+                key={commentChild.id}
+                commentChild={commentChild}
+                comment={comment}
+              />
+            );
           })}
+
+        {openPostOptions && (
+          <>
+            <PopupModal
+              success={"10"}
+              useruuid={comment.users.useruuid}
+              username={comment.users.username}
+              avatar={comment.users.avatar}
+              postid={comment.id}
+              setOpenPostOptions={setOpenPostOptions}
+              reportType={"comment"}
+            />
+            <div
+              onClick={() => {
+                setOpenPostOptions(false);
+              }}
+              id="tip-overlay"
+            ></div>
+          </>
+        )}
       </span>
     )
   );

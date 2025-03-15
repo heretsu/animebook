@@ -3,24 +3,25 @@ import EditProfileContainer from "@/components/editProfileContainer";
 import supabase from "@/hooks/authenticateUser";
 import ConnectionData from "@/lib/connectionData";
 import { useRouter } from "next/router";
-import { SmallTopBar } from "@/components/largeTopBar";
+import LargeTopBar, { SmallTopBar } from "@/components/largeTopBar";
 import PlusIcon from "@/components/plusIcon";
 import Image from "next/image";
 import onePiece from "@/assets/onePiece.jpg";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import NewCommunityContainer from "@/components/newCommunityContainer";
 import { UserContext } from "@/lib/userContext";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import SideBar from "@/components/sideBar";
 import DappLibrary from "@/lib/dappLibrary";
 import loadscreen from "@/assets/loadscreen.json";
-import darkloadscreen from "@/assets/darkloadscreen.json"
+import darkloadscreen from "@/assets/darkloadscreen.json";
 import dynamic from "next/dynamic";
+import LargeRightBar from "@/components/largeRightBar";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 const Communities = () => {
-  const [cValue, setCValue] = useState('')
-  const [defaultCommunities, setDefaultCommunities] = useState(null)
+  const [cValue, setCValue] = useState("");
+  const [defaultCommunities, setDefaultCommunities] = useState(null);
   const { getUserFromId } = DappLibrary();
   const { fullPageReload } = PageLoadOptions();
   const router = useRouter();
@@ -32,6 +33,11 @@ const Communities = () => {
   const [openRequests, setOpenRequests] = useState(false);
   const [communityRequests, setCommunityRequests] = useState(null);
 
+  const [animeCommunities, setAnimeCommunities] = useState(null);
+  const [cryptoCommunities, setCryptoCommunities] = useState(null);
+  const [otherCommunities, setOtherCommunities] = useState(null);
+
+  const [expansion, setExpansion] = useState("");
   const fetchCommunityRequests = async () => {
     const { data } = await supabase
       .from("community_requests")
@@ -43,12 +49,12 @@ const Communities = () => {
 
   const checkIfAdmin = () => {
     if (
-      userData.useruuid === "69436932-d1e0-43a6-92bb-1ee4644331b2" ||
+      // userData.useruuid === "69436932-d1e0-43a6-92bb-1ee4644331b2" ||
       userData.useruuid === "6db1f631-b204-499e-a1e2-fcf77647e14f" ||
       userData.useruuid === "222a3ecf-d715-43ba-9aec-ee97a8b8bed6" ||
       userData.useruuid === "e58cd906-1a25-43fc-bffb-67e3c1689c26" ||
       userData.useruuid === "7adc69a6-84ea-4893-a74f-4977d060a235" ||
-      userData.useruuid === "a5ad109b-e701-4752-9fa8-47a6ec913e37" || 
+      userData.useruuid === "a5ad109b-e701-4752-9fa8-47a6ec913e37" ||
       userData.useruuid === "222a3ecf-d715-43ba-9aec-ee97a8b8bed6" ||
       userData.useruuid === "e58cd906-1a25-43fc-bffb-67e3c1689c26" ||
       userData.useruuid === "881ee2e4-3edc-4a75-82e5-a55972ce09a8"
@@ -171,22 +177,60 @@ const Communities = () => {
       .join(" ");
   };
 
+  const [activeIndex, setActiveIndex] = useState(0); // Change this to update active step
+  const totalDots = 5;
+
+  const scrollContainerRef = useRef(null);
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      if(scrollContainerRef.current.scrollLeft === 0){
+        setActiveIndex(0)
+      } else{
+        setActiveIndex(2)
+      }
+    }
+  };
+
   useEffect(() => {
     if (userData) {
       checkIfAdmin();
     }
 
     if (communities && !defaultCommunities) {
-      setDefaultCommunities(communities)
+      setDefaultCommunities(
+        communities.filter(
+          (community) =>
+            community.type !== "other" &&
+            community.type !== "crypto" &&
+            community.type !== "nft"
+        )
+      );
+      setAnimeCommunities(
+        communities.filter(
+          (community) =>
+            community.type !== "other" &&
+            community.type !== "crypto" &&
+            community.type !== "nft"
+        )
+      );
+      setCryptoCommunities(
+        communities.filter((community) => community.type === "crypto")
+      );
+      setOtherCommunities(
+        communities.filter((community) => community.type === "other")
+      );
       setLoading(false);
     }
   }, [userData, communities, defaultCommunities]);
   return (
-    <main>
-      <section className="mb-5 flex flex-row space-x-2 w-full">
+    <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
+      <div className="hidden lg:block block z-40 sticky top-0">
+        <LargeTopBar relationship={false} />
+      </div>
+      <section className="relative mb-5 flex flex-row justify-between lg:flex-row lg:space-x-2 w-full">
         <NavBar />
-        <div className="w-full pb-2 space-y-8 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
-          <SmallTopBar middleTab={true} />
+        <div className="w-full pb-2 space-y-8 pl-2 pr-4 lg:pl-[16rem] lg:pr-[18rem] xl:pl-[18rem] xl:pr-[20rem] flex flex-col">
+          <SmallTopBar relationship={false} />
 
           {openRequests ? (
             <div className="flex flex-col items-center space-y-1.5 w-full">
@@ -219,14 +263,20 @@ const Communities = () => {
               </span>
               {loading ? (
                 <span className="h-screen">
-                  <Lottie animationData={darkMode ? darkloadscreen : loadscreen} />
+                  <Lottie
+                    animationData={darkMode ? darkloadscreen : loadscreen}
+                  />
                 </span>
               ) : communityRequests && communityRequests.length > 0 ? (
                 communityRequests.map((request) => {
                   return (
                     <span
                       key={request.id}
-                      className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-black'} cursor-pointer w-full justify-between flex flex-row rounded border border-gray-300`}
+                      className={`${
+                        darkMode
+                          ? "bg-[#1e1f24] text-white"
+                          : "bg-white text-black"
+                      } cursor-pointer w-full justify-between flex flex-row rounded border border-gray-300`}
                     >
                       <Image
                         src={request.avatar}
@@ -266,7 +316,7 @@ const Communities = () => {
                                 request.id
                               );
                             }}
-                            className="cursor-default px-2 py-0.5 text-center bg-pastelGreen w-full rounded-md flex flex-row items-center justify-center"
+                            className="cursor-default px-2 py-0.5 text-center bg-[#EB4463] w-full rounded-md flex flex-row items-center justify-center"
                           >
                             {"Approve"}
                           </span>
@@ -284,7 +334,9 @@ const Communities = () => {
                   );
                 })
               ) : (
-                <span className={`darkMode ? 'text-gray-200' : 'text-gray-900'} text-sm text-start w-full`}>
+                <span
+                  className={`darkMode ? 'text-gray-200' : 'text-gray-900'} text-sm text-start w-full`}
+                >
                   No new community requests
                 </span>
               )}
@@ -314,16 +366,43 @@ const Communities = () => {
               <NewCommunityContainer isAdmin={isAdmin} />
             </div>
           ) : (
-            <div className="w-full space-y-5 mt-2 lg:mt-20 flex flex-col">
-              
-              <span className="flex flex-row w-full justify-end text-sm">
+            <div className="w-full space-y-3 mt-1 lg:mt-20 flex flex-col">
+              <span
+                className={`font-normal border rounded ${
+                  darkMode
+                    ? "bg-[#1E1F24] border-[#292C33] text-white"
+                    : "bg-white border-[#EEEDEF] text-black"
+                } py-2 px-3.5 flex flex-col space-y-1 lg:flex-row lg:space-y-0 w-full justify-between items-center text-sm`}
+              >
+                <span className="text-xs flex flex-col lg:flex-row lg:space-x-2.5 items-center">
+                  <span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="15.637"
+                      height="15.615"
+                      viewBox="0 0 23.637 23.615"
+                      fill={darkMode ? "white" : "black"}
+                    >
+                      <path
+                        id="about"
+                        d="M12.808,1A11.791,11.791,0,0,0,2.416,18.393l-1.36,4.533a1.312,1.312,0,0,0,1.257,1.69,1.337,1.337,0,0,0,.378-.055L7.223,23.2A11.808,11.808,0,1,0,12.808,1Zm0,5.248A1.312,1.312,0,1,1,11.5,7.56,1.312,1.312,0,0,1,12.808,6.248Zm1.312,13.12H12.808A1.312,1.312,0,0,1,11.5,18.055V12.808a1.312,1.312,0,1,1,0-2.624h1.312A1.312,1.312,0,0,1,14.12,11.5v5.248a1.312,1.312,0,1,1,0,2.624Z"
+                        transform="translate(-1 -1)"
+                      />
+                    </svg>
+                  </span>
+                  <span>
+                    {
+                      "Didn't find the community you're looking for? Request to add it now!"
+                    }
+                  </span>
+                </span>
                 {isAdmin && (
                   <span
                     onClick={() => {
                       fetchCommunityRequests();
                       setOpenRequests(true);
                     }}
-                    className="mr-2 flex items-center justify-center rounded-lg py-1 px-2 bg-blue-400 font-bold text-white cursor-pointer"
+                    className="mr-2 flex items-center justify-center rounded-lg py-1 px-2 bg-blue-400 text-white cursor-pointer"
                   >
                     Requests
                   </span>
@@ -333,58 +412,591 @@ const Communities = () => {
                     onClick={() => {
                       setAddCommunity(true);
                     }}
-                    className="font-bold cursor-pointer bg-pastelGreen text-white py-1 px-2 rounded-lg"
+                    className="flex flex-row space-x-1 cursor-pointer bg-[#EB4463] text-white p-2.5 rounded-lg"
                   >
-                    Add community
+                    <span>Add</span>
+                    <span>a</span> <span>community</span>
                   </span>
                 ) : (
                   <span
                     onClick={() => {
                       setAddCommunity(true);
                     }}
-                    className="cursor-pointer font-bold cursor-pointer bg-pastelGreen text-white py-1 px-2 rounded-lg"
+                    className="flex flex-row space-x-1 cursor-pointer cursor-pointer bg-[#EB4463] text-white py-1 px-4 rounded"
                   >
-                    Request community
+                    <span>Request</span> <span>a</span> <span>community</span>
                   </span>
                 )}
               </span>
-              <div className="flex flex-col items-center space-y-1.5 w-full">
-              <span className={`${darkMode ? 'bg-zinc-800 text-white' : 'border-[1.5px] border-gray-300 bg-gray-100 text-gray-500'} px-2 py-1 w-full flex flex-row items-center rounded-3xl`}>
-            <svg
-              className="w-4 h-4 text-slate-400"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-              />
-            </svg>
-            <input
-              type="search"
-              value={cValue}
-              onChange={(e)=> {
-                setCValue(e.target.value)
-                if (e.target.value){
-                  setCommunities(defaultCommunities.filter((c)=> {return (c.name.toLowerCase().includes(e.target.value.toLowerCase()) || c.bio.toLowerCase().includes(e.target.value.toLowerCase()))}))
-                } else{
-                  if (defaultCommunities){
-                    setCommunities(defaultCommunities)
+              <span className="w-full space-x-1 text-sm flex flex-row justify-between items-center">
+                <span
+                  className={`${
+                    darkMode ? "text-white" : "text-black"
+                  } font-semibold`}
+                >
+                  {"Anime & Manga"}
+                </span>
+
+                <span
+                  className={`${
+                    darkMode ? "text-white" : "text-gray-500"
+                  } flex items-center space-x-2`}
+                >
+                  <span className={darkMode ? "text-white" : "text-gray-500"}>
+                    Sort by:
+                  </span>
+
+                  <select
+                    onChange={(e) => {
+                      if (!animeCommunities || animeCommunities.length === 0) {
+                        return;
+                      }
+                      const value = e.target.value;
+                      setAnimeCommunities((prevCommunities) => {
+                        let sortedCommunities = [...prevCommunities];
+
+                        if (value === "most_recent") {
+                          sortedCommunities.sort(
+                            (a, b) =>
+                              new Date(b.created_at) - new Date(a.created_at)
+                          );
+                        } else if (value === "most_joined") {
+                          sortedCommunities.sort(
+                            (a, b) => b.membersLength - a.membersLength
+                          );
+                        } else {
+                          sortedCommunities.sort(
+                            (a, b) => b.membersLength - a.membersLength
+                          );
+                        }
+                        return sortedCommunities;
+                      });
+                    }}
+                    className="text-sm font-medium bg-transparent w-fit pr-0 border-none focus:outline-none focus:ring-0 focus:ring-none appearance-none"
+                  >
+                    <option value="default">Default</option>
+                    <option value="most_recent">Recent</option>
+                    <option value="most_joined">Members</option>
+                  </select>
+
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="8.582"
+                    height="9.821"
+                    viewBox="0 0 8.582 9.821"
+                  >
+                    <g id="up-arrow" transform="translate(0)">
+                      <g
+                        id="Gruppe_3153"
+                        data-name="Gruppe 3153"
+                        transform="translate(0)"
+                      >
+                        <path
+                          id="Pfad_1769"
+                          data-name="Pfad 1769"
+                          d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
+                          transform="translate(-32.307 0)"
+                          fill="#292c33"
+                        />
+                      </g>
+                    </g>
+                  </svg>
+                </span>
+              </span>
+
+              <div className="relative space-y-0.5 flex flex-col space-y-0">
+                <div
+                  id="scrollbar-remove"
+                  ref={scrollContainerRef}
+      onScroll={handleScroll}
+                  className="h-fit flex flex-row overflow-x-scroll lg:grid gap-2 grid-cols-3"
+                >
+                  {loading ? (
+                    <span className="h-screen">
+                      <Lottie
+                        animationData={darkMode ? darkloadscreen : loadscreen}
+                      />
+                    </span>
+                  ) : animeCommunities && animeCommunities.length > 0 ? (
+                    animeCommunities
+                      .slice(
+                        0,
+                        expansion === "anime" ? animeCommunities.length : 6
+                      )
+                      .map((community) => {
+                        return (
+                          <span
+                            key={community.id}
+                            onClick={() => {
+                              fullPageReload(
+                                `/communities/${community.name}`.replace(
+                                  " ",
+                                  "+"
+                                )
+                              );
+                            }}
+                            className="cursor-pointer flex-shrink-0 lg:flex-shrink rounded-2xl relative flex h-[150px] sm:h-[120px] w-[60vw] lg:w-full"
+                          >
+                            <span>
+                              <Image
+                                src={community.cover}
+                                alt="user profile"
+                                fill={true}
+                                className="border border-black rounded-2xl object-cover"
+                              />
+                            </span>
+
+                            <span className="text-xs md:text-sm absolute inset-0 flex flex-col justify-end text-white">
+                              <span className="border border-black rounded-b-xl bg-black bg-opacity-30 backdrop-blur-md w-full pb-1 flex flex-col space-y-0.5 items-center justify-center border-t border-black">
+                                <span className="relative h-10 w-10 flex -mt-5 mx-auto">
+                                  <Image
+                                    src={community.avatar}
+                                    alt="user profile"
+                                    width={55}
+                                    height={55}
+                                    className="border border-black rounded-full"
+                                  />
+                                </span>
+                                <span className="rounded-b-xl text-xs font-semibold">
+                                  {formatGroupName(community.name)}
+                                </span>
+                              </span>
+                            </span>
+                          </span>
+                        );
+                      })
+                  ) : (
+                    <span
+                      className={`${
+                        darkMode ? "text-gray-200" : "text-gray-900"
+                      } text-sm text-start w-full`}
+                    >
+                      No communities found
+                    </span>
+                  )}
+                </div>
+                {animeCommunities && animeCommunities.length > 2 && (
+                  <span className="lg:hidden text-sm px-2 w-full flex flex-row justify-between items-center">
+                    <span className="flex space-x-1">
+                      {Array.from({ length: totalDots }).map((_, index) => (
+                        <span
+                          key={index}
+                          className={`h-1 rounded-full ${
+                            index === activeIndex
+                              ? "w-4 bg-[#EB4463]"
+                              : "w-1.5 bg-gray-400"
+                          }`}
+                        ></span>
+                      ))}
+                    </span>
+                    <span
+                      className={`${darkMode ? "text-white" : "text-black"}`}
+                    >
+                      Swipe to view more
+                    </span>
+                  </span>
+                )}
+              </div>
+
+              <span
+                onClick={() => {
+                  if (expansion === "anime") {
+                    setExpansion("");
+                  } else {
+                    setExpansion("anime");
                   }
-                }
-              }}
-              className="w-full text-sm bg-transparent border-none focus:ring-0 placeholder-gray-400"
-              placeholder="Search Communities"
-            />
-          </span>
+                }}
+                className="cursor-pointer underline text-xs text-[#EB4463]"
+              >
+                {expansion !== "anime"
+                  ? "View more Anime & Manga communities"
+                  : "Collapse"}
+              </span>
+
+              <span
+                className={`border-t ${
+                  darkMode ? "border-[#292C33]" : "border-[#EEEDEF]"
+                } mt-1 pt-2 w-full space-x-1 text-sm flex flex-row justify-between items-center`}
+              >
+                <span
+                  className={`${
+                    darkMode ? "text-white" : "text-black"
+                  } font-semibold`}
+                >
+                  {"Crypto & NFTs"}
+                </span>
+
+                <span
+                  className={`${
+                    darkMode ? "text-white" : "text-gray-500"
+                  } flex items-center space-x-2`}
+                >
+                  <span className={darkMode ? "text-white" : "text-gray-500"}>
+                    Sort by:
+                  </span>
+
+                  <select
+                    onChange={(e) => {
+                      if (
+                        !cryptoCommunities ||
+                        cryptoCommunities.length === 0
+                      ) {
+                        return;
+                      }
+                      const value = e.target.value;
+                      setCryptoCommunities((prevCommunities) => {
+                        let sortedCommunities = [...prevCommunities];
+
+                        if (value === "most_recent") {
+                          sortedCommunities.sort(
+                            (a, b) =>
+                              new Date(b.created_at) - new Date(a.created_at)
+                          );
+                        } else if (value === "most_joined") {
+                          sortedCommunities.sort(
+                            (a, b) => b.membersLength - a.membersLength
+                          );
+                        } else {
+                          sortedCommunities.sort(
+                            (a, b) => b.membersLength - a.membersLength
+                          );
+                        }
+                        return sortedCommunities;
+                      });
+                    }}
+                    className="text-sm font-medium bg-transparent w-fit pr-0 border-none focus:outline-none focus:ring-0 focus:ring-none appearance-none"
+                  >
+                    <option value="default">Default</option>
+                    <option value="most_recent">Recent</option>
+                    <option value="most_joined">Members</option>
+                  </select>
+
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="8.582"
+                    height="9.821"
+                    viewBox="0 0 8.582 9.821"
+                    fill={darkMode ? "white" : "black"}
+                  >
+                    <g id="up-arrow" transform="translate(0)">
+                      <g
+                        id="Gruppe_3153"
+                        data-name="Gruppe 3153"
+                        transform="translate(0)"
+                      >
+                        <path
+                          id="Pfad_1769"
+                          data-name="Pfad 1769"
+                          d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
+                          transform="translate(-32.307 0)"
+                          fill="#292c33"
+                        />
+                      </g>
+                    </g>
+                  </svg>
+                </span>
+              </span>
+
+              <div
+                id="scrollbar-remove"
+                className="h-fit flex flex-row overflow-x-scroll lg:grid gap-2 grid-cols-3"
+              >
                 {loading ? (
                   <span className="h-screen">
-                    <Lottie animationData={darkMode ? darkloadscreen : loadscreen} />
+                    <Lottie
+                      animationData={darkMode ? darkloadscreen : loadscreen}
+                    />
+                  </span>
+                ) : cryptoCommunities && cryptoCommunities.length > 0 ? (
+                  cryptoCommunities
+                    .slice(
+                      0,
+                      expansion === "crypto" ? cryptoCommunities.length : 3
+                    )
+                    .map((community) => {
+                      return (
+                        <span
+                          key={community.id}
+                          onClick={() => {
+                            fullPageReload(
+                              `/communities/${community.name}`.replace(" ", "+")
+                            );
+                          }}
+                          className="cursor-pointer flex-shrink-0 lg:flex-shrink rounded-2xl relative flex h-[150px] sm:h-[120px] w-[60vw] lg:w-full"
+                        >
+                          <span>
+                            <Image
+                              src={community.cover}
+                              alt="user profile"
+                              fill={true}
+                              className="border border-black rounded-2xl object-cover"
+                            />
+                          </span>
+
+                          <span className="text-xs md:text-sm absolute inset-0 flex flex-col justify-end text-white">
+                            <span className="border border-black rounded-b-xl bg-black bg-opacity-30 backdrop-blur-md w-full pb-1 flex flex-col space-y-0.5 items-center justify-center border-t border-black">
+                              <span className="relative h-10 w-10 flex -mt-5 mx-auto">
+                                <Image
+                                  src={community.avatar}
+                                  alt="user profile"
+                                  width={55}
+                                  height={55}
+                                  className="border border-black rounded-full"
+                                />
+                              </span>
+                              <span className="rounded-b-xl text-xs font-semibold">
+                                {formatGroupName(community.name)}
+                              </span>
+                            </span>
+                          </span>
+                        </span>
+                      );
+                    })
+                ) : (
+                  <span
+                    className={`${
+                      darkMode ? "text-gray-200" : "text-gray-900"
+                    } text-sm text-start w-full`}
+                  >
+                    No communities found
+                  </span>
+                )}
+              </div>
+              <span
+                onClick={() => {
+                  if (expansion === "crypto") {
+                    setExpansion("");
+                  } else {
+                    setExpansion("crypto");
+                  }
+                }}
+                className="cursor-pointer underline text-xs text-[#EB4463]"
+              >
+                {expansion !== "crypto"
+                  ? "View more Crypto & NFTs communities"
+                  : "Collapse"}
+              </span>
+
+              <span
+                className={`border-t ${
+                  darkMode ? "border-[#292C33]" : "border-[#EEEDEF]"
+                } mt-1 pt-2 w-full space-x-1 text-sm flex flex-row justify-between items-center`}
+              >
+                <span
+                  className={`${
+                    darkMode ? "text-white" : "text-black"
+                  } font-semibold`}
+                >
+                  {"Other topics"}
+                </span>
+                <span
+                  className={`${
+                    darkMode ? "text-white" : "text-gray-500"
+                  } flex items-center space-x-2`}
+                >
+                  <span className={darkMode ? "text-white" : "text-gray-500"}>
+                    Sort by:
+                  </span>
+
+                  <select
+                    onChange={(e) => {
+                      if (!otherCommunities || otherCommunities.length === 0) {
+                        return;
+                      }
+                      const value = e.target.value;
+                      setOtherCommunities((prevCommunities) => {
+                        let sortedCommunities = [...prevCommunities];
+
+                        if (value === "most_recent") {
+                          sortedCommunities.sort(
+                            (a, b) =>
+                              new Date(b.created_at) - new Date(a.created_at)
+                          );
+                        } else if (value === "most_joined") {
+                          sortedCommunities.sort(
+                            (a, b) => b.membersLength - a.membersLength
+                          );
+                        } else {
+                          sortedCommunities.sort(
+                            (a, b) => b.membersLength - a.membersLength
+                          );
+                        }
+                        return sortedCommunities;
+                      });
+                    }}
+                    className="text-sm font-medium bg-transparent w-fit pr-0 border-none focus:outline-none focus:ring-0 focus:ring-none appearance-none"
+                  >
+                    <option value="default">Default</option>
+                    <option value="most_recent">Recent</option>
+                    <option value="most_joined">Members</option>
+                  </select>
+
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="8.582"
+                    height="9.821"
+                    viewBox="0 0 8.582 9.821"
+                    fill={darkMode ? "white" : "black"}
+                  >
+                    <g id="up-arrow" transform="translate(0)">
+                      <g
+                        id="Gruppe_3153"
+                        data-name="Gruppe 3153"
+                        transform="translate(0)"
+                      >
+                        <path
+                          id="Pfad_1769"
+                          data-name="Pfad 1769"
+                          d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
+                          transform="translate(-32.307 0)"
+                          fill="#292c33"
+                        />
+                      </g>
+                    </g>
+                  </svg>
+                </span>
+              </span>
+
+              <div
+                id="scrollbar-remove"
+                className="h-fit flex flex-row overflow-x-scroll lg:grid gap-2 grid-cols-3"
+              >
+                {loading ? (
+                  <span className="h-screen">
+                    <Lottie
+                      animationData={darkMode ? darkloadscreen : loadscreen}
+                    />
+                  </span>
+                ) : otherCommunities && otherCommunities.length > 0 ? (
+                  otherCommunities
+                    .slice(
+                      0,
+                      expansion === "other" ? otherCommunities.length : 3
+                    )
+                    .map((community) => {
+                      return (
+                        <span
+                          key={community.id}
+                          onClick={() => {
+                            fullPageReload(
+                              `/communities/${community.name}`.replace(" ", "+")
+                            );
+                          }}
+                          className="cursor-pointer flex-shrink-0 lg:flex-shrink rounded-2xl relative flex h-[150px] sm:h-[120px] w-[60vw] lg:w-full"
+                        >
+                          <span>
+                            <Image
+                              src={community.cover}
+                              alt="user profile"
+                              fill={true}
+                              className="border border-black rounded-2xl object-cover"
+                            />
+                          </span>
+
+                          <span className="text-xs md:text-sm absolute inset-0 flex flex-col justify-end text-white">
+                            <span className="border border-black rounded-b-xl bg-black bg-opacity-30 backdrop-blur-md w-full pb-1 flex flex-col space-y-0.5 items-center justify-center border-t border-black">
+                              <span className="relative h-10 w-10 flex -mt-5 mx-auto">
+                                <Image
+                                  src={community.avatar}
+                                  alt="user profile"
+                                  width={55}
+                                  height={55}
+                                  className="border border-black rounded-full"
+                                />
+                              </span>
+                              <span
+                                onClick={() => {
+                                  setExpansion("other");
+                                }}
+                                className="rounded-b-xl text-xs font-semibold"
+                              >
+                                {formatGroupName(community.name)}
+                              </span>
+                            </span>
+                          </span>
+                        </span>
+                      );
+                    })
+                ) : (
+                  <span
+                    className={`${
+                      darkMode ? "text-gray-200" : "text-gray-900"
+                    } text-sm text-start w-full`}
+                  >
+                    No communities found
+                  </span>
+                )}
+              </div>
+
+              <span
+                onClick={() => {
+                  if (expansion === "other") {
+                    setExpansion("");
+                  } else {
+                    setExpansion("other");
+                  }
+                }}
+                className="cursor-pointer underline text-xs text-[#EB4463]"
+              >
+                {expansion !== "anime" ? "View more communities" : "Collapse"}
+              </span>
+
+              <div className="flex flex-col items-center space-y-1.5 w-full">
+                {/* <span
+                  className={`${
+                    darkMode
+                      ? "bg-zinc-800 text-white"
+                      : "border border-gray-300 bg-gray-100 text-gray-500"
+                  } px-2 py-0 mb-1 w-full flex flex-row items-center rounded-xl`}
+                >
+                  <svg
+                    className="w-3 h-3 text-slate-400"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                    />
+                  </svg>
+                  <input
+                    type="search"
+                    value={cValue}
+                    onChange={(e) => {
+                      setCValue(e.target.value);
+                      if (e.target.value) {
+                        setCommunities(
+                          defaultCommunities.filter((c) => {
+                            return (
+                              c.name
+                                .toLowerCase()
+                                .includes(e.target.value.toLowerCase()) ||
+                              c.bio
+                                .toLowerCase()
+                                .includes(e.target.value.toLowerCase())
+                            );
+                          })
+                        );
+                      } else {
+                        if (defaultCommunities) {
+                          setCommunities(defaultCommunities);
+                        }
+                      }
+                    }}
+                    className="w-full text-xs bg-transparent border-none focus:ring-0 placeholder-gray-400"
+                    placeholder="Search Communities"
+                  />
+                </span> */}
+                {/* {loading ? (
+                  <span className="h-screen">
+                    <Lottie
+                      animationData={darkMode ? darkloadscreen : loadscreen}
+                    />
                   </span>
                 ) : communities && communities.length > 0 ? (
                   communities.map((community) => {
@@ -396,7 +1008,11 @@ const Communities = () => {
                             `/communities/${community.name}`.replace(" ", "+")
                           );
                         }}
-                        className={`border ${darkMode ? 'bg-[#1e1f24] border-gray-700 text-white' : 'bg-white border-gray-300 text-black'} cursor-pointer w-full flex flex-row rounded`}
+                        className={`border ${
+                          darkMode
+                            ? "bg-[#1e1f24] border-gray-700 text-white"
+                            : "bg-white border-gray-300 text-black"
+                        } cursor-pointer w-full flex flex-row rounded`}
                       >
                         <Image
                           src={community.avatar}
@@ -409,7 +1025,11 @@ const Communities = () => {
                           <span className="font-bold">
                             {formatGroupName(community.name)}
                           </span>
-                          <span className={`${darkMode ? 'text-gray-200' : 'text-gray-500'} text-xs`}>
+                          <span
+                            className={`${
+                              darkMode ? "text-gray-200" : "text-gray-500"
+                            } text-xs`}
+                          >
                             {community.bio.slice(0, 110).trim().concat("...")}
                           </span>
                           <span className="text-textGreen text-[0.8rem]">
@@ -424,14 +1044,21 @@ const Communities = () => {
                     );
                   })
                 ) : (
-                  <span className={`${darkMode ? 'text-gray-200' : 'text-gray-900'} text-sm text-start w-full`}>
+                  <span
+                    className={`${
+                      darkMode ? "text-gray-200" : "text-gray-900"
+                    } text-sm text-start w-full`}
+                  >
                     No communities found
                   </span>
-                )}
+                )} */}
               </div>
             </div>
           )}
         </div>
+        <div className="hidden lg:block sticky right-2 top-20 heighto">
+            <LargeRightBar />
+          </div>
       </section>
       {sideBarOpened && <SideBar />}
       <MobileNavBar />

@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 
 export const getServerSideProps = async (context) => {
-  const { username } = context.params; 
+  const { username } = context.params;
   return {
     props: {
       username,

@@ -10,7 +10,15 @@ import DbUsers from "@/hooks/dbUsers";
 
 const SmallPostContainer = ({ communityId, community }) => {
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, userData, darkMode, postValues, setPostValues, setOriginalPostValues, setCommunities } = useContext(UserContext);
+  const {
+    userNumId,
+    userData,
+    darkMode,
+    postValues,
+    setPostValues,
+    setOriginalPostValues,
+    setCommunities,
+  } = useContext(UserContext);
   const router = useRouter();
   const [content, setContent] = useState("");
   const [mediaContent, setMediaContent] = useState("");
@@ -25,97 +33,89 @@ const SmallPostContainer = ({ communityId, community }) => {
 
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [gifSelected, setGifSelected] = useState(false);
-const [gifLink, setGifLink] = useState(null)
-const { fetchAllPosts, fetchAllReposts } = DbUsers();
+  const [gifLink, setGifLink] = useState(null);
+  const { fetchAllPosts, fetchAllReposts } = DbUsers();
 
-const fetchCommunities = async () => {
-  const { data } = await supabase
-    .from("communities")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const fetchCommunities = async () => {
+    const { data } = await supabase
+      .from("communities")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  const members = await supabase.from("community_relationships").select("*");
+    const members = await supabase.from("community_relationships").select("*");
 
-  if (
-    data &&
-    members !== undefined &&
-    members !== null &&
-    members.data !== null &&
-    members.data !== undefined
-  ) {
-    const communityMembersCountMap = new Map();
-    members.data.forEach((member) => {
-      const communityId = member.communityid;
-      communityMembersCountMap.set(
-        communityId,
-        (communityMembersCountMap.get(communityId) || 0) + 1
-      );
-    });
-    const communitiesWithMembers = data.map((community) => ({
-      ...community,
-      membersLength: communityMembersCountMap.get(community.id) || 0,
-    }));
-    return { data: communitiesWithMembers };
-  }
-};
-const fetchPosts = () => {
-  fetchAllReposts().then((reposts) => {
-    fetchAllPosts().then((result1) => {
-      fetchCommunities().then(async (secondResult) => {
-        if (secondResult !== undefined && secondResult !== null) {
-
-          setCommunities(
-            [...secondResult.data].sort(
-              (a, b) => b.membersLength - a.membersLength
-            )
-          );
-          const posts = reposts
-          .map((repost) => {
-            const originalPost = result1.data.find(
-              (post) => post.id === repost.postid
+    if (
+      data &&
+      members !== undefined &&
+      members !== null &&
+      members.data !== null &&
+      members.data !== undefined
+    ) {
+      const communityMembersCountMap = new Map();
+      members.data.forEach((member) => {
+        const communityId = member.communityid;
+        communityMembersCountMap.set(
+          communityId,
+          (communityMembersCountMap.get(communityId) || 0) + 1
+        );
+      });
+      const communitiesWithMembers = data.map((community) => ({
+        ...community,
+        membersLength: communityMembersCountMap.get(community.id) || 0,
+      }));
+      return { data: communitiesWithMembers };
+    }
+  };
+  const fetchPosts = () => {
+    fetchAllReposts().then((reposts) => {
+      fetchAllPosts().then((result1) => {
+        fetchCommunities().then(async (secondResult) => {
+          if (secondResult !== undefined && secondResult !== null) {
+            setCommunities(
+              [...secondResult.data].sort(
+                (a, b) => b.membersLength - a.membersLength
+              )
             );
+            const posts = reposts
+              .map((repost) => {
+                const originalPost = result1.data.find(
+                  (post) => post.id === repost.postid
+                );
 
-            if (originalPost) {
-              return {
-                ...originalPost,
-                repostAuthor: repost.users,
-                repostQuote: repost.quote,
-                repostCreatedAt: repost.created_at,
-              };
-            }
-            return null;
-          })
-          .filter(Boolean)
-          .concat(
-            result1.data.filter(
-              (post) =>
-                !reposts.some(
-                  (repost) => repost.postid === post.id
+                if (originalPost) {
+                  return {
+                    ...originalPost,
+                    repostAuthor: repost.users,
+                    repostQuote: repost.quote,
+                    repostCreatedAt: repost.created_at,
+                  };
+                }
+                return null;
+              })
+              .filter(Boolean)
+              .concat(
+                result1.data.filter(
+                  (post) => !reposts.some((repost) => repost.postid === post.id)
                 )
-            )
-          )
-          .sort((a, b) => {
-            const dateA = new Date(
-              a.repostQuote ? a.repostCreatedAt : a.created_at
-            );
-            const dateB = new Date(
-              b.repostQuote ? b.repostCreatedAt : b.created_at
-            );
-            return dateB - dateA;
-          })
-          setOriginalPostValues(
-            posts
-          );
-          setPostValues(
-            posts
-          );
-        }
+              )
+              .sort((a, b) => {
+                const dateA = new Date(
+                  a.repostQuote ? a.repostCreatedAt : a.created_at
+                );
+                const dateB = new Date(
+                  b.repostQuote ? b.repostCreatedAt : b.created_at
+                );
+                return dateB - dateA;
+              });
+            setOriginalPostValues(posts);
+            setPostValues(posts);
+          }
+        });
       });
     });
-  });
-}
+  };
   const handleGifSelect = (gifUrl) => {
-    setGifLink(gifUrl)
+    setGifLink(gifUrl);
     // setInputValue((prev) => `${prev} ${gifUrl}`);
     setGifSelected(true);
     setSelectedMedia(gifUrl);
@@ -150,31 +150,30 @@ const fetchPosts = () => {
       return;
     }
     setPostLoading(true);
-    if (gifLink){
+    if (gifLink) {
       await supabase.from("posts").insert({
         userid: userNumId,
         media: gifLink,
         content: content.trim() !== "" ? content.trim() : "",
       });
-      setContent('')
+      setContent("");
       setGifSelected(false);
       setSelectedMedia(null);
-      setMediaFile(null)
+      setMediaFile(null);
       setShowGifPicker(false);
-      fetchPosts()
+      fetchPosts();
       // fullPageReload("/home");
-    }
-    else if (mediaFile !== null) {
+    } else if (mediaFile !== null) {
       for (const file of mediaFile) {
         const newName = Date.now() + file.name;
-        
+
         const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-          if (file.type.startsWith("video/") && file.size > MAX_FILE_SIZE) {
-            setPostLoading(false);
-            setErrorMsg("Video exceeds 50MB");
-            return;
-          }
+        if (file.type.startsWith("video/") && file.size > MAX_FILE_SIZE) {
+          setPostLoading(false);
+          setErrorMsg("Video exceeds 50MB");
+          return;
+        }
 
         const bucketResponse = await supabase.storage
           .from("mediastore")
@@ -203,12 +202,12 @@ const fetchPosts = () => {
               content: content.trim() !== "" ? content.trim() : "",
             });
             // fullPageReload("/home");
-            setContent('')
+            setContent("");
             setGifSelected(false);
             setSelectedMedia(null);
-            setMediaFile(null)
+            setMediaFile(null);
             setShowGifPicker(false);
-            fetchPosts()
+            fetchPosts();
           }
         }
       }
@@ -222,12 +221,12 @@ const fetchPosts = () => {
             communityid: parseInt(communityId),
           });
           // fullPageReload(`/communities/${community}`);
-          setContent('')
+          setContent("");
           setGifSelected(false);
-            setSelectedMedia(null);
-            setMediaFile(null)
-            setShowGifPicker(false);
-          fetchPosts()
+          setSelectedMedia(null);
+          setMediaFile(null);
+          setShowGifPicker(false);
+          fetchPosts();
         } else {
           await supabase.from("posts").insert({
             userid: userNumId,
@@ -235,11 +234,11 @@ const fetchPosts = () => {
             content: content.trim(),
           });
           // fullPageReload("/home");
-          setContent('')
+          setContent("");
           setGifSelected(false);
-            setSelectedMedia(null);
-            setMediaFile(null)
-            setShowGifPicker(false);
+          setSelectedMedia(null);
+          setMediaFile(null);
+          setShowGifPicker(false);
 
           fetchPosts();
         }
@@ -248,7 +247,10 @@ const fetchPosts = () => {
         setErrorMsg("Failed to post. Post is empty");
       }
     }
-    
+
+    if (router.pathname === '/create'){
+      router.push('/home')
+    }
     setPostLoading(false);
   };
 
@@ -265,41 +267,19 @@ const fetchPosts = () => {
   }, [selectedMedia]);
   return (
     <div
-      className={`p-4 flex flex-col space-y-4 shadow-lg w-full ${
-        darkMode ? "bg-[#1e1f24] text-white" : "bg-white"
+      className={`border rounded-sm p-4 flex flex-row w-full ${
+        darkMode ? "bg-[#1e1f24] text-white border-[#292C33]" : "bg-white border-[#EEEDEF]"
       } justify-center items-center`}
     >
-      <span className="flex flex-row w-full justify-center space-x-2">
-        <span
-          id="anime-book-font"
-          className={`w-full text-start text-xl ${
-            darkMode ? "text-white" : "text-slate-600"
-          }`}
-        >
-          {"POST SOMETHING.."}
-        </span>
-      </span>
-
       <span
-        className={`w-full p-2 ${
-          darkMode ? "bg-zinc-800 text-white" : "bg-gray-100"
+        className={`rounded-md border w-full p-2 ${
+          darkMode ? "bg-[#27292F] border-[#32353C] text-white" : "bg-[#F9F9F9] border-[#EEEDEF]"
         } relative flex flex-row ${
           showGifPicker ? "flex" : "justify-between items-center"
-        } space-x-0`}
+        } ${selectedMedia && 'flex-col'} space-x-0`}
       >
         {!showGifPicker && (
-          <span className="relative h-9 w-9 flex flex-shrink-0">
-            <Image
-              src={userData.avatar}
-              alt="user profile"
-              width={35}
-              height={35}
-              className="rounded-full object"
-            />
-          </span>
-        )}
-        {!showGifPicker && (
-          <textarea
+          <input
             value={content}
             onKeyDown={(e) => {
               if (e.key === "Backspace" && content && content.length === 1) {
@@ -318,14 +298,14 @@ const fetchPosts = () => {
               }
             }}
             ref={textareaRef}
-            placeholder={`What's on your mind...`}
+            placeholder={`What's on your mind?`}
             className={`text-sm resize-none w-full bg-transparent ${
               darkMode ? "placeholder:text-gray-400 text-white" : "text-black"
-            } border-none focus:outline-none focus:ring-0`}
-          ></textarea>
+            } placeholder:text-xs border-none focus:outline-none focus:ring-0`}
+          />
         )}
         <span className="flex flex-row space-x-1 justify-center items-center">
-          {!showGifPicker && !selectedMedia && (
+          {/* {!showGifPicker && !selectedMedia && (
             <svg
               onClick={() => {
                 setShowGifPicker(true);
@@ -342,7 +322,7 @@ const fetchPosts = () => {
                 fill="gray"
               />
             </svg>
-          )}
+          )} */}
           {selectedMedia ? (
             <label
               onClick={(e) => {
@@ -358,21 +338,23 @@ const fetchPosts = () => {
                 <Image
                   src={selectedMedia}
                   alt="Invalid post media. Click to change"
-                  height={30}
-                  width={30}
+                  height={300}
+                  width={300}
                 />
               ) : (
-                <video width={30} height={30} src={selectedMedia} controls>
+                <video width={300} height={300} src={selectedMedia} controls>
                   {`${mediaName} It seems your browser does not support video uploads`}
                 </video>
               )}
-              {!gifSelected && <input
-                onChange={mediaChange}
-                className="hidden"
-                type="file"
-                accept="image/jpeg, image/png, image/jpg, image/svg, image/gif, video/3gp, video/mp4, video/mov, video/quicktime"
-                id="input-post-file"
-              />}
+              {!gifSelected && (
+                <input
+                  onChange={mediaChange}
+                  className="hidden"
+                  type="file"
+                  accept="image/jpeg, image/png, image/jpg, image/svg, image/gif, video/3gp, video/mp4, video/mov, video/quicktime"
+                  id="input-post-file"
+                />
+              )}
             </label>
           ) : (
             !showGifPicker && (
@@ -381,52 +363,18 @@ const fetchPosts = () => {
                 className="relative cursor-pointer"
               >
                 <svg
-                  height="30"
-                  width="30"
-                  version="1.1"
-                  id=""
                   xmlns="http://www.w3.org/2000/svg"
-                  xmlnsXlink="http://www.w3.org/1999/xlink"
-                  x="0px"
-                  y="0px"
-                  viewBox="0 0 218.168 218.168"
-                  style={{ enableBackground: "new 0 0 218.168 218.168" }}
-                  xmlSpace="preserve"
-                  className={darkMode ? "text-white" : "text-black"}
-                  fill="currentColor"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 22 22"
                 >
-                  <g opacity="0.3">
-                    <g>
-                      <g>
-                        <path
-                          d="M206.278,5.951H11.888C5.332,5.951,0,11.273,0,17.816v162.703c0,6.543,5.328,11.865,11.879,11.865h57.632
-                    c9.057,12.016,23.401,19.833,39.573,19.833s30.516-7.817,39.573-19.833h57.65c6.541,0,11.861-5.322,11.861-11.865V17.816
-                    C218.167,11.273,212.835,5.951,206.278,5.951z M109.083,204.284c-22.965,0-41.65-18.683-41.65-41.65
-                    c0-22.967,18.685-41.65,41.65-41.65s41.65,18.683,41.65,41.65S132.049,204.284,109.083,204.284z M27.767,95.426v-1.088
-                    c10.841-3.447,21.662-5.834,32.206-7.097c32.105-3.854,47.089,1.712,64.427,8.162c9.157,3.405,18.627,6.926,31.466,9.63
-                    c9.465,1.995,21.069,3.537,34.534,4.59v0.283v22.979h-41.744c-9.057-12.016-23.401-19.833-39.573-19.833
-                    s-30.516,7.818-39.573,19.833H27.767V95.426z M27.767,86.088V37.684H190.4v63.973c-12.85-1.024-23.913-2.494-32.899-4.388
-                    c-12.26-2.58-21.451-6-30.337-9.305c-18.305-6.806-34.123-12.69-68.136-8.603C48.772,80.593,38.279,82.89,27.767,86.088z
-                    M210.234,180.519L210.234,180.519c-0.001,2.169-1.763,3.932-3.929,3.932H153.54c3.249-6.594,5.126-13.982,5.126-21.817
-                    s-1.876-15.222-5.125-21.817h40.825c2.19,0,3.967-1.774,3.967-3.967v-26.946v-3.967V33.718c0-2.192-1.776-3.967-3.967-3.967H23.8
-                    c-2.19,0-3.967,1.774-3.967,3.967v57.741v3.967v41.425c0,2.192,1.776,3.967,3.967,3.967h40.826
-                    c-3.249,6.594-5.126,13.982-5.126,21.817c0,7.835,1.876,15.222,5.126,21.817H11.879c-2.175,0-3.945-1.762-3.945-3.932V17.816
-                    c0-2.169,1.774-3.932,3.955-3.932h194.39c2.18,0,3.955,1.762,3.955,3.932V180.519z"
-                        />
-                        <path
-                          d="M162.633,77.351c8.749,0,15.867-7.116,15.867-15.867c0-8.751-7.118-15.867-15.867-15.867s-15.867,7.116-15.867,15.867
-                    C146.766,70.235,153.884,77.351,162.633,77.351z M162.633,53.551c4.375,0,7.933,3.56,7.933,7.933
-                    c0,4.373-3.558,7.933-7.933,7.933s-7.933-3.56-7.933-7.933C154.7,57.111,158.258,53.551,162.633,53.551z"
-                        />
-                        <path
-                          d="M112.541,142.84c-1.406-2.495-5.509-2.495-6.915,0l-17.85,31.733c-0.691,1.228-0.678,2.731,0.033,3.947
-                    s2.014,1.964,3.424,1.964h35.7c1.41,0,2.714-0.748,3.424-1.964c0.711-1.216,0.724-2.719,0.033-3.947L112.541,142.84z
-                    M98.016,172.551l11.067-19.675l11.067,19.675H98.016z"
-                        />
-                      </g>
-                    </g>
-                  </g>
+                  <path
+                    id="image"
+                    d="M17,0H5A5,5,0,0,0,0,5V17a5,5,0,0,0,5,5H17a5,5,0,0,0,5-5V5a5,5,0,0,0-5-5ZM6.07,5a2,2,0,1,1-2,2,2,2,0,0,1,2-2ZM20,17a3.009,3.009,0,0,1-3,3H5a3.009,3.009,0,0,1-3-3v-.24l3.8-3.04a.668.668,0,0,1,.73-.05l2.84,1.7a2.624,2.624,0,0,0,3.36-.54l3.94-4.61a.642.642,0,0,1,.47-.22.614.614,0,0,1,.47.19L20,12.57Z"
+                    fill={darkMode ? "#6A6B71" : "#4a5764"}
+                  />
                 </svg>
+
                 <input
                   onChange={mediaChange}
                   className="hidden"
@@ -438,7 +386,7 @@ const fetchPosts = () => {
             )
           )}
         </span>
-        
+
         {showGifPicker && (
           <span className="w-full">
             <GifPicker
@@ -448,41 +396,70 @@ const fetchPosts = () => {
             />
           </span>
         )}
+      
       </span>
 
-      {(mediaFile || content.trim() !== "" || gifLink) && (
-        <span className="flex flex-col">
-          {postLoading ? (
-            <span className="mx-auto">
-              <Spinner spinnerSize={"medium"} />
-            </span>
-          ) : (
-            <span
-              onClick={() => {
+      <span className="flex flex-col">
+        {postLoading ? (
+          <span className="mx-auto">
+            <Spinner spinnerSize={"medium"} />
+          </span>
+        ) : (
+          <>
+          <span
+            onClick={() => {
+              if (mediaFile || content.trim() !== "" || gifLink) {
                 createPost();
-              }}
-              className={`w-fit mx-auto hover:shadow cursor-pointer px-12 py-1 bg-pastelGreen text-center text-white font-bold`}
+              }
+            }}
+            className={`hidden lg:block rounded w-fit mx-auto hover:shadow cursor-pointer ml-4 px-7 py-1.5 bg-[#EB4463] text-sm font-medium text-center text-white`}
+          >
+            Post
+          </span>
+          <span
+             onClick={() => {
+              if (mediaFile || content.trim() !== "" || gifLink) {
+                createPost();
+              }
+            }}
+              className={`ml-2 lg:hidden bg-[#EB4463] rounded-full h-9 w-9 flex justify-center items-center`}
             >
-              Post
-            </span>
-          )}
-          {errorMsg !== "" && (
-            <span className="text-sm w-full flex flex-row justify-center items-center">
               <svg
-                fill="red"
-                width="20px"
-                height="20px"
-                viewBox="0 -8 528 528"
                 xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 21.5 21.5"
               >
-                <title>{"fail"}</title>
-                <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
+                <g id="Icon" transform="translate(-1.25 -1.25)">
+                  <path
+                    id="Pfad_4721"
+                    data-name="Pfad 4721"
+                    d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
+                    fill="white"
+                    fill-rule="evenodd"
+                  />
+                </g>
               </svg>
-              <p className="text-red-500">{errorMsg}</p>
             </span>
-          )}
-        </span>
-      )}
+          
+          </>
+        )}
+        {errorMsg !== "" && (
+          <span className="text-sm w-full flex flex-row justify-center items-center">
+            <svg
+              fill="red"
+              width="20px"
+              height="20px"
+              viewBox="0 -8 528 528"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <title>{"fail"}</title>
+              <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
+            </svg>
+            <p className="text-red-500">{errorMsg}</p>
+          </span>
+        )}
+      </span>
     </div>
   );
 };

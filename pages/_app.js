@@ -10,9 +10,19 @@ import DbUsers from "@/hooks/dbUsers";
 import Onboard from "@/components/onboard";
 import Relationships from "@/hooks/relationships";
 import TOS, { Policy } from "@/components/agreements";
+import TutorialBox from "@/components/tutorialBox";
+import PreventZoom from "@/lib/preventZoom";
 
 export default function App({ Component, pageProps }) {
+  const [videoPlayingId, setVideoPlayingId] = useState(null);
+  const [clickFollower, setClickFollower] = useState(false);
+  const [clickFollowing, setClickFollowing] = useState(false);
+
+  const videoRef = useRef([]);
+  const [openPremium, setOpenPremium] = useState(false);
+
   const [agreementMade, setAgreementMade] = useState(false);
+  const [graduate, setGraduate] = useState(false);
   const [darkMode, setDarkMode] = useState(undefined);
   const { fetchAllPosts, fetchAllReposts } = DbUsers();
   const router = useRouter();
@@ -21,6 +31,7 @@ export default function App({ Component, pageProps }) {
 
   const [address, setAddress] = useState(null);
   const [userData, setUserData] = useState(undefined);
+  const [allSubscriptions, setAllSubscriptions] = useState(null);
   const [subscribed, setSubscribed] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -37,7 +48,7 @@ export default function App({ Component, pageProps }) {
   const [userPostValues, setUserPostValues] = useState([]);
   const [storyValues, setStoryValues] = useState([]);
   const [openComments, setOpenComments] = useState(false);
-  const [postIdForComment, setPostIdForComment] = useState(null);
+  const [postOwnerDetails, setPostOwnerDetails] = useState(null);
   const [commentValues, setCommentValues] = useState(null);
   const [currentStory, setCurrentStory] = useState(null);
   const [storiesFilter, setStoriesFilter] = useState(false);
@@ -50,7 +61,7 @@ export default function App({ Component, pageProps }) {
   const [hashtagList, setHashtagList] = useState(null);
   const [originalExplorePosts, setOriginalExplorePosts] = useState(null);
   const [explorePosts, setExplorePosts] = useState(null);
-  const [chosenTag, setChosenTag] = useState("");
+  const [chosenTag, setChosenTag] = useState("all");
   const [followingPosts, setFollowingPosts] = useState(false);
   const [storyViews, setStoryViews] = useState(null);
 
@@ -60,8 +71,9 @@ export default function App({ Component, pageProps }) {
 
   const [deletePost, setDeletePost] = useState(null);
   const [playVideo, setPlayVideo] = useState(false);
-  const [unreadMessagesLength, setUnreadMessagesLength] = useState(null)
+  const [unreadMessagesLength, setUnreadMessagesLength] = useState(null);
 
+  const [newListOfComments, setNewListOfComments] = useState(null);
   const inputRef = useRef(null);
   const communityInputRef = useRef(null);
 
@@ -76,9 +88,18 @@ export default function App({ Component, pageProps }) {
   const [myRelationships, setMyRelationships] = useState(null);
   const [sideBarOpened, setSideBarOpened] = useState(false);
   const [notifyUserObject, setNotifyUserObject] = useState(null);
+  const [mediasClicked, setMediasClicked] = useState("posts");
+
+  const [userWatchList, setUserWatchList] = useState(null);
+  const [currentUserWatchlist, setCurrentUserWatchlist] = useState(null);
 
   const [communities, setCommunities] = useState(null);
   const { fetchFollowing, fetchFollows } = Relationships();
+
+  const [currentCommunity, setCurrentCommunity] = useState('')
+  const [unreadCount, setUnreadCount] = useState(null);
+  const commentRef = useRef(null)
+
 
   const fetchFollowingAndFollowers = async (userid) => {
     const followings = await fetchFollowing(userid);
@@ -91,7 +112,7 @@ export default function App({ Component, pageProps }) {
     return { followings: followings.data, followers: followers.data };
   };
 
-  const fetchCommunities = async () => {
+  const fetchCommunities = async (personId) => {
     const { data } = await supabase
       .from("communities")
       .select("*")
@@ -107,16 +128,23 @@ export default function App({ Component, pageProps }) {
       members.data !== undefined
     ) {
       const communityMembersCountMap = new Map();
+      const userMemberships = new Set();
+
       members.data.forEach((member) => {
         const communityId = member.communityid;
         communityMembersCountMap.set(
           communityId,
           (communityMembersCountMap.get(communityId) || 0) + 1
         );
+
+        if (personId && member.userid === personId) {
+          userMemberships.add(communityId);
+        }
       });
       const communitiesWithMembers = data.map((community) => ({
         ...community,
         membersLength: communityMembersCountMap.get(community.id) || 0,
+        isAMember: userMemberships.has(community.id),
       }));
       return { data: communitiesWithMembers };
     }
@@ -134,7 +162,7 @@ export default function App({ Component, pageProps }) {
     const response = await supabase
       .from("conversations")
       .select()
-      .eq('receiverid', userNumId)
+      .eq("receiverid", userNumId)
       .order("created_at", { ascending: false });
 
     const messages = response.data;
@@ -145,22 +173,23 @@ export default function App({ Component, pageProps }) {
       return [senderId, receiverId].sort().join("-");
     };
 
-    messages.forEach((message) => {
-      const conversationKey = createConversationKey(
-        message.senderid,
-        message.receiverid
+    if (messages) {
+      messages.forEach((message) => {
+        const conversationKey = createConversationKey(
+          message.senderid,
+          message.receiverid
+        );
+        if (!latestMessages.has(conversationKey)) {
+          latestMessages.set(conversationKey, message);
+        }
+      });
+
+      const lastChats = Array.from(latestMessages.values());
+
+      return lastChats.filter(
+        (lc) => lc.receiverid === userNumId && !lc.rdelete && !lc.isread
       );
-      if (!latestMessages.has(conversationKey)) {
-        latestMessages.set(conversationKey, message);
-      }
-    });
-
-    const lastChats = Array.from(latestMessages.values());
-
-    return lastChats.filter(
-      (lc) =>
-        (lc.receiverid === userNumId && !lc.rdelete) && !lc.isread
-    );
+    }
   };
 
   const checkIfUserExistsAndUpdateData = async (user) => {
@@ -243,90 +272,61 @@ export default function App({ Component, pageProps }) {
                 ...res.data[0],
               });
 
+              if (router.pathname === "/profile/[user]") {
+                fetchCommunities(res.data[0].id).then((secondResult) => {
+                  if (secondResult !== undefined && secondResult !== null) {
+                    setCommunities(
+                      [...secondResult.data].sort(
+                        (a, b) => b.membersLength - a.membersLength
+                      )
+                    );
+                  }
+                });
+              }
+
               if (router.pathname !== "/profile/[user]") {
                 fetchAllReposts().then((reposts) => {
                   fetchAllPosts().then((result1) => {
-                    fetchCommunities().then((secondResult) => {
+                    fetchCommunities(res.data[0].id).then((secondResult) => {
                       if (secondResult !== undefined && secondResult !== null) {
-                        // const sortedCommunities = [...communitiesWithMembers].sort((a, b) => b.membersLength - a.membersLength);
-
                         setCommunities(
                           [...secondResult.data].sort(
                             (a, b) => b.membersLength - a.membersLength
                           )
                         );
-                        setOriginalPostValues(
-                          reposts
-                            .map((repost) => {
-                              const originalPost = result1.data.find(
-                                (post) => post.id === repost.postid
-                              );
 
-                              if (originalPost) {
-                                return {
-                                  ...originalPost,
-                                  repostAuthor: repost.users,
-                                  repostQuote: repost.quote,
-                                  repostCreatedAt: repost.created_at,
-                                };
-                              }
-                              return null;
-                            })
-                            .filter(Boolean)
-                            .concat(
-                              result1.data.filter(
-                                (post) =>
-                                  !reposts.some(
-                                    (repost) => repost.postid === post.id
-                                  )
-                              )
-                            )
-                            .sort((a, b) => {
-                              const dateA = new Date(
-                                a.repostQuote ? a.repostCreatedAt : a.created_at
-                              );
-                              const dateB = new Date(
-                                b.repostQuote ? b.repostCreatedAt : b.created_at
-                              );
-                              return dateB - dateA;
-                            })
-                        );
-                        setPostValues(
-                          reposts
-                            .map((repost) => {
-                              const originalPost = result1.data.find(
-                                (post) => post.id === repost.postid
-                              );
+                        const mergedPosts = reposts
+                          .map((repost) => {
+                            const originalPost = result1.data.find(
+                              (post) => post.id === repost.postid
+                            );
 
-                              if (originalPost) {
-                                return {
-                                  ...originalPost,
-                                  repostAuthor: repost.users,
-                                  repostQuote: repost.quote,
-                                  repostCreatedAt: repost.created_at,
-                                };
-                              }
-                              return null;
-                            })
-                            .filter(Boolean)
-                            .concat(
-                              result1.data.filter(
-                                (post) =>
-                                  !reposts.some(
-                                    (repost) => repost.postid === post.id
-                                  )
-                              )
+                            if (originalPost) {
+                              return {
+                                ...originalPost,
+                                repostAuthor: repost.users,
+                                repostQuote: repost.quote,
+                                repostCreatedAt: repost.created_at,
+                              };
+                            }
+                            return null;
+                          })
+                          .filter(Boolean)
+                          .concat(
+                            result1.data.filter(
+                              (post) =>
+                                !reposts.some(
+                                  (repost) => repost.postid === post.id
+                                )
                             )
-                            .sort((a, b) => {
-                              const dateA = new Date(
-                                a.repostQuote ? a.repostCreatedAt : a.created_at
-                              );
-                              const dateB = new Date(
-                                b.repostQuote ? b.repostCreatedAt : b.created_at
-                              );
-                              return dateB - dateA;
-                            })
+                          );
+
+                        const shuffledPosts = mergedPosts.sort(
+                          () => Math.random() - 0.5
                         );
+
+                        setOriginalPostValues(shuffledPosts);
+                        setPostValues(shuffledPosts);
                       }
                     });
                   });
@@ -340,7 +340,8 @@ export default function App({ Component, pageProps }) {
             setOnboarding(true);
           }
         } else {
-          setAgreementMade(data.agreedpolicies)
+          setAgreementMade(data.agreedpolicies);
+          setGraduate(data.readtutorial);
           fetchFollowingAndFollowers(data.id);
           setUserNumId(data.id);
           setAddress(data.address);
@@ -353,14 +354,28 @@ export default function App({ Component, pageProps }) {
             ...data,
           });
 
+          if (router.pathname === "/profile/[user]") {
+            fetchCommunities(data.id).then(async (secondResult) => {
+              if (secondResult !== undefined && secondResult !== null) {
+                setCommunities(
+                  [...secondResult.data].sort(
+                    (a, b) => b.membersLength - a.membersLength
+                  )
+                );
+              }
+            });
+          }
+
           if (router.pathname !== "/profile/[user]") {
             fetchAllReposts().then((reposts) => {
               fetchAllPosts().then((result1) => {
-                fetchCommunities().then(async (secondResult) => {
+                fetchCommunities(data.id).then(async (secondResult) => {
                   if (secondResult !== undefined && secondResult !== null) {
                     if (!unreadMessagesLength && unreadMessagesLength !== 0) {
-                      const unreadMsg = await fetchUnreadChat(data.id)
-                      setUnreadMessagesLength(unreadMsg.length)
+                      const unreadMsg = await fetchUnreadChat(data.id);
+                      if (unreadMsg) {
+                        setUnreadMessagesLength(unreadMsg.length);
+                      }
                     }
 
                     setCommunities(
@@ -368,78 +383,37 @@ export default function App({ Component, pageProps }) {
                         (a, b) => b.membersLength - a.membersLength
                       )
                     );
-                    setOriginalPostValues(
-                      reposts
-                        .map((repost) => {
-                          const originalPost = result1.data.find(
-                            (post) => post.id === repost.postid
-                          );
 
-                          if (originalPost) {
-                            return {
-                              ...originalPost,
-                              repostAuthor: repost.users,
-                              repostQuote: repost.quote,
-                              repostCreatedAt: repost.created_at,
-                            };
-                          }
-                          return null;
-                        })
-                        .filter(Boolean)
-                        .concat(
-                          result1.data.filter(
-                            (post) =>
-                              !reposts.some(
-                                (repost) => repost.postid === post.id
-                              )
-                          )
-                        )
-                        .sort((a, b) => {
-                          const dateA = new Date(
-                            a.repostQuote ? a.repostCreatedAt : a.created_at
-                          );
-                          const dateB = new Date(
-                            b.repostQuote ? b.repostCreatedAt : b.created_at
-                          );
-                          return dateB - dateA;
-                        })
-                    );
-                    setPostValues(
-                      reposts
-                        .map((repost) => {
-                          const originalPost = result1.data.find(
-                            (post) => post.id === repost.postid
-                          );
+                    const mergedPosts = reposts
+                      .map((repost) => {
+                        const originalPost = result1.data.find(
+                          (post) => post.id === repost.postid
+                        );
 
-                          if (originalPost) {
-                            return {
-                              ...originalPost,
-                              repostAuthor: repost.users,
-                              repostQuote: repost.quote,
-                              repostCreatedAt: repost.created_at,
-                            };
-                          }
-                          return null;
-                        })
-                        .filter(Boolean)
-                        .concat(
-                          result1.data.filter(
-                            (post) =>
-                              !reposts.some(
-                                (repost) => repost.postid === post.id
-                              )
-                          )
+                        if (originalPost) {
+                          return {
+                            ...originalPost,
+                            repostAuthor: repost.users,
+                            repostQuote: repost.quote,
+                            repostCreatedAt: repost.created_at,
+                          };
+                        }
+                        return null;
+                      })
+                      .filter(Boolean)
+                      .concat(
+                        result1.data.filter(
+                          (post) =>
+                            !reposts.some((repost) => repost.postid === post.id)
                         )
-                        .sort((a, b) => {
-                          const dateA = new Date(
-                            a.repostQuote ? a.repostCreatedAt : a.created_at
-                          );
-                          const dateB = new Date(
-                            b.repostQuote ? b.repostCreatedAt : b.created_at
-                          );
-                          return dateB - dateA;
-                        })
+                      );
+
+                    const shuffledPosts = mergedPosts.sort(
+                      () => Math.random() - 0.5
                     );
+
+                    setOriginalPostValues(shuffledPosts);
+                    setPostValues(shuffledPosts);
                   }
                 });
               });
@@ -483,25 +457,56 @@ export default function App({ Component, pageProps }) {
   };
 
   const agreeToTerms = async () => {
-   const agreeStatus = await supabase.from('users').update({agreedpolicies: true}).eq('useruuid', userData.useruuid)
-   if (!agreeStatus.error){
-    setAgreementMade(true)
-   }
-  }
+    const agreeStatus = await supabase
+      .from("users")
+      .update({ agreedpolicies: true })
+      .eq("useruuid", userData.useruuid);
+    if (!agreeStatus.error) {
+      setAgreementMade(true);
+    }
+  };
 
-  const [allowUnloggedView, setAllowUnloggedView] = useState(false)
+  const graduateTutorial = async () => {
+    const scholar = await supabase
+      .from("users")
+      .update({ readtutorial: true })
+      .eq("useruuid", userData.useruuid);
+    if (!scholar.error) {
+     
+    }
+  };
+
+  const [activeVideo, setActiveVideo] = useState(null);
+
+  const handlePlay = (index) => {
+    // Pause the currently playing video if there is one
+    if (activeVideo !== null && activeVideo === index) {
+      videoRef.current[activeVideo]?.play();
+      return;
+    }
+
+    if (activeVideo !== null && activeVideo !== index) {
+      videoRef.current[activeVideo]?.pause();
+    }
+    // Update active video state
+    setActiveVideo(index);
+
+    // Play the new video
+    videoRef.current[index]?.play();
+  };
+
+  const [allowUnloggedView, setAllowUnloggedView] = useState(false);
   useEffect(() => {
-
     if (darkMode) {
-      document.body.style.backgroundColor = "black";
+      document.body.style.backgroundColor = "#17181C";
       document.documentElement.classList.add("dark");
-      document.documentElement.style.backgroundColor = "black";
-      localStorage.setItem("darkmode", true)
+      document.documentElement.style.backgroundColor = "#17181C";
+      localStorage.setItem("darkmode", true);
     } else if (darkMode === null) {
-      document.body.style.backgroundColor = "#e8edf1";
+      document.body.style.backgroundColor = "#F9F9F9";
       document.documentElement.classList.remove("dark");
-      document.documentElement.style.backgroundColor = "#e8edf1";
-      localStorage.setItem("darkmode", false)
+      document.documentElement.style.backgroundColor = "#F9F9F9";
+      localStorage.setItem("darkmode", false);
     }
     if (
       [
@@ -537,7 +542,7 @@ export default function App({ Component, pageProps }) {
               checkIfUserExistsAndUpdateData(session.user);
             }
           } else {
-            setAllowUnloggedView(true)
+            setAllowUnloggedView(true);
             if (router.pathname !== "/profile/[user]") {
               fetchAllReposts().then((reposts) => {
                 fetchAllPosts().then((result1) => {
@@ -637,151 +642,215 @@ export default function App({ Component, pageProps }) {
   }, [darkMode, address, router.pathname, router, subscribed]);
 
   return (
-    (darkMode !== undefined || router.pathname === '/signin' || allowUnloggedView || onboarding) && <UserContext.Provider
-      value={{
-        unreadMessagesLength,
-        setUnreadMessagesLength,
-        darkMode,
-        setDarkMode,
-        allUsers,
-        youMayKnow,
-        setYouMayKnow,
-        newPeople,
-        setNewPeople,
-        address,
-        userData,
-        setUserData,
-        subscribed,
-        profileOpen,
-        setProfileOpen,
-        openStories,
-        setOpenStories,
-        selectedMediaFile,
-        setSelectedMediaFile,
-        selectedMedia,
-        setSelectedMedia,
-        userNumId,
-        postJustMade,
-        setPostJustMade,
-        isImage,
-        setIsImage,
-        originalPostValues,
-        setOriginalPostValues,
-        postValues,
-        setPostValues,
-        storyValues,
-        setStoryValues,
-        commentValues,
-        setCommentValues,
-        openComments,
-        setOpenComments,
-        postIdForComment,
-        setPostIdForComment,
-        currentStory,
-        setCurrentStory,
-        storiesFilter,
-        setStoriesFilter,
-        imagesFilter,
-        setImagesFilter,
-        videosFilter,
-        setVideosFilter,
-        tagsFilter,
-        setTagsFilter,
-        searchFilter,
-        setSearchFilter,
-        commentMsg,
-        setCommentMsg,
-        parentId,
-        setParentId,
-        hashtagList,
-        setHashtagList,
-        originalExplorePosts,
-        setOriginalExplorePosts,
-        explorePosts,
-        setExplorePosts,
-        chosenTag,
-        setChosenTag,
-        followingPosts,
-        setFollowingPosts,
-        storyViews,
-        setStoryViews,
-        followerObject,
-        setFollowerObject,
-        followingObject,
-        setFollowingObject,
-        myProfileRoute,
-        setMyProfileRoute,
-        inputRef,
-        communityInputRef,
-        address,
-        setAddress,
-        userPostValues,
-        setUserPostValues,
-        deletePost,
-        setDeletePost,
-        playVideo,
-        setPlayVideo,
-        openManga,
-        setOpenManga,
-        mgComic,
-        setMgComic,
-        openPurchaseModal,
-        setOpenPurchaseModal,
-        allUserObject,
-        setAllUserObject,
-        NotSignedIn,
-        setNotSignedIn,
-        routedUser,
-        setRoutedUser,
-        communities,
-        setCommunities,
-        myRelationships,
-        setMyRelationships,
-        sideBarOpened,
-        setSideBarOpened,
-        notifyUserObject,
-        setNotifyUserObject,
-      }}
-    >
-      <span className="text-sm sm:text-base">
-        {[
-          "/notifications",
-          "/create",
-          "/publishmanga",
-          "/settings",
-          "/earn",
-          "/reports",
-          "/leaderboard",
-          "/subscriptionplan",
-          "/inbox",
-          "/[message]",
-        ].includes(router.pathname) ? (
-          authLoading ? (
-            <div className="pt-8">
-              <PopupModal success={"4"} messageTopic={""} moreInfo={""} />
-              <div id="overlay"></div>
-            </div>
-          ) : subscribed ? (
-            userData ? (
-              agreementMade ? (
+    (darkMode !== undefined ||
+      router.pathname === "/signin" ||
+      allowUnloggedView ||
+      onboarding) && (
+      <UserContext.Provider
+        value={{
+          userWatchList,
+          setUserWatchList,
+          currentUserWatchlist,
+          setCurrentUserWatchlist,
+          mediasClicked,
+          setMediasClicked,
+          clickFollower,
+          setClickFollower,
+          clickFollowing,
+          setClickFollowing,
+          allSubscriptions,
+          setAllSubscriptions,
+          fetchCommunities,
+          newListOfComments,
+          setNewListOfComments,
+          videoRef,
+          activeVideo,
+          videoPlayingId,
+          handlePlay,
+          setVideoPlayingId,
+          unreadMessagesLength,
+          setUnreadMessagesLength,
+          darkMode,
+          setDarkMode,
+          allUsers,
+          youMayKnow,
+          setYouMayKnow,
+          newPeople,
+          setNewPeople,
+          address,
+          userData,
+          setUserData,
+          subscribed,
+          profileOpen,
+          setProfileOpen,
+          openStories,
+          setOpenStories,
+          selectedMediaFile,
+          setSelectedMediaFile,
+          selectedMedia,
+          setSelectedMedia,
+          userNumId,
+          postJustMade,
+          setPostJustMade,
+          isImage,
+          setIsImage,
+          originalPostValues,
+          setOriginalPostValues,
+          postValues,
+          setPostValues,
+          storyValues,
+          setStoryValues,
+          commentValues,
+          setCommentValues,
+          openComments,
+          setOpenComments,
+          postOwnerDetails,
+          setPostOwnerDetails,
+          currentStory,
+          setCurrentStory,
+          storiesFilter,
+          setStoriesFilter,
+          imagesFilter,
+          setImagesFilter,
+          videosFilter,
+          setVideosFilter,
+          tagsFilter,
+          setTagsFilter,
+          searchFilter,
+          setSearchFilter,
+          commentMsg,
+          setCommentMsg,
+          parentId,
+          setParentId,
+          hashtagList,
+          setHashtagList,
+          originalExplorePosts,
+          setOriginalExplorePosts,
+          explorePosts,
+          setExplorePosts,
+          chosenTag,
+          setChosenTag,
+          followingPosts,
+          setFollowingPosts,
+          storyViews,
+          setStoryViews,
+          followerObject,
+          setFollowerObject,
+          followingObject,
+          setFollowingObject,
+          myProfileRoute,
+          setMyProfileRoute,
+          inputRef,
+          communityInputRef,
+          address,
+          setAddress,
+          userPostValues,
+          setUserPostValues,
+          deletePost,
+          setDeletePost,
+          playVideo,
+          setPlayVideo,
+          openManga,
+          setOpenManga,
+          mgComic,
+          setMgComic,
+          openPurchaseModal,
+          setOpenPurchaseModal,
+          allUserObject,
+          setAllUserObject,
+          NotSignedIn,
+          setNotSignedIn,
+          routedUser,
+          setRoutedUser,
+          communities,
+          setCommunities,
+          myRelationships,
+          setMyRelationships,
+          sideBarOpened,
+          setSideBarOpened,
+          notifyUserObject,
+          setNotifyUserObject,
+          openPremium,
+          setOpenPremium,
+          currentCommunity, setCurrentCommunity, unreadCount, setUnreadCount, commentRef
+        }}
+      >
+        <PreventZoom />
+        <span id="baiFont" className={`relative w-full max-w-[20px] mx-auto bg-black text-sm sm:text-base`}>
+          {[
+            "/notifications",
+            "/create",
+            "/publishmanga",
+            "/settings",
+            "/earn",
+            "/reports",
+            "/leaderboard",
+            "/subscriptionplan",
+            "/inbox",
+            "/[message]",
+            "/privacy-policy",
+          ].includes(router.pathname) ? (
+            authLoading ? (
+              <div className="pt-8">
+                <PopupModal success={"4"} messageTopic={""} moreInfo={""} />
+                <div id="overlay"></div>
+              </div>
+            ) : subscribed ? (
+              userData ? (
+                agreementMade ? (
+                  graduate ? (
+                    <Component {...pageProps} />
+                  ) : (
+                    <>
+                <div id="tutorial" className="bg-transparent">
+                  <TutorialBox graduateTutorial={graduateTutorial} setGraduate={setGraduate}/>
+                </div>
+                
                 <Component {...pageProps} />
-              ) : userData && !userData.agreedpolicies && (
-                <span className={`${darkMode && 'text-white'} flex flex-col space-y-2 py-2`}>
-                  <span className="font-medium flex flex-col text-center justify-center items-center">
-                    <p>{"By signing in to Animebook,"}</p>
-                    <p>{
-                      "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
-                    }</p>
-                  </span>
-                  <span onClick={()=>{agreeToTerms()}} className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg">
-                    I Agree
-                  </span>
-                  <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
-                    <TOS darkMode={darkMode}/>
-                    <Policy darkMode={darkMode}/>
-                  </span>
-                  
-                </span>
+
+                <div
+                  id="tutorial-overlay"
+                  className="bg-black backdrop-blur-md"
+                ></div>
+              </>
+                  )
+                ) : (
+                  userData &&
+                  !userData.agreedpolicies && (
+                    <span
+                      className={`${
+                        darkMode && "text-white"
+                      } flex flex-col space-y-2 py-2`}
+                    >
+                      <span className="font-medium flex flex-col text-center justify-center items-center">
+                        <p>{"By signing in to Animebook,"}</p>
+                        <p>
+                          {
+                            "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
+                          }
+                        </p>
+                      </span>
+                      <span
+                        onClick={() => {
+                          agreeToTerms();
+                        }}
+                        className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg"
+                      >
+                        I Agree
+                      </span>
+                      <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
+                        <TOS darkMode={darkMode} />
+                        <Policy darkMode={darkMode} />
+                      </span>
+                    </span>
+                  )
+                )
+              ) : (
+                <div className="pt-8">
+                  <DappLogo size={"default"} />
+                  <PopupModal success={"3"} messageTopic={""} moreInfo={""} />
+                  <div id="overlay"></div>
+                </div>
               )
             ) : (
               <div className="pt-8">
@@ -790,36 +859,57 @@ export default function App({ Component, pageProps }) {
                 <div id="overlay"></div>
               </div>
             )
+          ) : onboarding ? (
+            <Onboard allUsers={allUsers} me={oauthDetails} />
+          ) : userData && agreementMade ? (
+            graduate ? (
+              <Component {...pageProps} />
+            ) : (
+              <>
+                <div id="tutorial" className="bg-transparent">
+                  <TutorialBox graduateTutorial={graduateTutorial} setGraduate={setGraduate}/>
+                </div>
+                
+                <Component {...pageProps} />
+
+                <div
+                  id="tutorial-overlay"
+                  className="bg-black backdrop-blur-md"
+                ></div>
+              </>
+            )
+          ) : userData && !userData.agreedpolicies ? (
+            <span
+              className={`${
+                darkMode && "text-white"
+              } flex flex-col space-y-2 py-2`}
+            >
+              <span className="font-medium flex flex-col text-center justify-center items-center">
+                <p>{"By signing in to Animebook,"}</p>
+                <p>
+                  {
+                    "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
+                  }
+                </p>
+              </span>
+              <span
+                onClick={() => {
+                  agreeToTerms();
+                }}
+                className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg"
+              >
+                I Agree
+              </span>
+              <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
+                <TOS darkMode={darkMode} />
+                <Policy darkMode={darkMode} />
+              </span>
+            </span>
           ) : (
-            <div className="pt-8">
-              <DappLogo size={"default"} />
-              <PopupModal success={"3"} messageTopic={""} moreInfo={""} />
-              <div id="overlay"></div>
-            </div>
-          )
-        ) : onboarding ? (
-          <Onboard allUsers={allUsers} me={oauthDetails} />
-        ) : userData && agreementMade ? (
-          <Component {...pageProps} />
-        ) : userData && !userData.agreedpolicies ? (
-          <span className={`${darkMode && 'text-white'} flex flex-col space-y-2 py-2`}>
-            <span className="font-medium flex flex-col text-center justify-center items-center">
-              <p>{"By signing in to Animebook,"}</p>
-              <p>{
-                "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
-              }</p>
-            </span>
-            <span onClick={()=>{agreeToTerms()}} className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg">
-              I Agree
-            </span>
-            <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
-              <TOS darkMode={darkMode}/>
-              <Policy darkMode={darkMode}/>
-            </span>
-            
-          </span>
-        ) : <Component {...pageProps} />}
-      </span>
-    </UserContext.Provider>
+            <Component {...pageProps} />
+          )}
+        </span>
+      </UserContext.Provider>
+    )
   );
 }

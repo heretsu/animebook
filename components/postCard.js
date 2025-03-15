@@ -14,6 +14,7 @@ import animationData from "@/assets/kianimation.json";
 import PopupModal from "./popupModal";
 import UnfollowButton from "./unfollowButton";
 import dynamic from "next/dynamic";
+import ShareSystem from "./shareSystem";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export const BinSvg = ({ pixels }) => {
@@ -46,7 +47,9 @@ export default function PostCard({
   repostCreatedAt,
   allPosts,
 }) {
-  const videoRef = useRef(null);
+  // const videoRef = useRef(null);
+  const commentRef = useRef(null);
+  const [myTextComment, setMyTextComment] = useState("");
   const router = useRouter();
   const { sendNotification, postTimeAgo } = DappLibrary();
   const [alreadyFollowed, setAlreadyFollowed] = useState(null);
@@ -54,12 +57,22 @@ export default function PostCard({
   const { fullPageReload } = PageLoadOptions();
   const {
     setOpenComments,
-    setPostIdForComment,
+    activeVideo,
+    setPostOwnerDetails,
     setCommentValues,
     deletePost,
     setDeletePost,
     userData,
     darkMode,
+    videoPlayingId,
+    setVideoPlayingId,
+    handlePlay,
+    videoRef,
+    inputRef,
+    commentMsg,
+    setCommentMsg,
+    parentId: globalParentId,
+    setNewListOfComments,
   } = useContext(UserContext);
   const [comments, setComments] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -81,6 +94,20 @@ export default function PostCard({
   const [quoteContent, setQuoteContent] = useState(null);
   const [openTipPost, setOpenTipPost] = useState(false);
   const [openPostOptions, setOpenPostOptions] = useState(false);
+  const [myComment, setMyComment] = useState("");
+  const [open, setOpen] = useState(false);
+  const [preview, setPreview] = useState(false);
+
+  const [selectedCommentMedia, setSelectedCommentMedia] = useState(null);
+  const [commentMediaFile, setCommentMediaFile] = useState(null);
+
+  const commentMediaChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setCommentMediaFile(e.target.files);
+      setSelectedCommentMedia(URL.createObjectURL(file));
+    }
+  };
 
   const [ref, isBeingViewed] = PostInViewport({
     threshold: 0.5,
@@ -88,6 +115,134 @@ export default function PostCard({
 
   const deleteAction = () => {
     setDeletePost({ postid: id, media: media });
+  };
+
+  const togglePlayPause = () => {
+    setVideoPlayingId(id);
+
+    setThumbnail(null);
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+        setPlayVideo(true);
+      } else {
+        videoRef.current.pause();
+        setPlayVideo(false);
+      }
+    }
+  };
+
+  const postComment = async () => {
+    console.log('here')
+    if (userData === undefined || userData === null) {
+      fullPageReload("/signin");
+      return;
+    }
+console.log('ya')
+    if (commentMediaFile !== null) {
+console.log('hmm')
+      for (const file of commentMediaFile) {
+        const newName = Date.now() + file.name;
+
+        const bucketResponse = await supabase.storage
+          .from("mediastore")
+          .upload(`${"comments/" + newName}`, file);
+
+        if (bucketResponse.data) {
+          const mediaUrl =
+            process.env.NEXT_PUBLIC_SUPABASE_URL +
+            "/storage/v1/object/public/mediastore/" +
+            bucketResponse.data.path;
+          let commentToSend = myTextComment;
+          setMyTextComment("")
+          console.log(commentToSend)
+          await supabase.from("comments").insert({
+            postid: id,
+            content: commentToSend,
+            userid: myProfileId,
+            parentid: myTextComment.startsWith("@") ? parentId : null,
+            media: mediaUrl,
+          });
+        }
+      }
+      setSelectedCommentMedia(null);
+      setCommentMediaFile(null);
+      setMyTextComment("");
+      fetchComments();
+    } else {
+      console.log('hmm')
+      console.log(myTextComment)
+      if (myTextComment !== "") {
+        let commentToSend = myTextComment;
+        setMyTextComment("");
+        supabase
+          .from("comments")
+          .insert({
+            postid: id,
+            content: commentToSend,
+            userid: myProfileId,
+            parentid: myTextComment.startsWith("@") ? parentId : null,
+            media: null,
+          })
+          .then(async () => {
+            setMyComment(commentToSend);
+            fetchComments();
+          });
+      }
+    }
+  };
+
+  const postGlobalComment = async () => {
+    if (userData === undefined || userData === null) {
+      fullPageReload("/signin");
+      return;
+    }
+    if (commentMediaFile !== null) {
+      for (const file of commentMediaFile) {
+        const newName = Date.now() + file.name;
+
+        const bucketResponse = await supabase.storage
+          .from("mediastore")
+          .upload(`${"comments/" + newName}`, file);
+
+        if (bucketResponse.data) {
+          const mediaUrl =
+            process.env.NEXT_PUBLIC_SUPABASE_URL +
+            "/storage/v1/object/public/mediastore/" +
+            bucketResponse.data.path;
+          let commentToSend = commentMsg;
+          setCommentMsg("");
+          await supabase.from("comments").insert({
+            postid: id,
+            content: commentToSend,
+            userid: myProfileId,
+            parentid: commentMsg.startsWith("@") ? globalParentId : null,
+            media: mediaUrl,
+          });
+        }
+      }
+      setSelectedCommentMedia(null);
+      setCommentMediaFile(null);
+      fetchComments();
+    } else {
+      if (commentMsg !== "") {
+        let commentToSend = commentMsg;
+        setCommentMsg("");
+        supabase
+          .from("comments")
+          .insert({
+            postid: id,
+            content: commentToSend,
+            userid: myProfileId,
+            parentid: commentMsg.startsWith("@") ? globalParentId : null,
+            media: null,
+          })
+          .then(async () => {
+            setMyComment(commentToSend);
+            fetchComments();
+          });
+      }
+    }
   };
 
   const addBookmark = () => {
@@ -320,13 +475,15 @@ export default function PostCard({
     supabase
       .from("comments")
       .select(
-        "id, created_at, content, posts(id), users(id, avatar, username), parentid"
+        "id, created_at, content, posts(id), users(id, avatar, username), parentid, media"
       )
       .eq("postid", id)
       .order("created_at", { ascending: false })
       .then((res) => {
         if (res.data !== undefined && res.data !== null) {
           setComments(res.data);
+          setCommentValues(res.data);
+          setNewListOfComments(res.data);
         }
       });
   };
@@ -336,18 +493,6 @@ export default function PostCard({
         (e.target.buffered.end(0) / e.target.duration) * 100;
       if (loadedPercentage >= 50) {
         e.target.preload = "none";
-      }
-    }
-  };
-
-  const togglePlayPause = () => {
-    if (videoRef.current) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-        setPlayVideo(true);
-      } else {
-        videoRef.current.pause();
-        setPlayVideo(false);
       }
     }
   };
@@ -376,6 +521,7 @@ export default function PostCard({
     }
   };
 
+  const [parentId, setParentId] = useState(null);
   const [postCount, setPostCount] = useState(null);
 
   function userSpecificPosts() {
@@ -421,6 +567,63 @@ export default function PostCard({
   const [imgSrcOrigin, setImgSrcOrigin] = useState(users && users.avatar);
   const [isExpanded, setIsExpanded] = useState(false);
 
+  const [commentReentry, setCommentReentry] = useState(false);
+  const [commentLiked, setCommentLiked] = useState(false);
+  const [commentLikes, setCommentLikes] = useState(null);
+  const [loadedData, setLoadedData] = useState(false);
+
+  const fetchCommentLikes = (id) => {
+    supabase
+      .from("comment_likes")
+      .select()
+      .eq("commentid", id)
+      .then((res) => {
+        if (res.data !== undefined && res.data !== null) {
+          setCommentLikes(res.data);
+          setCommentLiked(!!res.data.find((lk) => lk.userid === myProfileId));
+          setCommentReentry(true);
+        }
+      });
+  };
+
+  const likeComment = (id) => {
+    if (userData === undefined || userData === null) {
+      fullPageReload("/signin");
+      return;
+    }
+    if (commentReentry) {
+      setCommentReentry(false);
+      if (commentLiked) {
+        supabase
+          .from("comment_likes")
+          .delete()
+          .eq("commentid", id)
+          .eq("userid", myProfileId)
+          .then(() => {
+            fetchCommentLikes(id);
+          });
+      } else {
+        supabase
+          .from("comment_likes")
+          .insert({ commentid: id, userid: myProfileId })
+          .then(() => {
+            fetchCommentLikes(id);
+          });
+      }
+    }
+  };
+
+  const replyComment = (parentCommentId, commentOwner) => {
+    if (userData === undefined || userData === null) {
+      fullPageReload("/signin");
+      return;
+    }
+    setMyTextComment(`@${commentOwner} `);
+    setParentId(parentCommentId);
+    commentRef.current.focus();
+  };
+
+  const [randomComment, setRandomComment] = useState(null);
   useEffect(() => {
     if (users.id !== myProfileId) {
       fetchFollows(users.id).then((res) => {
@@ -434,194 +637,256 @@ export default function PostCard({
         }
       });
     }
+    if (comments && comments.length > 0 && !commentLikes) {
+      const randomIndex = Math.floor(Math.random() * comments.length);
+      setRandomComment(comments[randomIndex]);
+      fetchCommentLikes(comments[randomIndex].id);
+    }
+
     if (!viewed && isBeingViewed) {
       if (userData && users.id !== myProfileId) {
         addView();
       }
     }
-    fetchReposts();
-    fetchLikes();
-    fetchViews();
-    fetchBookmarkStatus();
-    fetchComments();
-  }, [viewed, isBeingViewed]);
+    if (!loadedData) {
+      fetchReposts();
+      fetchLikes();
+      fetchViews();
+      fetchBookmarkStatus();
+      fetchComments();
+      setLoadedData(true);
+    }
+  }, [loadedData, viewed, isBeingViewed, videoPlayingId, comments]);
 
   return (
     likes !== null &&
     reposts !== null &&
     views !== null &&
     comments !== null && (
-      <div
-        ref={ref}
-        className={`${
-          router.pathname !==
-            ("/comments/[comments]" || "/[username]/post/[postid]") &&
-          "shadow-xl"
-        } ${!media && "w-full"} ${
-          darkMode ? "bg-[#1e1f24] text-white" : "bg-white text-black"
-        } space-y-1 py-4 px-3 flex flex-col justify-center text-start`}
-      >
-        {router.pathname === "/profile/[user]" &&
-          repostAuthor &&
-          repostAuthor.username && (
-            <span className="text-xs text-slate-500 font-medium">
-              {repostAuthor.username} reposted
+      <div className="w-full">
+        <div
+          ref={ref}
+          className={`${
+            router.pathname === "/[username]/post/[postid]" && "w-full"
+          } ${!media && "w-full"} ${
+            darkMode ? "bg-[#1e1f24] text-white" : "bg-white text-black"
+          } mx-auto space-y-1 rounded-md py-4 px-3 flex flex-col justify-center text-start`}
+        >
+          {router.pathname === "/profile/[user]" &&
+            repostAuthor &&
+            repostAuthor.username && (
+              <span className="text-xs text-slate-500 font-medium">
+                {repostAuthor.username} reposted
+              </span>
+            )}
+          {repostQuote && (
+            <span className="flex flex-row justify-between items-center">
+              <span
+                onClick={() => {
+                  fullPageReload(`/profile/${repostAuthor.username}`);
+                }}
+                className="cursor-pointer flex flex-row justify-start items-center space-x-0"
+              >
+                <span className="relative h-8 w-8 flex">
+                  <Image
+                    src={imgSrc}
+                    alt="user profile"
+                    width={35}
+                    height={35}
+                    className="rounded-full object-cover"
+                    onError={() =>
+                      setImgSrc(
+                        "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                      )
+                    }
+                  />
+                </span>
+
+                <span className="flex flex-col">
+                  <span className="flex flex-row items-center">
+                    <span className="pl-2 pr-1 text-xs font-semibold">
+                      {repostAuthor.username}
+                    </span>
+                    <span className="text-[0.7rem] text-gray-400">
+                      reposted {postTimeAgo(repostCreatedAt)}
+                    </span>
+                  </span>
+                  <span className="flex flex-row items-center">
+                    <span className="h-4 w-6">
+                      <Lottie animationData={animationData} />
+                    </span>
+                    <span className="absolute pl-6 text-[0.7rem] font-bold text-blue-400">
+                      {parseFloat(parseFloat(repostAuthor.ki).toFixed(2))}
+                    </span>
+                  </span>
+                </span>
+              </span>
             </span>
           )}
-        {repostQuote && (
+          {repostQuote && (
+            <span
+              className={`${
+                darkMode ? "text-white bg-gray-700" : "text-black bg-gray-100"
+              } text-sm px-1 py-2 w-full rounded`}
+            >
+              <CommentConfig text={repostQuote} tags={true} />{" "}
+            </span>
+          )}
+
           <span className="flex flex-row justify-between items-center">
             <span
               onClick={() => {
-                fullPageReload(`/profile/${repostAuthor.username}`);
+                fullPageReload(`/profile/${users.username}`, "window");
               }}
-              className="cursor-pointer flex flex-row justify-start items-center space-x-0"
+              // onClick={() => setIsExpanded(!isExpanded)}
+              className={`cursor-pointer flex flex-row justify-start items-center space-x-0 transition-transform duration-500 ${
+                isExpanded ? "scale-110 w-full" : "scale-100"
+              }`}
             >
-              <span className="relative h-8 w-8 flex">
-                <Image
-                  src={imgSrc}
-                  alt="user profile"
-                  width={35}
-                  height={35}
-                  className="rounded-full object-cover"
-                  onError={() =>
-                    setImgSrc(
-                      "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
-                    )
-                  }
-                />
-              </span>
-
-              <span className="flex flex-col">
-                <span className="flex flex-row items-center">
-                  <span className="pl-2 pr-1 text-xs font-semibold">
-                    {repostAuthor.username}
-                  </span>
-                  <span className="text-[0.7rem] text-gray-400">
-                    reposted {postTimeAgo(repostCreatedAt)}
-                  </span>
-                </span>
-                <span className="flex flex-row items-center">
-                  <span className="h-4 w-6">
-                    <Lottie animationData={animationData} />
-                  </span>
-                  <span className="absolute pl-6 text-[0.7rem] font-bold text-blue-400">
-                    {parseFloat(parseFloat(repostAuthor.ki).toFixed(2))}
-                  </span>
-                </span>
-              </span>
-            </span>
-          </span>
-        )}
-        {repostQuote && (
-          <span
-            className={`${
-              darkMode ? "text-white bg-gray-700" : "text-black bg-gray-100"
-            } px-1 py-2 w-full rounded`}
-          >
-            <CommentConfig text={repostQuote} tags={true} />{" "}
-          </span>
-        )}
-
-        <span className="flex flex-row justify-between items-center">
-          <span
-            // onClick={() => {
-
-            //   // fullPageReload(`/profile/${users.username}`, 'window');
-            // }}
-            onClick={() => setIsExpanded(!isExpanded)}
-            className={`cursor-pointer flex flex-row justify-start items-center space-x-0 transition-transform duration-500 ${
-              isExpanded ? "scale-110 w-full" : "scale-100"
-            }`}
-          >
-            {!isExpanded && (
-              <span className="relative h-9 w-9 flex">
-                <Image
-                  src={imgSrcOrigin}
-                  alt="user profile"
-                  width={35}
-                  height={35}
-                  className="rounded-full object-cover"
-                  onError={() =>
-                    setImgSrcOrigin(
-                      "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
-                    )
-                  }
-                />
-              </span>
-            )}
-
-            <span className={`flex flex-col ${isExpanded && "w-full"}`}>
               {!isExpanded && (
-                <span className="flex flex-row">
-                  <span className="pl-2 pr-1 font-semibold">
-                    {users.username}
-                  </span>
-
-                  <span className="text-[0.7rem] text-gray-400">
-                    {postTimeAgo(created_at)}
-                  </span>
+                <span className="relative h-9 w-9 flex">
+                  <Image
+                    src={imgSrcOrigin}
+                    alt="user profile"
+                    width={35}
+                    height={35}
+                    className="rounded-full object-cover"
+                    onError={() =>
+                      setImgSrcOrigin(
+                        "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                      )
+                    }
+                  />
                 </span>
               )}
-              {!isExpanded && (
-                <span className="flex flex-row items-center">
-                  <span className="h-6 w-8">
-                    <Lottie animationData={animationData} />
-                  </span>
-                  <span className="absolute pl-6 text-xs font-bold text-blue-400">
-                    {parseFloat(parseFloat(users.ki).toFixed(2))}
-                  </span>
-                </span>
-              )}
-              {isExpanded && (
-                <span className="px-2 pt-2 pb-4 space-y-1 flex flex-col justify-center items-center">
-                  <span className="relative flex h-[120px] w-full">
-                    {users.cover ? (
-                      <Image
-                        src={users.cover}
-                        alt="user profile"
-                        fill={true}
-                        className="rounded-2xl object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-slate-900 rounded-2xl"></div>
-                    )}
-                    <span className="text-xs md:text-sm rounded-b-2xl absolute inset-0 flex flex-col justify-between text-white">
-                      <span className="absolute border border-gray-500 ml-2 mt-2 flex flex-row items-center justify-center rounded-2xl w-fit px-1 py-0.5 bg-gray-800 bg-opacity-70">
-                        <span className="-ml-2 h-6 w-8">
-                          <Lottie animationData={animationData} />
-                        </span>
-                        <span className="-ml-2 text-xs font-semibold text-white">
-                          {parseFloat(parseFloat(users.ki).toFixed(2))}
-                        </span>
+
+              <span className={`flex flex-col ${isExpanded && "w-full"}`}>
+                {!isExpanded && (
+                  <span className="flex flex-row">
+                    <span className="pl-2 pr-1 font-semibold">
+                      {users.username}
+                    </span>
+
+                    <span className="flex flex-row items-center">
+                      <span className="h-6 w-8 -ml-2">
+                        <Lottie animationData={animationData} />
                       </span>
-                      <span className="w-full flex flex-row justify-end pt-2 pr-4"></span>
-                      <span className="rounded-b-2xl space-y-0.5 w-full p-1 bg-gray-800 bg-opacity-70">
-                        <span className="font-semibold flex flex-row w-full justify-between items-center">
-                          <span className="flex flex-row justify-start items-center space-x-0.5">
-                            <span className="relative h-5 w-5 flex">
-                              <Image
-                                src={imgSrcOrigin}
-                                alt="user profile"
-                                width={35}
-                                height={35}
-                                className="rounded-full object-cover"
-                                onError={() =>
-                                  setImgSrcOrigin(
-                                    "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
-                                  )
-                                }
-                              />
-                            </span>
-                            <span className="font-semibold text-xs pr-2">
-                              {users.username}
-                            </span>
+                      <span className="absolute pl-4 text-xs font-semibold text-blue-400">
+                        {parseFloat(parseFloat(users.ki).toFixed(2))}
+                      </span>
+                    </span>
+                  </span>
+                )}
+                {!isExpanded && (
+                  <span className="pl-2 flex flex-row justify-start space-x-0.5 items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      id="clock"
+                      width="13"
+                      height="13"
+                      viewBox="0 0 13 13"
+                    >
+                      <g
+                        id="Gruppe_3284"
+                        data-name="Gruppe 3284"
+                        transform="translate(5.996 3.016)"
+                      >
+                        <g id="Gruppe_3283" data-name="Gruppe 3283">
+                          <path
+                            id="Pfad_4719"
+                            data-name="Pfad 4719"
+                            d="M238.989,123.411l-1.813-1.359v-2.769a.5.5,0,0,0-1.007,0V122.3a.5.5,0,0,0,.2.4l2.014,1.51a.5.5,0,0,0,.6-.806Z"
+                            transform="translate(-236.169 -118.779)"
+                            fill="#728198"
+                          />
+                        </g>
+                      </g>
+                      <g id="Gruppe_3286" data-name="Gruppe 3286">
+                        <g id="Gruppe_3285" data-name="Gruppe 3285">
+                          <path
+                            id="Pfad_4720"
+                            data-name="Pfad 4720"
+                            d="M6.5,0A6.5,6.5,0,1,0,13,6.5,6.507,6.507,0,0,0,6.5,0Zm0,11.993A5.493,5.493,0,1,1,11.993,6.5,5.5,5.5,0,0,1,6.5,11.993Z"
+                            fill="#728198"
+                          />
+                        </g>
+                      </g>
+                    </svg>
+                    <span className="text-[0.7rem] text-[#728198]">
+                      {postTimeAgo(created_at)}
+                    </span>
+                  </span>
+                )}
+                {isExpanded && (
+                  <span className="px-2 pt-2 pb-4 space-y-1 flex flex-col justify-center items-center">
+                    <span className="relative flex h-[120px] w-full">
+                      {users.cover ? (
+                        <Image
+                          src={users.cover}
+                          alt="user profile"
+                          fill={true}
+                          className="rounded-2xl object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-slate-900 rounded-2xl"></div>
+                      )}
+                      <span className="text-xs md:text-sm rounded-b-2xl absolute inset-0 flex flex-col justify-between text-white">
+                        <span className="absolute border border-gray-500 ml-2 mt-2 flex flex-row items-center justify-center rounded-2xl w-fit px-1 py-0.5 bg-gray-800 bg-opacity-70">
+                          <span className="-ml-2 h-6 w-8">
+                            <Lottie animationData={animationData} />
+                          </span>
+                          <span className="-ml-2 text-xs font-semibold text-white">
+                            {parseFloat(parseFloat(users.ki).toFixed(2))}
+                          </span>
+                        </span>
+                        <span className="w-full flex flex-row justify-end pt-2 pr-4"></span>
+                        <span className="rounded-b-2xl space-y-0.5 w-full p-1 bg-gray-800 bg-opacity-70">
+                          <span className="font-semibold flex flex-row w-full justify-between items-center">
+                            <span className="flex flex-row justify-start items-center space-x-0.5">
+                              <span className="relative h-5 w-5 flex">
+                                <Image
+                                  src={imgSrcOrigin}
+                                  alt="user profile"
+                                  width={35}
+                                  height={35}
+                                  className="rounded-full object-cover"
+                                  onError={() =>
+                                    setImgSrcOrigin(
+                                      "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                                    )
+                                  }
+                                />
+                              </span>
+                              <span className="font-semibold text-xs pr-2">
+                                {users.username}
+                              </span>
 
-                            <span
-                              onClick={(e) => {
-                                e.stopPropagation();
-                              }}
-                            >
-                              {userData &&
+                              <span
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
+                              >
+                                <svg
+                                  onClick={() => {
+                                    if (userData) {
+                                      addBookmark();
+                                    } else {
+                                      fullPageReload("/signin");
+                                    }
+                                  }}
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="13.909"
+                                  height="17"
+                                  viewBox="0 0 13.909 17"
+                                >
+                                  <path
+                                    id="bookmark"
+                                    d="M15.909,2.318V16.227a.773.773,0,0,1-1.283.58L8.955,11.846,3.283,16.807A.773.773,0,0,1,2,16.227V2.318A2.325,2.325,0,0,1,4.318,0h9.273a2.325,2.325,0,0,1,2.318,2.318Z"
+                                    transform="translate(-2)"
+                                    fill={bookmarked ? "#EB4463" : "#adb6c3"}
+                                  />
+                                </svg>
+                                {/* {userData &&
                                 (users.id === myProfileId ? (
                                   <span className="text-sm">You</span>
                                 ) : alreadyFollowed ? (
@@ -641,121 +906,298 @@ export default function PostCard({
                                     size={"19"}
                                     color={"default"}
                                   />
-                                ))}
+                                ))} */}
+                              </span>
+                            </span>
+                            <span className="text-xs">
+                              {postCount !== null &&
+                                postCount !== undefined && (
+                                  <span>{`${postCount} Posts`}</span>
+                                )}
                             </span>
                           </span>
-                          <span className="text-xs">
-                            {postCount !== null && postCount !== undefined && (
-                              <span>{`${postCount} Posts`}</span>
-                            )}
-                          </span>
+                          <p className="text-xs pb-1 max-h-10 break-words overflow-auto">
+                            {users.bio !== null ? users.bio : "\u00A0"}
+                          </p>
                         </span>
-                        <p className="text-xs pb-1 max-h-10 break-words overflow-auto">
-                          {users.bio !== null ? users.bio : "\u00A0"}
-                        </p>
                       </span>
                     </span>
+                    <button
+                      className="w-full py-2 bg-blue-500 text-xs font-medium text-white rounded-md hover:bg-blue-600"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering the expansion toggle
+                        fullPageReload(`/profile/${users.username}`, "window");
+                      }}
+                    >
+                      View Full Profile
+                    </button>
                   </span>
-                  <button
-                    className="w-full py-2 bg-blue-500 text-xs font-medium text-white rounded-md hover:bg-blue-600"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent triggering the expansion toggle
-                      fullPageReload(`/profile/${users.username}`, "window");
-                    }}
-                  >
-                    View Full Profile
-                  </button>
-                </span>
-              )}
+                )}
+              </span>
             </span>
-          </span>
 
-          {!isExpanded &&
-            userData &&
-            (users.id === myProfileId ? (
-              <span onClick={deleteAction} className="cursor-pointer">
-                <BinSvg pixels={"20px"} />
-              </span>
-            ) : alreadyFollowed === null ? (
-              ""
-            ) : alreadyFollowed ? (
-              <span className="flex flex-row space-x-0.5">
-                <span></span>
-                <UnfollowButton
-                  alreadyFollowed={alreadyFollowed}
-                  setAlreadyFollowed={setAlreadyFollowed}
-                  followerUserId={myProfileId}
-                  followingUserId={users.id}
-                />
-              </span>
-            ) : (
-              <span className="flex flex-row space-x-0.5 justify-center items-center">
-                <PlusIcon
-                  ymk={false}
-                  alreadyFollowed={alreadyFollowed}
-                  setAlreadyFollowed={setAlreadyFollowed}
-                  followerUserId={myProfileId}
-                  followingUserId={users.id}
-                  size={"19"}
-                  color={"default"}
-                />
+            {
+              <div className="relative">
+                <div className="flex items-center space-x-2">
+                  <svg
+                    onClick={() => {
+                      if (userData) {
+                        addBookmark();
+                      } else {
+                        fullPageReload("/signin");
+                      }
+                    }}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="17"
+                    viewBox="0 0 14 17"
+                    className="cursor-pointer"
+                  >
+                    <path
+                      d="M15.909,2.318V16.227a.773.773,0,0,1-1.283.58L8.955,11.846,3.283,16.807A.773.773,0,0,1,2,16.227V2.318A2.325,2.325,0,0,1,4.318,0h9.273a2.325,2.325,0,0,1,2.318,2.318Z"
+                      fill="#adb6c3"
+                    />
+                  </svg>
+                  <svg
+                    className="rotate-90 cursor-pointer"
+                    onClick={() => setOpen(!open)}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="4"
+                    viewBox="0 0 14 4"
+                  >
+                    <g transform="translate(-0.645 3.864) rotate(-90)">
+                      <circle cx="2" cy="2" r="2" fill="#adb6c3" />
+                      <circle
+                        cx="2"
+                        cy="2"
+                        r="2"
+                        transform="translate(0 5)"
+                        fill="#adb6c3"
+                      />
+                      <circle
+                        cx="2"
+                        cy="2"
+                        r="2"
+                        transform="translate(0 10)"
+                        fill="#adb6c3"
+                      />
+                    </g>
+                  </svg>
+                </div>
 
-                <svg
-                  onClick={() => {
-                    setOpenPostOptions(true);
-                  }}
-                  className="rotate-90 cursor-pointer"
-                  fill={darkMode ? "white" : "#000000"}
-                  width="18px"
-                  height="18px"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M12,10a2,2,0,1,1-2,2A2,2,0,0,1,12,10ZM4,14a2,2,0,1,0-2-2A2,2,0,0,0,4,14Zm16-4a2,2,0,1,0,2,2A2,2,0,0,0,20,10Z" />
-                </svg>
-              </span>
-            ))}
-        </span>
-        <span
-          onDoubleClick={() => {
-            if (userData) {
-              likePost();
-            } else {
-              fullPageReload("/signin");
+                {open && (
+                  <div
+                    id="zMax"
+                    className={`border absolute right-0 mt-1 w-44 rounded-lg shadow-lg ${
+                      darkMode
+                        ? "border-gray-700 bg-[#1E1F24] text-white"
+                        : "border-gray-300 bg-white text-black"
+                    }`}
+                  >
+                    <ul className={`space-y-1`}>
+                      {userData && users.id === myProfileId && (
+                        <li
+                          onClick={() => {
+                            deleteAction();
+                          }}
+                          className={`border-b ${
+                            darkMode ? "border-gray-900" : "border-gray-100"
+                          } px-4 py-2 flex items-center space-x-2 hover:bg-gray-100 cursor-pointer`}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="12.331"
+                            height="15.854"
+                            viewBox="0 0 12.331 15.854"
+                          >
+                            <g
+                              id="delete_1_"
+                              data-name="delete (1)"
+                              transform="translate(-42.667)"
+                            >
+                              <g
+                                id="Gruppe_3315"
+                                data-name="Gruppe 3315"
+                                transform="translate(42.667)"
+                              >
+                                <g
+                                  id="Gruppe_3314"
+                                  data-name="Gruppe 3314"
+                                  transform="translate(0)"
+                                >
+                                  <path
+                                    id="Pfad_4759"
+                                    data-name="Pfad 4759"
+                                    d="M64,95.9a1.761,1.761,0,0,0,1.762,1.762h7.046A1.761,1.761,0,0,0,74.569,95.9V85.333H64Z"
+                                    transform="translate(-63.119 -81.81)"
+                                    fill="#5d6879"
+                                  />
+                                  <path
+                                    id="Pfad_4760"
+                                    data-name="Pfad 4760"
+                                    d="M51.915.881,51.034,0h-4.4L45.75.881H42.667V2.642H55V.881Z"
+                                    transform="translate(-42.667)"
+                                    fill="#5d6879"
+                                  />
+                                </g>
+                              </g>
+                            </g>
+                          </svg>
+                          <span>Delete</span>
+                        </li>
+                      )}
+
+                      <ShareSystem postUrl={`https://animebook.io/${users.username}/post/${id}`} custom={true}/>
+
+                      {userData && users.id !== myProfileId && (
+                        <li
+                          onClick={() => {
+                            setOpenPostOptions(true);
+                          }}
+                          className={`px-4 py-2 flex items-center space-x-2 ${
+                            !darkMode && "hover:bg-gray-100"
+                          } cursor-pointer`}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="16"
+                            viewBox="0 0 14 16"
+                          >
+                            <path
+                              d="M16.451,7.12a1.317,1.317,0,0,0-.663.18,1.342,1.342,0,0,0-.664,1.16V22.2a.83.83,0,0,0,.859.915h.935a.83.83,0,0,0,.858-.915V16.883c3.494-.236,5.131,2.288,9.143,1.093.513-.153.726-.362.726-.86V10.683c0-.367-.341-.8-.726-.661C23.09,11.343,21,9.042,17.776,9.015V8.461a1.34,1.34,0,0,0-.663-1.16,1.313,1.313,0,0,0-.662-.18Z"
+                              transform="translate(-15.124 -7.12)"
+                              fill="#5f6877"
+                            />
+                          </svg>
+                          <span>Report</span>
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              // alreadyFollowed === null ? (
+              //   ""
+              // ) : alreadyFollowed ? (
+              //   <span className="flex flex-row space-x-0.5">
+              //     <span></span>
+              //     <UnfollowButton
+              //       alreadyFollowed={alreadyFollowed}
+              //       setAlreadyFollowed={setAlreadyFollowed}
+              //       followerUserId={myProfileId}
+              //       followingUserId={users.id}
+              //     />
+              //   </span>
+              // ) : (
+              //   <span className="flex flex-row space-x-0.5 justify-center items-center">
+              //     <PlusIcon
+              //       ymk={false}
+              //       alreadyFollowed={alreadyFollowed}
+              //       setAlreadyFollowed={setAlreadyFollowed}
+              //       followerUserId={myProfileId}
+              //       followingUserId={users.id}
+              //       size={"19"}
+              //       color={"default"}
+              //     />
+
+              //     <svg
+              //       onClick={() => {
+              //         setOpenPostOptions(true);
+              //       }}
+              //       className="rotate-90 cursor-pointer"
+              //       fill={darkMode ? "white" : "#000000"}
+              //       width="18px"
+              //       height="18px"
+              //       viewBox="0 0 24 24"
+              //       xmlns="http://www.w3.org/2000/svg"
+              //     >
+              //       <path d="M12,10a2,2,0,1,1-2,2A2,2,0,0,1,12,10ZM4,14a2,2,0,1,0-2-2A2,2,0,0,0,4,14Zm16-4a2,2,0,1,0,2,2A2,2,0,0,0,20,10Z" />
+              //     </svg>
+              //   </span>
+              // )
             }
-          }}
-          className="relative w-full max-h-[600px] flex justify-center"
-        >
-          {media !== null &&
-            media !== undefined &&
-            media !== "" &&
-            (media.endsWith("mp4") ||
-            media.endsWith("MP4") ||
-            media.endsWith("mov") ||
-            media.endsWith("MOV") ||
-            media.endsWith("3gp") ||
-            media.endsWith("3GP") ? (
-              <span
-                onClick={() => {
-                  if (
-                    router.pathname !==
-                    ("/comments/[comments]" || "[username]/post/[postid]")
-                  ) {
-                    router.push(`/${users.username}/post/${id}`);
-                  } else {
-                    togglePlayPause();
-                  }
-                }}
-                className="relative cursor-pointer flex justify-center items-center bg-black w-full"
-              >
-                {!thumbnail && <video
+          </span>
+          {content !== null && content !== undefined && content !== "" && (
+            <span
+              onClick={() => {
+                router.push(`/${users.username}/post/${id}`);
+              }}
+              className={`text-sm leading-tight break-all overflow-wrap-word whitespace-preline`}
+              style={{ whiteSpace: "pre-wrap" }}
+            >
+              <CommentConfig text={content} tags={true} />
+            </span>
+          )}
+          <span
+            onDoubleClick={() => {
+              if (userData) {
+                likePost();
+              } else {
+                fullPageReload("/signin");
+              }
+            }}
+            className={`relative ${
+              router.pathname === "/home" ||
+              router.pathname === "/profile/[user]"
+                ? "w-full max-h-[600px]"
+                : "max-h-[600px]"
+            } flex justify-center items-center`}
+          >
+            {media !== null &&
+              media !== undefined &&
+              media !== "" &&
+              (media.endsWith("mp4") ||
+              media.endsWith("MP4") ||
+              media.endsWith("mov") ||
+              media.endsWith("MOV") ||
+              media.endsWith("3gp") ||
+              media.endsWith("3GP") ? (
+                <span
+                  onClick={() => {
+                    // togglePlayPause();
+                    handlePlay(id);
+                    setPlayVideo(true);
+                    // if (
+                    //   router.pathname !==
+                    //   ("/comments/[comments]" || "[username]/post/[postid]")
+                    // ) {
+                    //   router.push(`/${users.username}/post/${id}`);
+                    // } else {
+                    //   togglePlayPause();
+                    // }
+                  }}
+                  className="mx-auto relative cursor-pointer flex justify-center items-center bg-black w-full"
+                >
+                  <video
+                    className={`${
+                      router.pathname === "/home" ||
+                      router.pathname === "/profile/[user]"
+                        ? "w-full max-h-[600px]"
+                        : "max-h-[600px]"
+                    } mx-auto relative`}
+                    src={media}
+                    crossOrigin="anonymous"
+                    // ref={videoRef}
+                    ref={(el) => (videoRef.current[id] = el)}
+                    height={600}
+                    width={600}
+                    onPlay={() => handlePlay(id)}
+
+                    // onProgress={(e) => {
+                    //   loadVideoSnippet(e);
+                    // }}
+                  ></video>
+                  {/* {!thumbnail && <video
                   className="relative max-h-[600px]"
                   src={media}
                   crossOrigin="anonymous"
                   ref={videoRef}
                   height={600}
                   width={600}
-                  loop
+                  
                   // onProgress={(e) => {
                   //   loadVideoSnippet(e);
                   // }}
@@ -769,221 +1211,265 @@ export default function PostCard({
                       height={600}
                       className="rounded-lg object-cover"
                     />
-                )}
-                {!playVideo && (
-                  <svg
-                    fill={"white"}
-                    width="70px"
-                    height="70px"
-                    viewBox="0 0 36 36"
-                    preserveAspectRatio="xMidYMid meet"
-                    xmlns="http://www.w3.org/2000/svg"
-                    xmlnsXlink="http://www.w3.org/1999/xlink"
-                    className="absolute m-auto bg-black bg-opacity-20 p-2 rounded-full"
-                  >
-                    <title>{"play-solid"}</title>
-                    <path
-                      className="clr-i-solid clr-i-solid-path-1"
-                      d="M32.16,16.08,8.94,4.47A2.07,2.07,0,0,0,6,6.32V29.53a2.06,2.06,0,0,0,3,1.85L32.16,19.77a2.07,2.07,0,0,0,0-3.7Z"
-                    />
-                    <rect x={0} y={0} width={36} height={36} fillOpacity={0} />
-                  </svg>
-                )}
-              </span>
-            ) : (
-              <span
-                className="cursor-pointer"
-                onClick={() => {
-                  router.push(`/${users.username}/post/${id}`);
-                }}
-              >
-                <Image
-                  src={media}
-                  alt="post"
-                  width={600}
-                  height={600}
-                  className="rounded-lg object-cover"
-                />
-              </span>
-            ))}
-        </span>
-        {content !== null && content !== undefined && content !== "" && (
-          <span
-            onClick={() => {
-              router.push(`/${users.username}/post/${id}`);
-            }}
-            className="break-all overflow-wrap-word whitespace-preline"
-            style={{ whiteSpace: "pre-wrap" }}
-          >
-            <CommentConfig text={content} tags={true} />
+                )} */}
+                  {(!playVideo || activeVideo !== id) && (
+                    <svg
+                      fill={"white"}
+                      width="70px"
+                      height="70px"
+                      viewBox="0 0 36 36"
+                      preserveAspectRatio="xMidYMid meet"
+                      xmlns="http://www.w3.org/2000/svg"
+                      xmlnsXlink="http://www.w3.org/1999/xlink"
+                      className="absolute m-auto bg-black bg-opacity-20 p-2 rounded-full"
+                    >
+                      <title>{"play-solid"}</title>
+                      <path
+                        className="clr-i-solid clr-i-solid-path-1"
+                        d="M32.16,16.08,8.94,4.47A2.07,2.07,0,0,0,6,6.32V29.53a2.06,2.06,0,0,0,3,1.85L32.16,19.77a2.07,2.07,0,0,0,0-3.7Z"
+                      />
+                      <rect
+                        x={0}
+                        y={0}
+                        width={36}
+                        height={36}
+                        fillOpacity={0}
+                      />
+                    </svg>
+                  )}
+                </span>
+              ) : (
+                <span
+                  className="w-full cursor-pointer"
+                  onClick={() => {
+                    if (router.pathname === "/[username]/post/[postid]") {
+                      setPreview(true);
+                    } else {
+                      router.push(`/${users.username}/post/${id}`);
+                    }
+                  }}
+                >
+                  <Image
+                    src={media}
+                    alt="post"
+                    width={600}
+                    height={600}
+                    className={`${
+                      router.pathname === "/home" ||
+                      router.pathname === "/profile/[user]"
+                        ? "w-full max-h-[600px] object-cover"
+                        : "max-h-[600px] object-contain"
+                    } mx-auto rounded-lg`}
+                  />
+                </span>
+              ))}
           </span>
-        )}
 
-        <div className="flex flow-row items-center justify-between">
-          <div className="flex items-center space-x-4 bg-transparent pr-4 py-2">
-            <div className="flex items-center space-x-2">
-              {liked ? (
-                <svg
-                  onClick={() => {
-                    if (userData) {
-                      likePost();
-                    } else {
-                      fullPageReload("/signin");
-                    }
-                  }}
-                  className="cursor-pointer text-red-400"
-                  width="26px"
-                  height="26px"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  viewBox="0 0 20 18"
-                >
-                  <path d="M17.947 2.053a5.209 5.209 0 0 0-3.793-1.53A6.414 6.414 0 0 0 10 2.311 6.482 6.482 0 0 0 5.824.5a5.2 5.2 0 0 0-3.8 1.521c-1.915 1.916-2.315 5.392.625 8.333l7 7a.5.5 0 0 0 .708 0l7-7a6.6 6.6 0 0 0 2.123-4.508 5.179 5.179 0 0 0-1.533-3.793Z" />
-                </svg>
-              ) : (
-                <svg
-                  onClick={() => {
-                    if (userData) {
-                      likePost();
-                    } else {
-                      fullPageReload("/signin");
-                    }
-                  }}
-                  className="cursor-pointer"
-                  fill={darkMode ? "white" : "#000000"}
-                  width="26px"
-                  height="26px"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M20.16,5A6.29,6.29,0,0,0,12,4.36a6.27,6.27,0,0,0-8.16,9.48l6.21,6.22a2.78,2.78,0,0,0,3.9,0l6.21-6.22A6.27,6.27,0,0,0,20.16,5Zm-1.41,7.46-6.21,6.21a.76.76,0,0,1-1.08,0L5.25,12.43a4.29,4.29,0,0,1,0-6,4.27,4.27,0,0,1,6,0,1,1,0,0,0,1.42,0,4.27,4.27,0,0,1,6,0A4.29,4.29,0,0,1,18.75,12.43Z" />
-                </svg>
-              )}
-              <div className={darkMode ? "text-white" : "text-gray-800"}>
-                {likes.length}
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <svg
-                onClick={() => {
-                  setPostIdForComment(id);
-                  setCommentValues(comments);
-                  router.push(`/${users.username}/post/${id}`);
-                }}
-                className="cursor-pointer"
-                fill={darkMode ? "white" : "#000000"}
-                width="24px"
-                height="24px"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M8,11a1,1,0,1,0,1,1A1,1,0,0,0,8,11Zm4,0a1,1,0,1,0,1,1A1,1,0,0,0,12,11Zm4,0a1,1,0,1,0,1,1A1,1,0,0,0,16,11ZM12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.26,6.33l-2,2a1,1,0,0,0-.21,1.09A1,1,0,0,0,3,22h9A10,10,0,0,0,12,2Zm0,18H5.41l.93-.93a1,1,0,0,0,.3-.71,1,1,0,0,0-.3-.7A8,8,0,1,1,12,20Z" />
-              </svg>
-
-              <div className={`${darkMode ? "text-white" : "text-gray-800"}`}>
-                {comments.filter((c) => c.parentid === null).length}
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              {madeRepost ? (
-                <svg
-                  onMouseDown={handlePressStart}
-                  onMouseUp={handlePressEnd}
-                  onTouchStart={handlePressStart}
-                  onTouchEnd={handlePressEnd}
-                  className="cursor-pointer text-pastelGreen"
-                  fill="currentColor"
-                  width="22px"
-                  height="22px"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M5 4a2 2 0 0 0-2 2v6H0l4 4 4-4H5V6h7l2-2H5zm10 4h-3l4-4 4 4h-3v6a2 2 0 0 1-2 2H6l2-2h7V8z" />
-                </svg>
-              ) : (
-                <svg
-                  onMouseDown={handlePressStart}
-                  onMouseUp={handlePressEnd}
-                  onTouchStart={handlePressStart}
-                  onTouchEnd={handlePressEnd}
-                  className="cursor-pointer text-black"
-                  fill={darkMode ? "white" : "#000000"}
-                  width="22px"
-                  height="22px"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M5 4a2 2 0 0 0-2 2v6H0l4 4 4-4H5V6h7l2-2H5zm10 4h-3l4-4 4 4h-3v6a2 2 0 0 1-2 2H6l2-2h7V8z" />
-                </svg>
-              )}
-              <div className={darkMode ? "text-white" : "text-gray-800"}>
-                {reposts.length}
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <svg
-                className="cursor-pointer"
-                xmlns="http://www.w3.org/2000/svg"
-                width="16px"
-                height="16px"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={darkMode ? "white" : "#000000"}
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              <div className={darkMode ? "white" : "text-gray-800"}>
-                {views.length}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-x-3 w-fit flex flex-row justify-center items-center">
-            {userData && users.id !== myProfileId && (
-              <div
-                className="flex items-center"
-                onClick={() => {
-                  setOpenTipPost(true);
-                }}
-              >
-                <svg
-                  width="18px"
-                  height="18px"
-                  className="text-blue-500"
-                  stroke={darkMode ? "white" : ""}
-                  fill="currentColor"
-                  id="Capa_1"
-                  xmlns="http://www.w3.org/2000/svg"
-                  xmlnsXlink="http://www.w3.org/1999/xlink"
-                  x="0px"
-                  y="0px"
-                  viewBox="0 0 19.928 19.928"
-                  style={{
-                    enableBackground: "new 0 0 19.928 19.928",
-                  }}
-                  xmlSpace="preserve"
-                >
-                  <g>
-                    <path
-                      style={{
-                        fill: "#010002",
+          <div className="flex w-full flex-col justify-start">
+            <div className="flex flow-row items-center justify-between">
+              <div className="text-sm font-medium flex flex-row items-center space-x-4 bg-transparent pr-4 py-2">
+                <div className="flex items-center space-x-1">
+                  {liked ? (
+                    <svg
+                      onClick={() => {
+                        if (userData) {
+                          likePost();
+                        } else {
+                          fullPageReload("/signin");
+                        }
                       }}
-                      d="M11.273,3.18l-0.242-0.766c-0.096-0.305-0.228-0.603-0.393-0.884 c-0.545-0.926-1.18-1.328-1.425-1.352C9.122,0.373,9.136,1.12,9.701,2.081c0.538,0.916,1.165,1.318,1.417,1.351 C11.118,3.432,11.273,3.18,11.273,3.18z M13.731,2.081c0.564-0.961,0.578-1.708,0.488-1.903c-0.245,0.023-0.882,0.424-1.427,1.352 c-0.166,0.282-0.297,0.58-0.393,0.884L12.154,3.19l0.163,0.252C12.549,3.411,13.185,3.01,13.731,2.081z M11.381,3.927h2.02v2.818 h4.908V3.958H13.7c0.372-0.273,0.75-0.698,1.061-1.225c0.67-1.142,0.768-2.328,0.217-2.651C14.883,0.027,14.776,0,14.66,0 c-0.561,0-1.335,0.617-1.893,1.562c-0.186,0.319-0.324,0.639-0.42,0.945c-0.096-0.306-0.232-0.626-0.42-0.945 C11.372,0.617,10.595,0,10.033,0C9.92,0,9.812,0.027,9.716,0.082c-0.548,0.323-0.45,1.509,0.219,2.651 c0.311,0.527,0.691,0.952,1.062,1.225h-4.61v2.787h4.994V3.927z M12.974,2.705c0.087-0.278,0.208-0.55,0.359-0.81 c0.498-0.849,1.082-1.216,1.309-1.237c0.08,0.177,0.068,0.862-0.447,1.741c-0.502,0.852-1.084,1.218-1.295,1.246l-0.15-0.23 C12.75,3.415,12.974,2.705,12.974,2.705z M10.502,2.399c-0.516-0.879-0.53-1.564-0.446-1.741c0.224,0.021,0.807,0.389,1.306,1.237 c0.152,0.257,0.271,0.529,0.361,0.81l0.22,0.701l-0.142,0.23C11.569,3.607,10.996,3.238,10.502,2.399z M13.568,7.636v3.146 c0.364,0.184,0.465,0.516,0.465,0.516s0.072-0.034,0.072,1.479c0,1.514-0.324,1.568-0.537,1.616v0.824c0,0,2.462-0.796,3.928-2.65 c0.532-0.673,0.822-0.505,0.822-0.505l-0.01-4.426C18.308,7.636,13.568,7.636,13.568,7.636z M11.381,7.636H6.386v2.572 c1.209,0,3.428,0,4.994,0V7.636H11.381z M0.028,10.264h2.855v9.663H0.028V10.264z M18.054,13.379 c-0.113-0.044-0.23-0.061-0.349-0.041c-0.897,0.165-2.255,3.501-5.789,2.538c0,0-1.034-0.334-1.425-0.574 c-0.346-0.191-1.08-0.628-1.68-1.084h1.68h1.889c0,0,0.146,0.009,0.315-0.029c0.231-0.053,0.508-0.194,0.508-0.576 c0-0.66,0-1.647,0-1.647s-0.11-0.548-0.508-0.749c-0.091-0.046-0.194-0.075-0.315-0.075c-0.186,0-0.924,0-1.889,0 c-1.711,0-4.133,0-5.453,0c-0.581,0-0.949,0-0.949,0v7.026c0,0,5.602,1.758,7.578,1.758c0,0,4.939,0.22,8.234-3.624 C19.902,16.303,19.043,13.763,18.054,13.379z"
-                    />
-                  </g>
-                </svg>
-              </div>
-            )}
+                      fill="#EB4463"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="22.365"
+                      height="22.178"
+                      viewBox="0 0 18.365 16.178"
+                    >
+                      <path
+                        id="heart_1_"
+                        data-name="heart (1)"
+                        d="M18.365,6.954A5.271,5.271,0,0,1,16.8,10.719L9.767,17.564a.847.847,0,0,1-1.169,0L1.569,10.727A5.33,5.33,0,1,1,9.1,3.181l.083.083.083-.083a5.33,5.33,0,0,1,9.1,3.773Z"
+                        transform="translate(0 -1.62)"
+                        fill={
+                          liked ? "#EB4463" : darkMode ? "#42494F" : "#adb6c3"
+                        }
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      onClick={() => {
+                        if (userData) {
+                          likePost();
+                        } else {
+                          fullPageReload("/signin");
+                        }
+                      }}
+                      className="cursor-pointer"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="22.365"
+                      height="22.178"
+                      viewBox="0 0 18.365 16.178"
+                    >
+                      <path
+                        id="heart_1_"
+                        data-name="heart (1)"
+                        d="M18.365,6.954A5.271,5.271,0,0,1,16.8,10.719L9.767,17.564a.847.847,0,0,1-1.169,0L1.569,10.727A5.33,5.33,0,1,1,9.1,3.181l.083.083.083-.083a5.33,5.33,0,0,1,9.1,3.773Z"
+                        transform="translate(0 -1.62)"
+                        fill={darkMode ? "#42494F" : "#adb6c3"}
+                      />
+                    </svg>
+                  )}
+                  <div className="text-[#728198]">{likes.length}</div>
+                </div>
 
-            {copied ? (
+                <div className="flex items-center space-x-1">
+                  <svg
+                    onClick={() => {
+                      setPostOwnerDetails(id);
+                      setCommentValues(comments);
+                      router.push(`/${users.username}/post/${id}`);
+                    }}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18.18"
+                    height="18.178"
+                    viewBox="0 0 16.18 16.178"
+                  >
+                    <path
+                      id="comment"
+                      d="M.679,11.325.01,15.318a.751.751,0,0,0,.206.647.74.74,0,0,0,.522.213.756.756,0,0,0,.125-.007L4.856,15.5a7.95,7.95,0,0,0,3.236.677A8.089,8.089,0,1,0,0,8.089,7.951,7.951,0,0,0,.679,11.325Z"
+                      fill={darkMode ? "#42494F" : "#adb6c3"}
+                    />
+                  </svg>
+
+                  <div className="text-[#728198]">
+                    {comments.filter((c) => c.parentid === null).length}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-1">
+                  {madeRepost ? (
+                    <svg
+                      onMouseDown={handlePressStart}
+                      onMouseUp={handlePressEnd}
+                      onTouchStart={handlePressStart}
+                      onTouchEnd={handlePressEnd}
+                      className="cursor-pointer text-pastelGreen"
+                      fill={darkMode ? "#42494F" : "#adb6c3"}
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18.5"
+                      height="16.178"
+                      viewBox="0 0 18.5 16.178"
+                    >
+                      <g id="repost" transform="translate(0 -32.133)">
+                        <path
+                          id="Pfad_4757"
+                          data-name="Pfad 4757"
+                          d="M8.092,43.9a.542.542,0,0,0-.383-.159H5.729V36.7h1.78a.542.542,0,0,0,.383-.925L4.409,32.292a.542.542,0,0,0-.767,0L.159,35.775a.542.542,0,0,0,.383.925h1.78v7.586a2.864,2.864,0,0,0,2.864,2.864h4.845a.542.542,0,0,0,.383-.925Z"
+                          transform="translate(0)"
+                          fill={darkMode ? "#42494F" : "#adb6c3"}
+                        />
+                        <path
+                          id="Pfad_4758"
+                          data-name="Pfad 4758"
+                          d="M229.923,75.05a.542.542,0,0,0-.5-.335h-1.78V67.13a2.864,2.864,0,0,0-2.864-2.864h-4.845a.542.542,0,0,0-.383.925l2.322,2.322a.542.542,0,0,0,.383.159h1.98v7.044h-1.78a.542.542,0,0,0-.383.925l3.483,3.483a.542.542,0,0,0,.767,0l3.483-3.483a.542.542,0,0,0,.118-.591Z"
+                          transform="translate(-211.464 -30.971)"
+                          fill={darkMode ? "#42494F" : "#adb6c3"}
+                        />
+                      </g>
+                    </svg>
+                  ) : (
+                    <svg
+                      onMouseDown={handlePressStart}
+                      onMouseUp={handlePressEnd}
+                      onTouchStart={handlePressStart}
+                      onTouchEnd={handlePressEnd}
+                      className="cursor-pointer text-black"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18.5"
+                      height="16.178"
+                      viewBox="0 0 18.5 16.178"
+                    >
+                      <g id="repost" transform="translate(0 -32.133)">
+                        <path
+                          id="Pfad_4757"
+                          data-name="Pfad 4757"
+                          d="M8.092,43.9a.542.542,0,0,0-.383-.159H5.729V36.7h1.78a.542.542,0,0,0,.383-.925L4.409,32.292a.542.542,0,0,0-.767,0L.159,35.775a.542.542,0,0,0,.383.925h1.78v7.586a2.864,2.864,0,0,0,2.864,2.864h4.845a.542.542,0,0,0,.383-.925Z"
+                          transform="translate(0)"
+                          fill={darkMode ? "#42494F" : "#adb6c3"}
+                        />
+                        <path
+                          id="Pfad_4758"
+                          data-name="Pfad 4758"
+                          d="M229.923,75.05a.542.542,0,0,0-.5-.335h-1.78V67.13a2.864,2.864,0,0,0-2.864-2.864h-4.845a.542.542,0,0,0-.383.925l2.322,2.322a.542.542,0,0,0,.383.159h1.98v7.044h-1.78a.542.542,0,0,0-.383.925l3.483,3.483a.542.542,0,0,0,.767,0l3.483-3.483a.542.542,0,0,0,.118-.591Z"
+                          transform="translate(-211.464 -30.971)"
+                          fill={darkMode ? "#42494F" : "#adb6c3"}
+                        />
+                      </g>
+                    </svg>
+                  )}
+                  <div className="text-[#728198]">{reposts.length}</div>
+                </div>
+
+                <div className="flex items-center space-x-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="17.176"
+                    height="17.178"
+                    viewBox="0 0 16.176 16.178"
+                  >
+                    <g
+                      id="noun-sharingan-5340043"
+                      transform="translate(-27.476 -27.489)"
+                    >
+                      <path
+                        id="Pfad_4724"
+                        data-name="Pfad 4724"
+                        d="M39.553,28.542A8.088,8.088,0,1,0,42.6,39.561,8.088,8.088,0,0,0,39.553,28.542Zm1.764,11.8a4,4,0,0,0-.212-1.049.388.388,0,0,0-.586-.187h0a1.394,1.394,0,0,1-1.319.1,5.138,5.138,0,0,1-7.186.09,1.387,1.387,0,0,1-.507.129,3.512,3.512,0,0,1-2.935-1.207,3.916,3.916,0,0,0,1.02.334.392.392,0,0,0,.449-.417h0a1.39,1.39,0,0,1,.553-1.193,5.145,5.145,0,0,1,3.593-6.324,1.351,1.351,0,0,1,.147-.5,3.513,3.513,0,0,1,2.547-1.9,3.952,3.952,0,0,0-.812.719.388.388,0,0,0,.126.6h0a1.376,1.376,0,0,1,.719,1.078,5.141,5.141,0,0,1,3.794,4.951,5.256,5.256,0,0,1-.151,1.243,1.383,1.383,0,0,1,.359.359A3.554,3.554,0,0,1,41.317,40.345Z"
+                        transform="translate(0)"
+                        fill={darkMode ? "#42494F" : "#adb6c3"}
+                      />
+                      <path
+                        id="Pfad_4725"
+                        data-name="Pfad 4725"
+                        d="M43.245,37.92a1.593,1.593,0,0,1-.072.162,1.383,1.383,0,0,1-2.515-.162,4.534,4.534,0,0,0-3.09,5.461.945.945,0,0,1,.176-.025A1.383,1.383,0,0,1,38.9,45.609a4.523,4.523,0,0,0,6.187-.083,1.436,1.436,0,0,1-.1-.14,1.387,1.387,0,0,1,.406-1.915,1.358,1.358,0,0,1,.981-.2,4.514,4.514,0,0,0-3.129-5.35Zm-1.3,6.284a1.944,1.944,0,1,1,1.944-1.944A1.944,1.944,0,0,1,41.945,44.2Z"
+                        transform="translate(-6.376 -6.683)"
+                        fill={darkMode ? "#42494F" : "#adb6c3"}
+                      />
+                    </g>
+                  </svg>
+                  <div className="text-[#728198]">{views.length}</div>
+                </div>
+              </div>
+
+              <div className="space-x-3 w-fit flex flex-row justify-center items-center">
+                {userData && users.id !== myProfileId && (
+                  <div
+                    className="text-sm space-x-1 rounded-md text-white py-1 px-3 bg-[#EB4463] flex flex-row items-center"
+                    onClick={() => {
+                      setOpenTipPost(true);
+                    }}
+                  >
+                    <svg
+                      width="15px"
+                      height="20px"
+                      viewBox="0 0 15 15"
+                      fill="white"
+                      stroke="white"
+                      strokeWidth="0.5"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M7 1V0H8V1H9.5C11.433 1 13 2.567 13 4.5H12C12 3.11929 10.8807 2 9.5 2H5.5C4.11929 2 3 3.11929 3 4.5C3 5.88071 4.11929 7 5.5 7H9.5C11.433 7 13 8.567 13 10.5C13 12.433 11.433 14 9.5 14H8V15H7V14H5.5C3.567 14 2 12.433 2 10.5H3C3 11.8807 4.11929 13 5.5 13H9.5C10.8807 13 12 11.8807 12 10.5C12 9.11929 10.8807 8 9.5 8H5.5C3.567 8 2 6.433 2 4.5C2 2.567 3.567 1 5.5 1H7Z"
+                        fill="white"
+                      />
+                    </svg>
+                    <span>{"Tip"}</span>
+                  </div>
+                )}
+
+                {/* {copied ? (
               <span
                 className={`text-xs ${
                   darkMode ? "text-white" : "text-black"
@@ -1045,90 +1531,508 @@ export default function PostCard({
                 strokeWidth="2"
                 d="m13 19-6-5-6 5V2a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17Z"
               />
-            </svg>
-          </div>
-        </div>
-        {openQuote && (
-          <>
-            <div
-              id="modal-visible"
-              className={`max-w-[400px] flex flex-col py-2 px-2 w-full relative ${
-                darkMode ? "bg-[#1e1f24] text-white" : "bg-white text-black"
-              } rounded-lg`}
-            >
-              <span className="pl-3 pb-1 text-start font-semibold">
-                Quoted Repost
-              </span>
-              <textarea
-                value={quoteContent !== null ? quoteContent : ""}
-                onChange={(e) => {
-                  setQuoteContent(e.target.value);
-                }}
-                maxLength={160}
-                placeholder="What do you think of this post..."
-                className="bg-transparent font-medium text-sm h-18 resize-none w-full px-2 border-none focus:outline-none focus:ring-0"
-              ></textarea>
+            </svg> */}
+              </div>
+            </div>
+            {
+              // router.pathname !== '/[username]/post/[postid]' &&
+              <div
+                className={`border-t ${
+                  darkMode ? "border-[#32353C]" : "border-[#EEEDEF]"
+                } pt-4 space-x-2 flex flex-row justify-between items-center`}
+              >
+                {userData && (
+                  <span
+                    // onClick={() => {
+                    //   fullPageReload(`/profile/${userData.username}`, "window");
+                    // }}
+                    className="relative flex flex-shrink-0"
+                  >
+                    <Image
+                      src={userData.avatar}
+                      alt="user myprofile"
+                      height={25}
+                      width={25}
+                      className="rounded-full"
+                    />
+                  </span>
+                )}
+                <span
+                  className={`w-full flex flex-row justify-between items-center pr-2 border rounded-2xl ${
+                    darkMode
+                      ? "bg-[#27292F] border-[#32353C]"
+                      : "bg-[#F9F9F9] border-[#EEEDEF]"
+                  }`}
+                >
+                  <input
+                    ref={
+                      router.pathname === "/[username]/post/[postid]"
+                        ? inputRef
+                        : commentRef
+                    }
+                    value={
+                      router.pathname === "/[username]/post/[postid]"
+                        ? commentMsg
+                        : myTextComment
+                    }
+                    onChange={(e) => {
+                      if (router.pathname === "/[username]/post/[postid]") {
+                        setCommentMsg(e.target.value);
+                      } else {
+                        setMyTextComment(e.target.value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        console.log('clicked')
+                        if (router.pathname === "/[username]/post/[postid]") {
+                          postGlobalComment();
+                        } else {
+                          postComment();
+                        }
+                      }
+                    }}
+                    maxLength={1900}
+                    className={`${
+                      darkMode ? "text-white" : "text-gray-800"
+                    } text-xs w-full bg-transparent border-none focus:ring-0`}
+                    placeholder="Comment on this post..."
+                  />
 
-              <span className="pb-4 text-sm text-white text-center flex flex-row justify-end font-semibold">
+                  {selectedCommentMedia ? (
+                    <label htmlFor="input-post-file">
+                      <Image
+                        src={selectedCommentMedia}
+                        alt="Invalid post media. Click to change"
+                        height={30}
+                        width={30}
+                      />
+
+                      <input
+                        onChange={commentMediaChange}
+                        className="hidden"
+                        type="file"
+                        accept="image/jpeg, image/png, image/jpg, image/svg, image/gif"
+                        id="input-post-file"
+                      />
+                    </label>
+                  ) : (
+                    <label
+                      htmlFor="input-comment-file"
+                      className="relative cursor-pointer"
+                    >
+                      <span className="flex flex-row items-end">
+                        <svg
+                          fill="#000000"
+                          width="20px"
+                          height="20px"
+                          viewBox="0 0 24 24"
+                          id="image"
+                          data-name="Flat Color"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="bg-[#5D6879] rounded-lg icon flat-color"
+                        >
+                          <rect
+                            id="primary"
+                            x={2}
+                            y={3}
+                            width={20}
+                            height={18}
+                            rx={2}
+                            style={{
+                              fill: "#5D6879",
+                            }}
+                          />
+                          <path
+                            id="secondary"
+                            d="M21.42,19l-6.71-6.71a1,1,0,0,0-1.42,0L11,14.59l-1.29-1.3a1,1,0,0,0-1.42,0L2.58,19a1,1,0,0,0-.29.72,1,1,0,0,0,.31.72A2,2,0,0,0,4,21H20a2,2,0,0,0,1.4-.56,1,1,0,0,0,.31-.72A1,1,0,0,0,21.42,19Z"
+                            style={{
+                              fill: "white",
+                            }}
+                          />
+                          <circle
+                            id="secondary-2"
+                            data-name="secondary"
+                            cx={11}
+                            cy={9}
+                            r={1.5}
+                            style={{
+                              fill: "white",
+                            }}
+                          />
+                        </svg>
+                      </span>
+                      <input
+                        onChange={commentMediaChange}
+                        className="hidden"
+                        type="file"
+                        accept="image/jpeg, image/png, image/jpg, image/svg, image/gif"
+                        id="input-comment-file"
+                      />
+                    </label>
+                  )}
+                </span>
                 <span
                   onClick={() => {
-                    handleQuoteRepost();
+                    router.pathname === "/[username]/post/[postid]" ? postGlobalComment() : postComment();
                   }}
-                  className={`${
-                    darkMode ? "" : "border border-gray-100"
-                  } bg-pastelGreen py-1 w-[70px] rounded-lg cursor-pointer`}
+                  className={`rounded-full border h-8 w-8 flex justify-center items-center ${
+                    darkMode
+                      ? "bg-[#27292F] border-[#32353C]"
+                      : "bg-[#F9F9F9] border-[#EEEDEF]"
+                  }`}
                 >
-                  Repost
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 21.5 21.5"
+                  >
+                    <g id="Icon" transform="translate(-1.25 -1.25)">
+                      <path
+                        id="Pfad_4721"
+                        data-name="Pfad 4721"
+                        d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
+                        fill={darkMode ? "#6A6B71" : "#5d6879"}
+                        fill-rule="evenodd"
+                      />
+                    </g>
+                  </svg>
                 </span>
+              </div>
+            }
+            {randomComment && commentLikes && router.pathname === "/home" && (
+              <span className={`flex flex-col space-y-1.5`}>
+                <span className="pt-1.5 pb-1 text-start font-semibold text-sm">
+                  All comments
+                </span>
+
+                {myComment ? (
+                  <span className="flex flex-row items-center justify-between w-full">
+                    <span className="flex flex-row items-center">
+                      <span className="relative flex h-6 w-6 flex-shrink-0">
+                        <Image
+                          src={userData.avatar}
+                          alt="user myprofile"
+                          height={35}
+                          width={35}
+                          className="rounded-full"
+                        />
+                      </span>
+                      <span className="pl-2 text-[0.8rem] flex flex-col">
+                        <span className="flex flex-row space-x-1">
+                          <span className="font-semibold">
+                            {userData.username}
+                            {":"}
+                          </span>
+                          <span>{myComment}</span>
+                        </span>
+                        <span
+                          className={`${
+                            darkMode ? "text-[#6A6B71]" : "text-[#728198]"
+                          } flex flex-row items-center items-center space-x-1`}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="12.004"
+                            height="14.17"
+                            viewBox="0 0 13.004 15.17"
+                          >
+                            <g id="ICON" transform="translate(-7.833 -3.5)">
+                              <path
+                                id="Pfad_4726"
+                                data-name="Pfad 4726"
+                                d="M18.646,16.365a7.552,7.552,0,0,1-1.37,1.089.383.383,0,1,0,.39.66A9.607,9.607,0,0,0,19.7,16.377a5.561,5.561,0,0,0,.54-.618.522.522,0,0,0,.078-.408.416.416,0,0,0-.2-.246,6.57,6.57,0,0,0-.816-.26,8.934,8.934,0,0,0-2.842-.366.383.383,0,1,0,.019.766,8.31,8.31,0,0,1,2.379.268,15.1,15.1,0,0,1-1.495.343c-3.041.638-5.881.1-7.309-2.967C8.888,10.376,9.183,7.076,9.1,4.372a.383.383,0,1,0-.766.024c.087,2.8-.182,6.214,1.032,8.818,1.6,3.435,4.754,4.108,8.161,3.393.375-.079.751-.149,1.119-.241Z"
+                                fill="#728198"
+                                stroke="#728198"
+                                stroke-width="1"
+                                fill-rule="evenodd"
+                              />
+                            </g>
+                          </svg>
+                          <span
+                            onClick={() => {
+                              router.push(`/${users.username}/post/${id}`);
+                            }}
+                            className="cursor-pointer underline"
+                          >
+                            Reply
+                          </span>
+                        </span>
+                      </span>
+                    </span>
+                    <span className="flex flex-row">
+                      <div className="flex items-center space-x-1">
+                        <svg
+                          onClick={() => {
+                            router.push(`/${users.username}/post/${id}`);
+                          }}
+                          className="cursor-pointer"
+                          fill="currentColor"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="15.365"
+                          height="15.178"
+                          viewBox="0 0 18.365 16.178"
+                        >
+                          <path
+                            id="heart_1_"
+                            data-name="heart (1)"
+                            d="M18.365,6.954A5.271,5.271,0,0,1,16.8,10.719L9.767,17.564a.847.847,0,0,1-1.169,0L1.569,10.727A5.33,5.33,0,1,1,9.1,3.181l.083.083.083-.083a5.33,5.33,0,0,1,9.1,3.773Z"
+                            transform="translate(0 -1.62)"
+                            fill={darkMode ? "#42494F" : "#adb6c3"}
+                          />
+                        </svg>
+
+                        <div className="text-[0.75rem] text-[#728198]">{0}</div>
+                      </div>
+                    </span>
+                  </span>
+                ) : (
+                  <span className="flex flex-row items-center justify-between w-full">
+                    <span className="flex flex-row items-center">
+                      <span
+                        // onClick={() => {
+                        //   fullPageReload(`/profile/${userData.username}`, "window");
+                        // }}
+                        className="relative flex h-6 w-6 flex-shrink-0"
+                      >
+                        <Image
+                          src={randomComment.users.avatar}
+                          alt="user myprofile"
+                          height={35}
+                          width={35}
+                          className="rounded-full"
+                        />
+                      </span>
+                      <span className="pl-2 text-[0.8rem] flex flex-col">
+                        <span className="flex flex-row space-x-1">
+                          <span className="font-semibold">
+                            {randomComment.users.username}
+                            {":"}
+                          </span>
+                          <span>{randomComment.content}</span>
+                        </span>
+                        <span
+                          className={`${
+                            darkMode ? "text-[#6A6B71]" : "text-[#728198]"
+                          } flex flex-row items-center items-center space-x-1`}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="12.004"
+                            height="14.17"
+                            viewBox="0 0 13.004 15.17"
+                          >
+                            <g id="ICON" transform="translate(-7.833 -3.5)">
+                              <path
+                                id="Pfad_4726"
+                                data-name="Pfad 4726"
+                                d="M18.646,16.365a7.552,7.552,0,0,1-1.37,1.089.383.383,0,1,0,.39.66A9.607,9.607,0,0,0,19.7,16.377a5.561,5.561,0,0,0,.54-.618.522.522,0,0,0,.078-.408.416.416,0,0,0-.2-.246,6.57,6.57,0,0,0-.816-.26,8.934,8.934,0,0,0-2.842-.366.383.383,0,1,0,.019.766,8.31,8.31,0,0,1,2.379.268,15.1,15.1,0,0,1-1.495.343c-3.041.638-5.881.1-7.309-2.967C8.888,10.376,9.183,7.076,9.1,4.372a.383.383,0,1,0-.766.024c.087,2.8-.182,6.214,1.032,8.818,1.6,3.435,4.754,4.108,8.161,3.393.375-.079.751-.149,1.119-.241Z"
+                                fill="#728198"
+                                stroke="#728198"
+                                stroke-width="1"
+                                fill-rule="evenodd"
+                              />
+                            </g>
+                          </svg>
+                          <span
+                            onClick={() => {
+                              replyComment(
+                                randomComment.id,
+                                randomComment.users.username
+                              );
+                            }}
+                            className="underline"
+                          >
+                            Reply
+                          </span>
+                        </span>
+                      </span>
+                    </span>
+                    <span className="flex flex-row">
+                      <div className="flex items-center space-x-1">
+                        {commentLiked ? (
+                          <svg
+                            onClick={() => {
+                              if (userData) {
+                                likeComment(randomComment.id);
+                              } else {
+                                fullPageReload("/signin");
+                              }
+                            }}
+                            fill="#EB4463"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="15.365"
+                            height="15.178"
+                            viewBox="0 0 18.365 16.178"
+                          >
+                            <path
+                              id="heart_1_"
+                              data-name="heart (1)"
+                              d="M18.365,6.954A5.271,5.271,0,0,1,16.8,10.719L9.767,17.564a.847.847,0,0,1-1.169,0L1.569,10.727A5.33,5.33,0,1,1,9.1,3.181l.083.083.083-.083a5.33,5.33,0,0,1,9.1,3.773Z"
+                              transform="translate(0 -1.62)"
+                              fill={"#EB4463"}
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            onClick={() => {
+                              if (userData) {
+                                likeComment(randomComment.id);
+                              } else {
+                                fullPageReload("/signin");
+                              }
+                            }}
+                            className="cursor-pointer"
+                            fill="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="15.365"
+                            height="15.178"
+                            viewBox="0 0 18.365 16.178"
+                          >
+                            <path
+                              id="heart_1_"
+                              data-name="heart (1)"
+                              d="M18.365,6.954A5.271,5.271,0,0,1,16.8,10.719L9.767,17.564a.847.847,0,0,1-1.169,0L1.569,10.727A5.33,5.33,0,1,1,9.1,3.181l.083.083.083-.083a5.33,5.33,0,0,1,9.1,3.773Z"
+                              transform="translate(0 -1.62)"
+                              fill={darkMode ? "#42494F" : "#adb6c3"}
+                            />
+                          </svg>
+                        )}
+                        <div className="text-[0.75rem] text-[#728198]">
+                          {commentLikes && commentLikes.length}
+                        </div>
+                      </div>
+                    </span>
+                  </span>
+                )}
+                {comments &&
+                  comments.filter((c) => c.parentid === null).length &&
+                  comments.filter((c) => c.parentid === null).length > 1 && (
+                    <span
+                      onClick={() => {
+                        router.push(`/${users.username}/post/${id}`);
+                      }}
+                      className={`border-t ${
+                        darkMode ? "border-[#32353C]" : "border-[#EEEDEF]"
+                      } cursor-pointer pt-2 w-full flex flex-row text-center justify-center underline text-xs text-[#EB4463]`}
+                    >
+                      View all comments
+                    </span>
+                  )}
               </span>
-            </div>
-            <div
-              onClick={() => {
-                setOpenQuote(false);
-              }}
-              id="overlay"
-            ></div>
-          </>
-        )}
+            )}
+          </div>
 
-        {openPostOptions && (
-          <>
-            <PopupModal
-              success={"10"}
-              useruuid={users.useruuid}
-              username={users.username}
-              postid={id}
-              setOpenPostOptions={setOpenPostOptions}
-            />
-            <div
-              onClick={() => {
-                setOpenPostOptions(false);
-              }}
-              id="tip-overlay"
-            ></div>
-          </>
-        )}
+          {preview && (
+            <>
+              <div
+                onClick={() => {
+                  setPreview(false);
+                }}
+                id="imagePreview"
+              >
+                <Image
+                  src={media}
+                  alt="user profile"
+                  height={2000}
+                  width={2000}
+                  className="h-screen"
+                />
+              </div>
+              <div
+                onClick={() => {
+                  setPreview(false);
+                }}
+                id="dark-overlay"
+                className="bg-black"
+              ></div>
+            </>
+          )}
 
-        {openTipPost && (
-          <>
-            <PopupModal
-              success={"6"}
-              username={users.username}
-              useruuid={users.useruuid}
-              destSolAddress={users.solAddress ? users.solAddress : null}
-              avatar={users.avatar}
-              destinationAddress={users.address}
-              userDestinationId={users.id}
-              post={true}
-            />
-            <div
-              onClick={() => {
-                setOpenTipPost(false);
-              }}
-              id="tip-overlay"
-            ></div>
-          </>
-        )}
+          {openQuote && (
+            <>
+              <div
+                id="modal-visible"
+                className={`flex flex-col py-2 px-2 w-full relative ${
+                  darkMode ? "bg-[#1e1f24] text-white" : "bg-white text-black"
+                } rounded-lg`}
+              >
+                <span className="pl-3 pb-1 text-start font-semibold">
+                  Quoted Repost
+                </span>
+                <textarea
+                  value={quoteContent !== null ? quoteContent : ""}
+                  onChange={(e) => {
+                    setQuoteContent(e.target.value);
+                  }}
+                  maxLength={160}
+                  placeholder="What do you think of this post..."
+                  className="bg-transparent font-medium text-sm h-18 resize-none w-full px-2 border-none focus:outline-none focus:ring-0"
+                ></textarea>
+
+                <span className="pb-4 text-sm text-white text-center flex flex-row justify-end font-semibold">
+                  <span
+                    onClick={() => {
+                      handleQuoteRepost();
+                    }}
+                    className={`${
+                      darkMode ? "" : "border border-gray-100"
+                    } bg-pastelGreen py-1 w-[70px] rounded-lg cursor-pointer`}
+                  >
+                    Repost
+                  </span>
+                </span>
+              </div>
+              <div
+                onClick={() => {
+                  setOpenQuote(false);
+                }}
+                id="overlay"
+              ></div>
+            </>
+          )}
+
+          {openPostOptions && (
+            <>
+              <PopupModal
+                success={"10"}
+                useruuid={users.useruuid}
+                username={users.username}
+                avatar={users.avatar}
+                postid={id}
+                setOpenPostOptions={setOpenPostOptions}
+              />
+              <div
+                onClick={() => {
+                  setOpenPostOptions(false);
+                }}
+                id="tip-overlay"
+              ></div>
+            </>
+          )}
+
+          {openTipPost && (
+            <>
+              <PopupModal
+                success={"6"}
+                username={users.username}
+                useruuid={users.useruuid}
+                destSolAddress={users.solAddress ? users.solAddress : null}
+                avatar={users.avatar}
+                destinationAddress={users.address}
+                userDestinationId={users.id}
+                post={true}
+              />
+              <div
+                onClick={() => {
+                  setOpenTipPost(false);
+                }}
+                id="tip-overlay"
+              ></div>
+            </>
+          )}
+        </div>
       </div>
     )
   );

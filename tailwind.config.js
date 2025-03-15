@@ -7,9 +7,12 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        bai: ['Bai Jamjuree', 'sans-serif'],
+      },
       colors: {
-        pastelGreen: "#04dbc4", //74dc9c
-        textGreen: "#04dbc4", //rgb(73, 169, 73)
+        pastelGreen: "#EB4463", //74dc9c
+        textGreen: "#EB4463", //rgb(73, 169, 73)
         dmGreen: "#D8E9E9" //#EAF6F6
       },
       padding: {

@@ -1,3 +1,14 @@
+export function FilledCloudSvg({pixels}){
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={pixels} height={pixels} viewBox="0 0 31.657 23.034">
+  <g id="cloud-computing" transform="translate(0 -66.65)">
+    <g id="Gruppe_3150" data-name="Gruppe 3150" transform="translate(0 66.65)">
+      <path id="Pfad_1762" data-name="Pfad 1762" d="M24.736,89.684H17.944V82.821h2.245a.7.7,0,0,0,.569-1.113l-4.366-6.042a.7.7,0,0,0-1.132,0l-4.366,6.042a.7.7,0,0,0,.569,1.113h2.245v6.863H6.1a6.8,6.8,0,0,1-6.1-6.8,6.444,6.444,0,0,1,3.2-5.563,4.32,4.32,0,0,1-.265-1.507,4.381,4.381,0,0,1,4.386-4.386,4.311,4.311,0,0,1,1.5.265,8.78,8.78,0,0,1,16.682,2.9,7.638,7.638,0,0,1-.763,15.1Z" transform="translate(0 -66.65)" fill="#fff"/>
+    </g>
+  </g>
+</svg>
+  );
+}
 export default function CloudSvg({pixels}) {
   return (
     <svg

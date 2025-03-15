@@ -19,7 +19,8 @@ import PopupModal from "@/components/popupModal";
 
 export default function Home() {
   const [storyUploading, setStoryUploading] = useState(false);
-  const { fetchStories, timeAgo, fetchViews, getUserFromUsername } = DappLibrary();
+  const { fetchStories, timeAgo, fetchViews, getUserFromUsername } =
+    DappLibrary();
   const [errorMsg, setErrorMsg] = useState("");
   const [mediaContent, setMediaContent] = useState("");
   const router = useRouter();
@@ -47,6 +48,7 @@ export default function Home() {
     sideBarOpened,
     deletePost,
     setDeletePost,
+    darkMode
   } = useContext(UserContext);
 
   const closeStory = () => {
@@ -153,57 +155,63 @@ export default function Home() {
   const handleReferralAndUpdateUsers = async (userData, refData) => {
     try {
       // Insert referral record
-      const referralResponse = await supabase
-        .from("referrals")
-        .insert({
-          referrer: refData.username,
-          referee: userData.username,
-        });
-  
+      const referralResponse = await supabase.from("referrals").insert({
+        referrer: refData.username,
+        referee: userData.username,
+      });
+
       if (referralResponse.error) {
-        console.log(`Referral insert failed: ${referralResponse.error.message}`);
-        return
+        console.log(
+          `Referral insert failed: ${referralResponse.error.message}`
+        );
+        return;
       }
-  
+
       // Update referrer's `ki` value
       const referrerUpdateResponse = await supabase
         .from("users")
         .update({ ki: parseFloat(refData.ki) + 1.2 })
         .eq("id", refData.id);
-  
+
       if (referrerUpdateResponse.error) {
-        console.log(`Referrer update failed: ${referrerUpdateResponse.error.message}`);
-        return
+        console.log(
+          `Referrer update failed: ${referrerUpdateResponse.error.message}`
+        );
+        return;
       }
-  
+
       const userUpdateResponse = await supabase
         .from("users")
         .update({ ki: 1.2 })
         .eq("id", userData.id);
-  
+
       if (userUpdateResponse.error) {
         console.log(`User update failed: ${userUpdateResponse.error.message}`);
-        return
+        return;
       }
-  
     } catch (error) {
       console.error("Error handling referral:", error.message);
     }
-  };  
+  };
 
   useEffect(() => {
-
     if (localStorage.getItem("referralCode") && userData) {
-      const referrer = localStorage.getItem("referralCode").replace("-san", "").trim();
-      if (referrer.toLowerCase().trim() === userData.username.toLowerCase().trim()){
+      const referrer = localStorage
+        .getItem("referralCode")
+        .replace("-san", "")
+        .trim();
+      if (
+        referrer.toLowerCase().trim() === userData.username.toLowerCase().trim()
+      ) {
         localStorage.removeItem("referralCode");
-        return
+        return;
       }
       const now = new Date();
       const createdAt = new Date(userData.created_at);
 
-      if ((now - createdAt) / (1000 * 60) < 5) { //check if new user from 5 minutes ago
-        const refData = getUserFromUsername(referrer)
+      if ((now - createdAt) / (1000 * 60) < 5) {
+        //check if new user from 5 minutes ago
+        const refData = getUserFromUsername(referrer);
         handleReferralAndUpdateUsers(userData, refData);
         localStorage.removeItem("referralCode");
       }
@@ -216,28 +224,41 @@ export default function Home() {
   }, [currentStory, userData]);
 
   return (
-    <main>
-      <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
-        {!openStories && <NavBar />}
-        {!openStories && <SmallTopBar middleTab={true} relationship={true} />}
+    <main className={`${darkMode ? 'bg-[#17181C]' : 'bg-[#F9F9F9]'}`}>
+      <div className="hidden lg:block block z-40 sticky top-0">
+        <LargeTopBar relationship={true} />
+      </div>
+      <div className=" lg:hidden block z-40 sticky top-0">
+        <SmallTopBar relationship={true} />
+      </div>
+
+      <section className="relative mb-5 flex flex-row justify-between lg:flex-row lg:space-x-2 w-full">
+          {!openStories && <NavBar />}
+          
+       
+        {/* {!openStories && <SmallTopBar middleTab={true} relationship={true} />} */}
         <div
           className={
-            "w-full lg:mt-20 pb-20 lg:pt-0 lg:pb-2 space-y-2 px-2 lg:pl-lPostCustom lg:pr-rPostCustom flex flex-col"
+            "w-full lg:mt-20 pb-20 lg:pt-0 lg:pb-2 space-y-2 px-2 lg:pl-[16rem] lg:pr-[18rem] xl:pl-[18rem] xl:pr-[20rem] flex flex-col"
           }
         >
-          <div className="topcont">
+          {/* <div className="topcont">
             <LargeTopBar relationship={true} />
-          </div>
+          </div> */}
+
           {userData && <Stories />}
           {userData && <SmallPostContainer />}
 
           <Posts />
         </div>
-
-        <div className="hidden lg:block sticky right-2 top-20 heighto">
-          <LargeRightBar />
-        </div>
+        
+        <LargeRightBar />
+        
       </section>
+
+      {/* <div id="stayinplace" className="hidden lg:block absolute fixed right-0 top-20">
+          <LargeRightBar />
+        </div> */}
 
       {sideBarOpened && <SideBar />}
 

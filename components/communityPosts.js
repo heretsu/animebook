@@ -8,7 +8,7 @@ const CommunityPosts = ({posts, community, globalCommunityComments}) => {
   } = useContext(UserContext);
 
   return (
-    <div className="space-y-6 pb-2 pt-4">
+    <div className="space-y-2 pb-2 pt-4">
       {posts !== null &&
         posts !== undefined &&
         (posts.length > 0 ? (

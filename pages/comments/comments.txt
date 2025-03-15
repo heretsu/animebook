@@ -47,7 +47,7 @@ export default function Comments({ comments }) {
     const { data } = await supabase
       .from("comments")
       .select(
-        "id, created_at, content, posts(id), users(id, avatar, username), parentid"
+        "id, created_at, content, posts(id), users(id, avatar, username), parentid, media"
       )
       .eq("postid", postid)
       .order("created_at", { ascending: false });

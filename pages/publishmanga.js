@@ -133,7 +133,7 @@ const PublishManga = () => {
       <section className="mb-5 flex flex-row space-x-2 w-full">
         <NavBar />
         <div className="w-full pb-2 space-y-8 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
-          <div className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-gray-600'} flex flex-col space-y-4 rounded-xl shadow-lg w-full justify-center items-center`}>
+          <div className={`${darkMode ? 'bg-[#17181C] text-white' : 'bg-[#F9F9F9] text-gray-600'} flex flex-col space-y-4 rounded-xl shadow-lg w-full justify-center items-center`}>
             {selectedMangaCover ? (
               <label
                 htmlFor="input-file"
