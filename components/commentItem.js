@@ -162,8 +162,9 @@ export default function CommentItem({
                           className="object-top object-contain"
                         />
                       </span>
-
+<span className="leading-tight break-words whitespace-pre-wrap">
                       <CommentConfig text={comment.content} tags={true} />
+                      </span>
                     </span>
                   </span>
                 ) : (

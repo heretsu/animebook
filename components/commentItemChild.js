@@ -140,8 +140,9 @@ export default function CommentItemChild({ commentChild, comment }) {
                           className="object-top object-contain"
                         />
                       </span>
-
+<span className="leading-tight break-words whitespace-pre-wrap">
                       <CommentConfig text={commentChild.content} tags={false} />
+                      </span>
                     </span>
                   </span>
                 ) : (

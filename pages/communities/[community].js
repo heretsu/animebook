@@ -243,7 +243,7 @@ const Community = ({ community }) => {
                         darkMode ? "bg-[#1E1F24] border-[#292C33] text-white" : "bg-white border-[#EEEDEF] text-black"
                       } p-1.5 px-2 h-full flex flex-1 flex-row justify-between items-center space-x-1`}
                     >
-                      <span className="flex flex-row items-center space-x-1">
+                      <span className="hidden lg:flex flex-row items-center space-x-1">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="17.637"
@@ -400,7 +400,7 @@ const Community = ({ community }) => {
                         darkMode ? "bg-[#1E1F24] border-[#292C33] text-white" : "bg-white border-[#EEEDEF] text-black"
                       } p-1.5 px-2 h-full flex flex-1 flex-row justify-between items-center space-x-1`}
                     >
-                      <span className="flex flex-row items-center space-x-1">
+                      <span className="hidden lg:flex flex-row items-center space-x-1">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="17.637"

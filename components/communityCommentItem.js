@@ -189,7 +189,7 @@ export default function CommunityCommentItem({
               {comment.content !== null &&
                 comment.content !== undefined &&
                 comment.content !== "" && (
-                  <span className="text-sm" onClick={() => {}}>
+                  <span className="text-sm leading-tight break-words whitespace-pre-wrap" onClick={() => {}}>
                     <CommentConfig text={comment.content} tags={true} />
                   </span>
                 )}

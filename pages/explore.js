@@ -829,7 +829,7 @@ export default function Explore() {
               >
                 {post.post.users.username}
               </span>
-              <span className="text-sm font-bold break-words overflow-wrap break-word" id="textkit">
+              <span className="mb-16 text-sm font-bold break-words overflow-wrap break-word" id="textkit">
                 <CommentConfig text={post.post.content} tags={true} />
               </span>
             </div>

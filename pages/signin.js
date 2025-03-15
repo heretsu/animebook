@@ -93,7 +93,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img5}
+            src={img1}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -121,7 +121,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img6}
+            src={img1}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -135,7 +135,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img7}
+            src={img4}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -151,7 +151,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img8}
+            src={img3}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -165,7 +165,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img9}
+            src={img2}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -179,7 +179,7 @@ export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9
 
           <div class="marquee-item">
             <p class="text-white"><Image
-            src={img10}
+            src={img1}
             alt="Anime Image 1"
             height={500}
             width={500}
@@ -233,12 +233,12 @@ const Signin = () => {
                 // options: {
                 //   redirectTo: "https://localhost:3000/home",
                 // },
-                options: {
-                  redirectTo: "https://animebook-theta.vercel.app/home",
-                },
                 // options: {
-                //   redirectTo: "https://animebook.io/home",
+                //   redirectTo: "https://animebook-theta.vercel.app/home",
                 // },
+                options: {
+                  redirectTo: "https://animebook.io/home",
+                },
               })
               .catch((e) => {
                 console.log(e);
@@ -251,12 +251,12 @@ const Signin = () => {
                 // options: {
                 //   redirectTo: "https://localhost:3000/home",
                 // },
-                options: {
-                  redirectTo: "https://animebook-theta.vercel.app/home",
-                },
                 // options: {
-                //   redirectTo: "https://animebook.io/home",
+                //   redirectTo: "https://animebook-theta.vercel.app/home",
                 // },
+                options: {
+                  redirectTo: "https://animebook.io/home",
+                },
               })
               .catch((e) => {
                 console.log(e);
@@ -280,12 +280,12 @@ const Signin = () => {
           // options: {
           //   redirectTo: "http://localhost:3000/home",
           // },
-          options: {
-            redirectTo: "https://animebook-theta.vercel.app/home",
-          },
           // options: {
-          //   redirectTo: "https://animebook.io/home",
+          //   redirectTo: "https://animebook-theta.vercel.app/home",
           // },
+          options: {
+            redirectTo: "https://animebook.io/home",
+          },
         });
       }
     } catch (error) {

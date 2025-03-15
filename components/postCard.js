@@ -727,7 +727,7 @@ console.log('hmm')
             <span
               className={`${
                 darkMode ? "text-white bg-gray-700" : "text-black bg-gray-100"
-              } text-sm px-1 py-2 w-full rounded`}
+              } text-sm px-1 py-2 w-full rounded leading-tight break-words whitespace-pre-wrap`}
             >
               <CommentConfig text={repostQuote} tags={true} />{" "}
             </span>
@@ -1122,14 +1122,14 @@ console.log('hmm')
           </span>
           {content !== null && content !== undefined && content !== "" && (
             <span
-              onClick={() => {
-                router.push(`/${users.username}/post/${id}`);
-              }}
-              className={`text-sm leading-tight break-all overflow-wrap-word whitespace-preline`}
-              style={{ whiteSpace: "pre-wrap" }}
-            >
-              <CommentConfig text={content} tags={true} />
-            </span>
+            onClick={() => {
+              router.push(`/${users.username}/post/${id}`);
+            }}
+            className="text-sm leading-tight break-words whitespace-pre-wrap"
+          >
+            <CommentConfig text={content} tags={true} />
+          </span>
+          
           )}
           <span
             onDoubleClick={() => {

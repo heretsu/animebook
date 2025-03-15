@@ -1751,23 +1751,7 @@ const NavBar = () => {
         )} */}
       {/* </span> */}
 
-      {NotSignedIn && (
-        <div className="pb-4 text-xs flex flex-row justify-between">
-          <span className="w-full py-3 cursor-pointer flex justify-start items-center space-x-1">
-            <span
-              onClick={() => {
-                fullPageReload("/signin");
-              }}
-              className="cursor-pointer w-fit mx-auto bg-[#EA334E] px-8 mb-2 py-2 text-center text-white font-bold rounded-xl"
-            >
-              Login
-            </span>
-          </span>
-
-          {/* <span className="cursor-pointer underline">Terms of Service</span>
-        <span className="cursor-pointer underline">Privacy Policy</span> */}
-        </div>
-      )}
+     
       {/* <span className="bottom-1 absolute w-full space-x-2 flex flex-row bg-transparent justify-center items-center pb-2 px-4">
         <span
           className="cursor-pointer"

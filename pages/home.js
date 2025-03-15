@@ -363,7 +363,7 @@ export default function Home() {
               </span>
               <span className="flex flex-row text-base w-full justify-center text-start">
                 <span className="flex flex-col space-y-2 items-center">
-                  <span className="bg-black px-2">
+                  <span className="bg-black px-2 leading-tight break-words whitespace-pre-wrap">
                     {storyToView && storyToView.content !== null && (
                       <CommentConfig text={storyToView.content} tags={true} />
                     )}
