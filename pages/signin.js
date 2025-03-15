@@ -230,12 +230,6 @@ const Signin = () => {
               .signUp({
                 email: manualEmail.trim(),
                 password: manualPassword,
-                // options: {
-                //   redirectTo: "https://localhost:3000/home",
-                // },
-                // options: {
-                //   redirectTo: "https://animebook-theta.vercel.app/home",
-                // },
                 options: {
                   redirectTo: "https://animebook.io/home",
                 },
@@ -248,12 +242,6 @@ const Signin = () => {
               .signInWithPassword({
                 email: manualEmail.trim(),
                 password: manualPassword,
-                // options: {
-                //   redirectTo: "https://localhost:3000/home",
-                // },
-                // options: {
-                //   redirectTo: "https://animebook-theta.vercel.app/home",
-                // },
                 options: {
                   redirectTo: "https://animebook.io/home",
                 },
@@ -277,12 +265,6 @@ const Signin = () => {
       } else {
         supabase.auth.signInWithOAuth({
           provider: provider,
-          // options: {
-          //   redirectTo: "http://localhost:3000/home",
-          // },
-          // options: {
-          //   redirectTo: "https://animebook-theta.vercel.app/home",
-          // },
           options: {
             redirectTo: "https://animebook.io/home",
           },
