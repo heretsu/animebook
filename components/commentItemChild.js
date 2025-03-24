@@ -126,26 +126,8 @@ export default function CommentItemChild({ commentChild, comment }) {
                   }
                 />
               </span>
-              <span className="ml-0.5 flex flex-col items-start">
-                {commentChild.media ? (
-                  <span className="w-full flex flex-row justify-start items-start">
-                    <span className="text-sm font-semibold">{`${commentChild.users.username} :`}</span>
-                    <span className="flex flex-col items-start justify-start">
-                      <span className="flex justify-start items-start w-40 h-40 mr-2">
-                        <Image
-                          src={commentChild.media}
-                          alt="user profile"
-                          width={200}
-                          height={200}
-                          className="object-top object-contain"
-                        />
-                      </span>
-<span className="leading-tight break-words whitespace-pre-wrap">
-                      <CommentConfig text={commentChild.content} tags={false} />
-                      </span>
-                    </span>
-                  </span>
-                ) : (
+              <span className="pl-0.5 flex flex-col items-start">
+                
                   <span className="text-sm break-words overflow-wrap break-word">
                     <CommentConfig
                       username={commentChild.users.username}
@@ -153,7 +135,23 @@ export default function CommentItemChild({ commentChild, comment }) {
                       tags={false}
                     />
                   </span>
-                )}
+                  {commentChild.media && (
+                  <span className="w-full flex flex-row justify-start items-start">
+                    <span className="flex flex-col items-start justify-start">
+                      <span className="flex justify-start items-start w-80 h-[200px] mr-2 relative">
+                        <Image
+                          src={commentChild.media}
+                          alt="user profile"
+                          layout="fill" // Makes the image fill the container
+                          objectFit="contain" // Ensures the whole image is visible
+                          className="rounded" // Optional: Adds rounded corners
+                        />
+                      </span>
+
+
+                    </span>
+                  </span>)}
+                
 
                 <span className="-mt-1 flex flex-row justify-between items-center space-x-2 pr-4">
                   <span
@@ -174,8 +172,8 @@ export default function CommentItemChild({ commentChild, comment }) {
                           d="M18.646,16.365a7.552,7.552,0,0,1-1.37,1.089.383.383,0,1,0,.39.66A9.607,9.607,0,0,0,19.7,16.377a5.561,5.561,0,0,0,.54-.618.522.522,0,0,0,.078-.408.416.416,0,0,0-.2-.246,6.57,6.57,0,0,0-.816-.26,8.934,8.934,0,0,0-2.842-.366.383.383,0,1,0,.019.766,8.31,8.31,0,0,1,2.379.268,15.1,15.1,0,0,1-1.495.343c-3.041.638-5.881.1-7.309-2.967C8.888,10.376,9.183,7.076,9.1,4.372a.383.383,0,1,0-.766.024c.087,2.8-.182,6.214,1.032,8.818,1.6,3.435,4.754,4.108,8.161,3.393.375-.079.751-.149,1.119-.241Z"
                           fill="#728198"
                           stroke="#728198"
-                          stroke-width="1"
-                          fill-rule="evenodd"
+                          strokeWidth="1"
+                          fillRule="evenodd"
                         />
                       </g>
                     </svg>

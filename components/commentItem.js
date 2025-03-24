@@ -127,10 +127,13 @@ export default function CommentItem({
           } pt-2 px-3 flex flex-col justify-center text-start`}
         >
           <span className="flex flex-row justify-between items-center">
-            <span className="cursor-pointer flex flex-row justify-start items-start space-x-0,">
+            <span className="w-full cursor-pointer flex flex-row justify-start items-start space-x-0">
               <span
                 onClick={() => {
-                  fullPageReload(`/profile/${comment.users.username}`, 'window');
+                  fullPageReload(
+                    `/profile/${comment.users.username}`,
+                    "window"
+                  );
                 }}
                 className="relative h-6 w-6 flex flex-shrink-0"
               >
@@ -148,32 +151,27 @@ export default function CommentItem({
                 />
               </span>
 
-              <span className="ml-0.5 flex flex-col items-start">
-                {comment.media ? (
+              <span className="w-full pl-0.5 flex flex-col items-start">
+                <span className="text-sm break-words overflow-wrap break-word">
+                  <CommentConfig
+                    username={comment.users.username}
+                    text={comment.content}
+                    tags={true}
+                  />
+                </span>
+                {comment.media && (
                   <span className="w-full flex flex-row justify-start items-start">
-                    <span className="text-sm font-semibold">{`${comment.users.username} :`}</span>
-                    <span className="flex flex-col items-start justify-start">
-                      <span className="flex justify-start items-start w-40 h-40 mr-2">
+                    <span className="w-full flex flex-col items-start justify-start">
+                      <span className="flex justify-start items-start w-full mr-2 relative">
                         <Image
                           src={comment.media}
                           alt="user profile"
-                          width={200}
-                          height={200}
-                          className="object-top object-contain"
+                          height={300}
+                          width={300}
+                          className="pt-1 relative max-h-[600px] mx-auto rounded-lg object-cover w-full"
                         />
                       </span>
-<span className="leading-tight break-words whitespace-pre-wrap">
-                      <CommentConfig text={comment.content} tags={true} />
-                      </span>
                     </span>
-                  </span>
-                ) : (
-                  <span className="text-sm break-words overflow-wrap break-word">
-                    <CommentConfig
-                      username={comment.users.username}
-                      text={comment.content}
-                      tags={true}
-                    />
                   </span>
                 )}
 
@@ -196,8 +194,8 @@ export default function CommentItem({
                           d="M18.646,16.365a7.552,7.552,0,0,1-1.37,1.089.383.383,0,1,0,.39.66A9.607,9.607,0,0,0,19.7,16.377a5.561,5.561,0,0,0,.54-.618.522.522,0,0,0,.078-.408.416.416,0,0,0-.2-.246,6.57,6.57,0,0,0-.816-.26,8.934,8.934,0,0,0-2.842-.366.383.383,0,1,0,.019.766,8.31,8.31,0,0,1,2.379.268,15.1,15.1,0,0,1-1.495.343c-3.041.638-5.881.1-7.309-2.967C8.888,10.376,9.183,7.076,9.1,4.372a.383.383,0,1,0-.766.024c.087,2.8-.182,6.214,1.032,8.818,1.6,3.435,4.754,4.108,8.161,3.393.375-.079.751-.149,1.119-.241Z"
                           fill="#728198"
                           stroke="#728198"
-                          stroke-width="1"
-                          fill-rule="evenodd"
+                          strokeWidth="1"
+                          fillRule="evenodd"
                         />
                       </g>
                     </svg>
@@ -243,9 +241,7 @@ export default function CommentItem({
 
                       <span
                         className={`py-0.5 px-2 text-sm ${
-                          darkMode
-                            ? "text-[#AFB1B2]"
-                            : "text-[#728198]"
+                          darkMode ? "text-[#AFB1B2]" : "text-[#728198]"
                         }`}
                       >
                         {likes.length}
@@ -300,6 +296,13 @@ export default function CommentItem({
                         fill={darkMode ? "#42494F" : "#adb6c3"}
                       />
                     </svg>
+                    {comment.users.id === userNumId && <span
+                      onClick={() => {
+                        deleteComment();
+                      }}
+                    > <BinSvg pixels={"15"} />
+                    </span>}
+                     
                   </span>
                 </span>
               </span>

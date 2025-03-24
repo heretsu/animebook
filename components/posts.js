@@ -43,7 +43,7 @@ const Posts = () => {
   };
 
   const [visiblePosts, setVisiblePosts] = useState([]); // Posts currently visible
-  const [chunkSize] = useState(10); // Number of posts to load at a time
+  const [chunkSize] = useState(50); // Number of posts to load at a time
   const [currentChunk, setCurrentChunk] = useState(1); // Tracks the chunk to load
   const [ran, setRan] = useState(false);
 
@@ -134,7 +134,7 @@ const Posts = () => {
                               <span
                                 onClick={() => {
                                   fullPageReload(
-                                    `/profile/${thisUser.username}`
+                                    `/profile/${thisUser.username}`, 'window'
                                   );
                                 }}
                                 className="cursor-pointer flex justify-start items-center space-x-2"

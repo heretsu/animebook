@@ -234,28 +234,35 @@ const LargeRightBar = () => {
   };
 
   const fetchAllHashTags = () => {
-    // Initialize counters for all hashtags and hashtags with media
     const allTagsCount = {};
     const tagsWithMediaCount = {};
 
-    originalPostValues.forEach((post) => {
-      const tags = post.content
-        ? post.content.toLowerCase().match(/#\w+/g) || []
-        : [];
-      const uniqueTags = [...new Set(tags)];
+const now = new Date();
+const cutoff = new Date(now.getTime() - 24 * 7 * 60 * 60 * 1000); // 24 hours ago
 
-      // Count hashtags for all posts
-      uniqueTags.forEach((tag) => {
-        allTagsCount[tag] = (allTagsCount[tag] || 0) + 1;
-      });
+const filteredPosts = originalPostValues.filter((post) => {
+  const createdAtDate = new Date(post.created_at);
 
-      // If post has media, count hashtags for posts with media
-      if (post.media !== null) {
-        uniqueTags.forEach((tag) => {
-          tagsWithMediaCount[tag] = (tagsWithMediaCount[tag] || 0) + 1;
-        });
-      }
+  return createdAtDate >= cutoff;
+});
+
+filteredPosts.forEach((post) => {
+  const tags = post.content
+    ? post.content.toLowerCase().match(/#\w+/g) || []
+    : [];
+  const uniqueTags = [...new Set(tags)];
+
+  uniqueTags.forEach((tag) => {
+    allTagsCount[tag] = (allTagsCount[tag] || 0) + 1;
+  });
+
+  if (post.media !== null) {
+    uniqueTags.forEach((tag) => {
+      tagsWithMediaCount[tag] = (tagsWithMediaCount[tag] || 0) + 1;
     });
+  }
+});
+   
     // const trendingTagsWithMedia = Object.entries(tagsWithMediaCount).sort(
     //   (a, b) => b[1] - a[1]
     // );
@@ -692,7 +699,7 @@ const LargeRightBar = () => {
                   24H
                 </span>
               </p>
-              {hashtagList.trending.slice(0, 4).map((tag) => {
+              {hashtagList.trending.slice(0, 5).map((tag) => {
                 return (
                   <div
                     key={tag}

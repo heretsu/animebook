@@ -42,7 +42,7 @@ export default function User({ user }) {
   const { connectToWallet, disconnectWallet } = ConnectionData();
   const { getUsdPrice } = PriceFeedStation();
   const router = useRouter();
-  const { fetchAllUsers, fetchAllPosts, fetchAllReposts, fetchUserMangas } =
+  const { fetchAllUsers, fetchAllPolls, fetchAllPosts, fetchAllReposts, fetchUserMangas } =
     DbUsers();
   const { fetchFollowing, fetchFollows } = Relationships();
   const {
@@ -86,6 +86,7 @@ export default function User({ user }) {
     mediasClicked,
     setMediasClicked,
     allSubscriptions,
+    setAllPolls
   } = useContext(UserContext);
 
   const [alreadyFollowed, setAlreadyFollowed] = useState(false);
@@ -388,7 +389,7 @@ export default function User({ user }) {
     // Calculate how many 80px width images fit (including spacing)
     const containerWidth = containerRef.current.offsetWidth;
     const itemWidth = 84; // 80px image + 4px spacing
-    const maxVisible = Math.floor(containerWidth / itemWidth);
+    const maxVisible = Math.ceil(containerWidth / itemWidth);
 
     setVisibleCount(maxVisible);
   }, [postValues]);
@@ -466,6 +467,7 @@ export default function User({ user }) {
 
     fetchAllPosts().then((result1) => {
       fetchAllReposts().then((reposts) => {
+        fetchAllPolls().then((pls) =>  setAllPolls(pls));
         const userPostsAndReposts = result1.data.map((post) => {
           const matchingRepost = reposts.find(
             (repost) => repost.postid === post.id

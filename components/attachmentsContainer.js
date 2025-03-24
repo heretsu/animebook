@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import supabase from "@/hooks/authenticateUser";
@@ -24,7 +24,7 @@ const AttachmentsContainer = ({ receiverid }) => {
     fetchChat,
     setChatsObject,
   } = useContext(MessageContext);
-
+const textareaRef = useRef(null)
   const router = useRouter();
   const [content, setContent] = useState("");
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -261,7 +261,13 @@ const AttachmentsContainer = ({ receiverid }) => {
               <textarea
                 value={content}
                 onChange={(e) => {
+                  const textarea = textareaRef.current;
+                  if (textarea) {
+                    textarea.style.height = "2rem";
+                    textarea.style.height = `${textarea.scrollHeight}px`;
+                  }
                   setContent(e.target.value);
+                  
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey && !searchMode) {
@@ -272,6 +278,7 @@ const AttachmentsContainer = ({ receiverid }) => {
                     setContent((prev) => prev + '\n')
                   }
                 }}
+                ref={textareaRef}
                 maxLength={1900}
                 placeholder={
                   searchMode
@@ -402,7 +409,7 @@ const AttachmentsContainer = ({ receiverid }) => {
                           data-name="Pfad 4721"
                           d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
                           fill={darkMode ? "black" : "white"}
-                          fill-rule="evenodd"
+                          fillRule="evenodd"
                         />
                       </g>
                     </svg> 

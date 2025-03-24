@@ -432,14 +432,12 @@ export default function ExploreBox({
                       currentPost.content !== undefined &&
                       currentPost.content !== "" && (
                         <span
-                          className="break-all overflow-wrap-word whitespace-preline"
-                          style={{ whiteSpace: "pre-wrap" }}
-                        >
-                          <CommentConfig
-                            text={currentPost.content}
-                            tags={true}
-                          />
-                        </span>
+  className="break-words whitespace-pre-wrap"
+  style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+>
+  <CommentConfig text={currentPost.content} tags={true} />
+</span>
+
                       )}
 
                     <div className="flex w-full flex-col justify-start">
@@ -760,7 +758,7 @@ export default function ExploreBox({
                                 data-name="Pfad 4721"
                                 d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
                                 fill={darkMode ? "#6A6B71" : "#5d6879"}
-                                fill-rule="evenodd"
+                                fillRule="evenodd"
                               />
                             </g>
                           </svg>

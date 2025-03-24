@@ -24,7 +24,7 @@ export default function App({ Component, pageProps }) {
   const [agreementMade, setAgreementMade] = useState(false);
   const [graduate, setGraduate] = useState(false);
   const [darkMode, setDarkMode] = useState(undefined);
-  const { fetchAllPosts, fetchAllReposts } = DbUsers();
+  const { fetchAllPosts, fetchAllReposts, fetchAllPolls } = DbUsers();
   const router = useRouter();
   const [youMayKnow, setYouMayKnow] = useState(null);
   const [newPeople, setNewPeople] = useState(null);
@@ -72,7 +72,7 @@ export default function App({ Component, pageProps }) {
   const [deletePost, setDeletePost] = useState(null);
   const [playVideo, setPlayVideo] = useState(false);
   const [unreadMessagesLength, setUnreadMessagesLength] = useState(null);
-
+  const [allPolls, setAllPolls] = useState(null);
   const [newListOfComments, setNewListOfComments] = useState(null);
   const inputRef = useRef(null);
   const communityInputRef = useRef(null);
@@ -96,10 +96,9 @@ export default function App({ Component, pageProps }) {
   const [communities, setCommunities] = useState(null);
   const { fetchFollowing, fetchFollows } = Relationships();
 
-  const [currentCommunity, setCurrentCommunity] = useState('')
+  const [currentCommunity, setCurrentCommunity] = useState("");
   const [unreadCount, setUnreadCount] = useState(null);
-  const commentRef = useRef(null)
-
+  const commentRef = useRef(null);
 
   const fetchFollowingAndFollowers = async (userid) => {
     const followings = await fetchFollowing(userid);
@@ -287,6 +286,7 @@ export default function App({ Component, pageProps }) {
               if (router.pathname !== "/profile/[user]") {
                 fetchAllReposts().then((reposts) => {
                   fetchAllPosts().then((result1) => {
+                    fetchAllPolls().then((pls) => setAllPolls(pls));
                     fetchCommunities(res.data[0].id).then((secondResult) => {
                       if (secondResult !== undefined && secondResult !== null) {
                         setCommunities(
@@ -325,8 +325,8 @@ export default function App({ Component, pageProps }) {
                           () => Math.random() - 0.5
                         );
 
-                        setOriginalPostValues(shuffledPosts);
-                        setPostValues(shuffledPosts);
+                        setOriginalPostValues(mergedPosts);
+                        setPostValues(mergedPosts);
                       }
                     });
                   });
@@ -369,6 +369,7 @@ export default function App({ Component, pageProps }) {
           if (router.pathname !== "/profile/[user]") {
             fetchAllReposts().then((reposts) => {
               fetchAllPosts().then((result1) => {
+                fetchAllPolls().then((pls) => setAllPolls(pls));
                 fetchCommunities(data.id).then(async (secondResult) => {
                   if (secondResult !== undefined && secondResult !== null) {
                     if (!unreadMessagesLength && unreadMessagesLength !== 0) {
@@ -412,8 +413,8 @@ export default function App({ Component, pageProps }) {
                       () => Math.random() - 0.5
                     );
 
-                    setOriginalPostValues(shuffledPosts);
-                    setPostValues(shuffledPosts);
+                    setOriginalPostValues(mergedPosts);
+                    setPostValues(mergedPosts);
                   }
                 });
               });
@@ -472,7 +473,6 @@ export default function App({ Component, pageProps }) {
       .update({ readtutorial: true })
       .eq("useruuid", userData.useruuid);
     if (!scholar.error) {
-     
     }
   };
 
@@ -532,6 +532,7 @@ export default function App({ Component, pageProps }) {
       ].includes(router.pathname)
     ) {
       if (!subscribed) {
+        setSubscribed(true);
         setAuthLoading(true);
         supabase.auth.onAuthStateChange((event, session) => {
           if (session !== undefined && session !== null) {
@@ -546,6 +547,7 @@ export default function App({ Component, pageProps }) {
             if (router.pathname !== "/profile/[user]") {
               fetchAllReposts().then((reposts) => {
                 fetchAllPosts().then((result1) => {
+                  fetchAllPolls().then((pls) => setAllPolls(pls));
                   fetchCommunities().then((secondResult) => {
                     if (secondResult !== undefined && secondResult !== null) {
                       setCommunities(
@@ -648,6 +650,8 @@ export default function App({ Component, pageProps }) {
       onboarding) && (
       <UserContext.Provider
         value={{
+          allPolls,
+          setAllPolls,
           userWatchList,
           setUserWatchList,
           currentUserWatchlist,
@@ -772,11 +776,18 @@ export default function App({ Component, pageProps }) {
           setNotifyUserObject,
           openPremium,
           setOpenPremium,
-          currentCommunity, setCurrentCommunity, unreadCount, setUnreadCount, commentRef
+          currentCommunity,
+          setCurrentCommunity,
+          unreadCount,
+          setUnreadCount,
+          commentRef,
         }}
       >
         <PreventZoom />
-        <span id="baiFont" className={`relative w-full max-w-[20px] mx-auto bg-black text-sm sm:text-base`}>
+        <span
+          id="baiFont"
+          className={`relative w-full max-w-[20px] mx-auto bg-black text-sm sm:text-base`}
+        >
           {[
             "/notifications",
             "/create",
@@ -802,17 +813,20 @@ export default function App({ Component, pageProps }) {
                     <Component {...pageProps} />
                   ) : (
                     <>
-                <div id="tutorial" className="bg-transparent">
-                  <TutorialBox graduateTutorial={graduateTutorial} setGraduate={setGraduate}/>
-                </div>
-                
-                <Component {...pageProps} />
+                      <div id="tutorial" className="bg-transparent">
+                        <TutorialBox
+                          graduateTutorial={graduateTutorial}
+                          setGraduate={setGraduate}
+                        />
+                      </div>
 
-                <div
-                  id="tutorial-overlay"
-                  className="bg-black backdrop-blur-md"
-                ></div>
-              </>
+                      <Component {...pageProps} />
+
+                      <div
+                        id="tutorial-overlay"
+                        className="bg-black backdrop-blur-md"
+                      ></div>
+                    </>
                   )
                 ) : (
                   userData &&
@@ -867,9 +881,12 @@ export default function App({ Component, pageProps }) {
             ) : (
               <>
                 <div id="tutorial" className="bg-transparent">
-                  <TutorialBox graduateTutorial={graduateTutorial} setGraduate={setGraduate}/>
+                  <TutorialBox
+                    graduateTutorial={graduateTutorial}
+                    setGraduate={setGraduate}
+                  />
                 </div>
-                
+
                 <Component {...pageProps} />
 
                 <div

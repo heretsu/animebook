@@ -38,6 +38,8 @@ export default function ExploreCard({
   post,
   explorePosts,
   allPosts,
+  index,
+  setSelectedIndex
 }) {
   const videoRef = useRef(null);
   const router = useRouter();
@@ -168,8 +170,12 @@ export default function ExploreCard({
   return (likes && bookmarks && comments &&
     <span
       onClick={() => {
-        setCommentValues(comments);
-        exploreAndAllDetails(post.post, explorePosts[post.newId]);
+        if (index !== null){
+          setSelectedIndex(index)
+        } else{
+          setCommentValues(comments);
+          exploreAndAllDetails(post.post, explorePosts[post.newId]);  
+        }
       }}
       className="cursor-pointer h-80 relative rounded-xl overflow-hidden"
     >

@@ -201,7 +201,7 @@ const SideBar = () => {
             {userData && (
               <span
                 onClick={() => {
-                  fullPageReload(`/profile/${userData.username}`);
+                  fullPageReload(`/profile/${userData.username}`, 'window');
                 }}
                 className="relative flex flex-col flex-shrink-0"
               >

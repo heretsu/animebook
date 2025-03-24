@@ -7,6 +7,7 @@ import Spinner from "./spinner";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import GifPicker from "./gifPicker";
 import DbUsers from "@/hooks/dbUsers";
+import PollCreator from "./pollCreator";
 
 const SmallPostContainer = ({ communityId, community }) => {
   const { fullPageReload } = PageLoadOptions();
@@ -19,6 +20,7 @@ const SmallPostContainer = ({ communityId, community }) => {
     setOriginalPostValues,
     setCommunities,
   } = useContext(UserContext);
+  const [openPoll, setOpenPoll] = useState(false)
   const router = useRouter();
   const [content, setContent] = useState("");
   const [mediaContent, setMediaContent] = useState("");
@@ -248,8 +250,8 @@ const SmallPostContainer = ({ communityId, community }) => {
       }
     }
 
-    if (router.pathname === '/create'){
-      router.push('/home')
+    if (router.pathname === "/create") {
+      router.push("/home");
     }
     setPostLoading(false);
   };
@@ -268,18 +270,25 @@ const SmallPostContainer = ({ communityId, community }) => {
   return (
     <div
       className={`border rounded-sm p-4 flex flex-row w-full ${
-        darkMode ? "bg-[#1e1f24] text-white border-[#292C33]" : "bg-white border-[#EEEDEF]"
+        darkMode
+          ? "bg-[#1e1f24] text-white border-[#292C33]"
+          : "bg-white border-[#EEEDEF]"
       } justify-center items-center`}
     >
       <span
         className={`rounded-md border w-full p-2 ${
-          darkMode ? "bg-[#27292F] border-[#32353C] text-white" : "bg-[#F9F9F9] border-[#EEEDEF]"
+          openPoll ? 'border-none bg-transparent' : ( darkMode
+            ? "bg-[#27292F] border-[#32353C] text-white"
+            : "bg-[#F9F9F9] border-[#EEEDEF]")
         } relative flex flex-row ${
           showGifPicker ? "flex" : "justify-between items-center"
-        } ${selectedMedia && 'flex-col'} space-x-0`}
+        } ${selectedMedia && "flex-col"} space-x-0`}
       >
+        {openPoll ? <>
+        <PollCreator darkMode={darkMode} setOpenPoll={setOpenPoll} userNumId={userNumId} postLoading={postLoading} setPostLoading={setPostLoading} errorMsg={errorMsg} setErrorMsg={setErrorMsg} communityId={communityId} fetchPosts={fetchPosts}/>
+        </> :  <>
         {!showGifPicker && (
-          <input
+          <textarea
             value={content}
             onKeyDown={(e) => {
               if (e.key === "Backspace" && content && content.length === 1) {
@@ -289,7 +298,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             onChange={(e) => {
               const textarea = textareaRef.current;
               if (textarea) {
-                textarea.style.height = "auto";
+                textarea.style.height = "2rem";
                 textarea.style.height = `${textarea.scrollHeight}px`;
               }
 
@@ -297,11 +306,18 @@ const SmallPostContainer = ({ communityId, community }) => {
                 setContent(e.target.value);
               }
             }}
+            onInput={(e) => {
+              // Ensure textarea shrinks when selecting and deleting text
+              if (e.target.value === "") {
+                setContent(""); // Reset content
+                e.target.style.height = "2rem"; // Reset to h-8
+              }
+            }}
             ref={textareaRef}
             placeholder={`What's on your mind?`}
             className={`text-sm resize-none w-full bg-transparent ${
               darkMode ? "placeholder:text-gray-400 text-white" : "text-black"
-            } placeholder:text-xs border-none focus:outline-none focus:ring-0`}
+            } h-8 placeholder:text-xs border-none focus:outline-none focus:ring-0`}
           />
         )}
         <span className="flex flex-row space-x-1 justify-center items-center">
@@ -323,6 +339,17 @@ const SmallPostContainer = ({ communityId, community }) => {
               />
             </svg>
           )} */}
+          <svg 
+            onClick={()=>{ setOpenPoll(true)}}
+            width="24px"
+            height="24px"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="#EB4463"
+            className="cursor-pointer"
+          >
+            <path d="M7 11h7v2H7zm0-4h10.97v2H7zm0 8h13v2H7zM4 4h2v16H4z" />
+          </svg>
           {selectedMedia ? (
             <label
               onClick={(e) => {
@@ -395,33 +422,32 @@ const SmallPostContainer = ({ communityId, community }) => {
               setShowGifPicker={setShowGifPicker}
             />
           </span>
-        )}
-      
+        )}</>}
       </span>
 
-      <span className="flex flex-col">
+      {!openPoll && <span className="flex flex-col">
         {postLoading ? (
           <span className="mx-auto">
             <Spinner spinnerSize={"medium"} />
           </span>
         ) : (
           <>
-          <span
-            onClick={() => {
-              if (mediaFile || content.trim() !== "" || gifLink) {
-                createPost();
-              }
-            }}
-            className={`hidden lg:block rounded w-fit mx-auto hover:shadow cursor-pointer ml-4 px-7 py-1.5 bg-[#EB4463] text-sm font-medium text-center text-white`}
-          >
-            Post
-          </span>
-          <span
-             onClick={() => {
-              if (mediaFile || content.trim() !== "" || gifLink) {
-                createPost();
-              }
-            }}
+            <span
+              onClick={() => {
+                if (mediaFile || content.trim() !== "" || gifLink) {
+                  createPost();
+                }
+              }}
+              className={`hidden lg:block rounded w-fit mx-auto hover:shadow cursor-pointer ml-4 px-7 py-1.5 bg-[#EB4463] text-sm font-medium text-center text-white`}
+            >
+              Post
+            </span>
+            <span
+              onClick={() => {
+                if (mediaFile || content.trim() !== "" || gifLink) {
+                  createPost();
+                }
+              }}
               className={`ml-2 lg:hidden bg-[#EB4463] rounded-full h-9 w-9 flex justify-center items-center`}
             >
               <svg
@@ -436,12 +462,11 @@ const SmallPostContainer = ({ communityId, community }) => {
                     data-name="Pfad 4721"
                     d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
                     fill="white"
-                    fill-rule="evenodd"
+                    fillRule="evenodd"
                   />
                 </g>
               </svg>
             </span>
-          
           </>
         )}
         {errorMsg !== "" && (
@@ -459,7 +484,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             <p className="text-red-500">{errorMsg}</p>
           </span>
         )}
-      </span>
+      </span>}
     </div>
   );
 };

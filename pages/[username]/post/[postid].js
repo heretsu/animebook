@@ -41,6 +41,7 @@ export default function Postid({ comments }) {
     newListOfComments,
     setNewListOfComments,
     darkMode,
+    setAllPolls
   } = useContext(UserContext);
   const [valuesLoaded, setValuesLoaded] = useState(false)
   const [errorMsg, setErrorMsg] = useState("");
@@ -48,7 +49,7 @@ export default function Postid({ comments }) {
   const [postReferenced, setPostReferenced] = useState(null);
   const [playVideo, setPlayVideo] = useState(false);
 
-  const { fetchPost } = DbUsers();
+  const { fetchPost, fetchAllPolls } = DbUsers();
 
   const fetchSinglePostComments = async () => {
     const post = await fetchPost(postid);
@@ -92,6 +93,7 @@ export default function Postid({ comments }) {
   useEffect(() => {
     if (!valuesLoaded){
       fetchSinglePostComments();
+      fetchAllPolls().then((pls) => setAllPolls(pls));
       setValuesLoaded(true)
     }
     if (newListOfComments) {
@@ -193,8 +195,11 @@ export default function Postid({ comments }) {
                   created_at={postReferenced.created_at}
                   users={postReferenced.users}
                   myProfileId={userNumId}
+                  {...postReferenced}
+                  ispoll={postReferenced.ispoll}
                 />
               </span>
+
 
               <span className="text-sm px-3 flex flex-row justify-between">
                 <span

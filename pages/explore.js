@@ -138,9 +138,9 @@ export const PostActions = ({
 export default function Explore() {
   const { sendNotification, postTimeAgo } = DappLibrary();
   const { fullPageReload } = PageLoadOptions();
-  const [selectedCommentMedia, setSelectedCommentMedia] = useState(null)
+  const [selectedCommentMedia, setSelectedCommentMedia] = useState(null);
   const [commentMediaFile, setCommentMediaFile] = useState(null);
-  
+
   const commentMediaChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -187,11 +187,11 @@ export default function Explore() {
   const [fetchLoaded, setFetchLoaded] = useState(false);
   const [visibleExplorePosts, setVisibleExplorePosts] = useState([]);
   const [currentChunk, setCurrentChunk] = useState(1);
-  const [visibleEposts, setVisibleEposts] = useState([])
-  const [currentPiece, setCurrentPiece] = useState(1)
-  const pieceSize = 10;
+  const [visibleEposts, setVisibleEposts] = useState([]);
+  const [currentPiece, setCurrentPiece] = useState(1);
+  const pieceSize = 50;
 
-  const chunkSize = 10;
+  const chunkSize = 50;
   const videoRef = useRef(null);
   const [openExplorer, setOpenExplorer] = useState(false);
   const [currentPost, setCurrentPost] = useState(null);
@@ -382,8 +382,8 @@ export default function Explore() {
       if (explorePosts[currentPost.newId + 1] === undefined) {
         return;
       }
-      setCommentMsg("")
-      setParentId(null)
+      setCommentMsg("");
+      setParentId(null);
 
       setPlayVideo(true);
 
@@ -452,19 +452,24 @@ export default function Explore() {
   };
 
   const exploreAndAllDetails = (postInfos, postInfosByNewId) => {
-    setComments(null);
-    setCommentValues(null);
-    resetStates();
-
-    fetchLikes(postInfos.id);
-    fetchReposts(postInfos.id);
-    fetchViews(postInfos.id);
-    fetchBookmarkStatus(postInfos.id);
-    fetchComments(postInfos.id);
-
-    setCurrentPost(postInfosByNewId);
-    setOpenExplorer(true);
-    pauseAndPlayVideo(true);
+    if (selectedIndex !== null){
+      
+    } else{
+      setComments(null);
+      setCommentValues(null);
+      resetStates();
+  
+      fetchLikes(postInfos.id);
+      fetchReposts(postInfos.id);
+      fetchViews(postInfos.id);
+      fetchBookmarkStatus(postInfos.id);
+      fetchComments(postInfos.id);
+  
+      setCurrentPost(postInfosByNewId);
+      setOpenExplorer(true);
+      pauseAndPlayVideo(true);
+    }
+   
   };
 
   const fetchExplorePosts = () => {
@@ -565,9 +570,8 @@ export default function Explore() {
       setSelectedCommentMedia(null);
       setCommentMediaFile(null);
       setCommentMsg("");
-      fetchComments();
-    }
-    else{
+      fetchComments(id);
+    } else {
       if (commentMsg !== "" && currentPost) {
         let commentToSend = commentMsg;
         setCommentMsg("");
@@ -578,15 +582,65 @@ export default function Explore() {
             content: commentToSend,
             userid: userNumId,
             parentid: commentToSend.startsWith("@") ? parentId : null,
-            media: null
+            media: null,
           })
           .then(async () => {
             fetchComments(id);
           });
       }
     }
-    
   };
+
+
+  const [selectedIndex, setSelectedIndex] = useState(null);
+
+  const [touchStartX, setTouchStartX] = useState(null);
+
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStartX) return;
+
+    const touchEndX = e.touches[0].clientX;
+    const swipeDistance = touchEndX - touchStartX;
+
+    if (swipeDistance > 100) {
+      setSelectedIndex(null)
+      setTouchStartX(null);
+    }
+  };
+
+  const [startX, setStartX] = useState(null);
+
+  const handleStart = (e) => {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    setStartX(clientX);
+  };
+
+  const handleMove = (e) => {
+    if (!startX) return;
+
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const swipeDistance = clientX - startX;
+
+    if (swipeDistance > 100) {
+      setSelectedIndex(null)
+      setStartX(null);
+    }
+  };
+
+
+  useEffect(() => {
+    // Scroll to the selected post when it changes
+    if (videoRefs.current[selectedIndex]) {
+      videoRefs.current[selectedIndex].scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [selectedIndex]);
 
   const loadMorePosts = useCallback(() => {
     if (explorePosts) {
@@ -652,20 +706,19 @@ export default function Explore() {
 
     const handleKeyDown = (event) => {
       if (!currentPost) return; // Ensure currentPost exists before proceeding
-  
+
       if (event.key === "ArrowRight") {
         postToggle(true); // Move forward
       } else if (event.key === "ArrowLeft") {
         postToggle(false); // Move backward
       }
     };
-  
+
     window.addEventListener("keydown", handleKeyDown);
-    
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-
   }, [
     currentPost,
     fetchLoaded,
@@ -676,17 +729,11 @@ export default function Explore() {
   ]);
 
   const loadMoreEposts = useCallback(() => {
-    if (originalExplorePosts){
-      const nextChunk = (originalExplorePosts).slice(
-        0,
-        currentPiece * pieceSize
-      );
+    if (originalExplorePosts) {
+      const nextChunk = originalExplorePosts.slice(0, currentPiece * pieceSize);
       setVisibleEposts(nextChunk);
     }
-    
   }, [originalExplorePosts, currentPiece, pieceSize]);
-
-
 
   useEffect(() => {
     const handleScroll = () => {
@@ -705,16 +752,14 @@ export default function Explore() {
   }, []);
 
   useEffect(() => {
-    
     loadMoreEposts();
   }, [currentChunk, loadMoreEposts]);
 
-
   const toggleMute = () => setIsMuted((prev) => !prev);
-
   return (
     <>
-      <div id="scrollbar-remove"
+      {selectedIndex !== null ? <div
+        id="scrollbar-remove"
         className={`xl:hidden h-screen snap-y snap-mandatory relative ${
           openComments
             ? "fixed top-0 left-0 overflow-hidden"
@@ -724,6 +769,10 @@ export default function Explore() {
         {visibleExplorePosts.map((post, index) => (
           <div
             key={post.newId}
+            onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onMouseDown={handleStart}
+      onMouseMove={handleMove}
             className={`bg-black relative h-screen flex justify-center items-center snap-center`}
           >
             <video
@@ -829,7 +878,10 @@ export default function Explore() {
               >
                 {post.post.users.username}
               </span>
-              <span className="mb-16 text-sm font-bold break-words overflow-wrap break-word" id="textkit">
+              <span
+                className="mb-16 text-sm font-bold break-words overflow-wrap break-word"
+                id="textkit"
+              >
                 <CommentConfig text={post.post.content} tags={true} />
               </span>
             </div>
@@ -850,14 +902,130 @@ export default function Explore() {
             ></div>
           </>
         )}
-      </div>
-      <div
-        className={`hidden xl:block ${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}
+      </div> : <div
+        className={` ${
+          darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"
+        }`}
       >
         <div className="hidden xl:block block z-40 sticky top-0">
           <LargeTopBar relationship={false} />
         </div>
-        <div className=" xl:hidden block z-40 sticky top-0">
+        <div className="xl:hidden block z-40 sticky top-0">
+          <SmallTopBar relationship={false} />
+        </div>
+
+        <mobile className="mb-5 flex flex-col xl:flex-row xl:space-x-2 w-full">
+          <NavBar />
+
+          <div className="w-full py-2 space-y-5 px-2 lg:pl-[16rem] xl:pr-[18rem] xl:pl-[18rem] xl:pr-[20rem] mt-2 xl:mt-0 flex flex-col">
+            <div
+              className={`border ${
+                darkMode
+                  ? "bg-[#1E1F24] border-[#292C33] text-white"
+                  : "bg-white border-[#EEEDEF] text-black"
+              } flex p-1.5 rounded w-full overflow-y-scroll`}
+            >
+              <div className="text-sm space-x-2 w-fit flex flex-row">
+                <span
+                  onClick={() => {
+                    getSelectedHashTag("all");
+                  }}
+                  className={
+                    chosenTag === "all"
+                      ? "rounded bg-[#EB4463] text-white py-2 px-3.5 cursor-pointer"
+                      : "py-2 px-3.5 cursor-pointer"
+                  }
+                >
+                  All
+                </span>
+                {hashtagList !== null &&
+                  hashtagList !== undefined &&
+                  hashtagList.trending?.map((tag, index) => {
+                    return (
+                      <span
+                        key={index}
+                        onClick={() => {
+                          getSelectedHashTag(tag);
+                        }}
+                        className={
+                          chosenTag === tag[0]
+                            ? "rounded bg-[#EB4463] text-white py-2 px-3.5 cursor-pointer"
+                            : "py-2 px-3.5 cursor-pointer"
+                        }
+                      >
+                        {tag[0].length > 10
+                          ? tag[0].slice(0, 5).concat("...")
+                          : tag[0]}
+                      </span>
+                    );
+                  })}
+              </div>
+            </div>
+
+            <div className="pb-12 h-fit grid gap-2 grid-cols-2 lg:grid-cols-3 mx-auto">
+              {explorePosts !== null &&
+                explorePosts !== undefined &&
+                (visibleEposts.length > 0 ? (
+                  <>
+                    {visibleEposts.map((post, index) => {
+                      return (
+                        <ExploreCard
+                          key={post.newId}
+                          {...post.post}
+                          myProfileId={userNumId}
+                          exploreAndAllDetails={exploreAndAllDetails}
+                          explorePosts={explorePosts}
+                          post={post}
+                          index={index}
+                          setSelectedIndex={setSelectedIndex}
+                        />
+                      );
+                    })}
+                    {visibleEposts.length < explorePosts.length && (
+                      <span>
+                        <Lottie
+                          animationData={darkMode ? darkloadscreen : loadscreen}
+                        />
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <div className="w-full text-center text-slate-800">
+                    {imagesFilter ? (
+                      "Image filter result not found. No image media found"
+                    ) : videosFilter ? (
+                      "Video filter result not found. No video media found"
+                    ) : tagsFilter ? (
+                      <span className="flex flex-col justify-center items-center">
+                        <p>Hashtag does not exist.</p>
+                        <p>Perhaps it has been deleted by creators</p>
+                      </span>
+                    ) : searchFilter ? (
+                      "Search not found. ない!"
+                    ) : (
+                      ""
+                    )}
+                  </div>
+                ))}
+            </div>
+          </div>
+         
+        </mobile>
+
+        {sideBarOpened && <SideBar />}
+
+       
+      </div>
+      }
+      <div
+        className={`hidden xl:block ${
+          darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"
+        }`}
+      >
+        <div className="hidden xl:block block z-40 sticky top-0">
+          <LargeTopBar relationship={false} />
+        </div>
+        <div className="xl:hidden block z-40 sticky top-0">
           <SmallTopBar relationship={false} />
         </div>
 
@@ -955,8 +1123,8 @@ export default function Explore() {
             </div>
           </div>
           <div className="hidden lg:block sticky right-2 top-20 heighto">
-          <LargeRightBar />
-        </div>
+            <LargeRightBar />
+          </div>
         </section>
 
         {sideBarOpened && <SideBar />}
@@ -1034,7 +1202,10 @@ export default function Explore() {
                       autoPlay={playVideo}
                     ></video>
                   </span>
-                  <span id="scrollbar-remove" className="w-[40%] min-w-[400px] h-full max-h-[90vh] overflow-y-scroll min-h-[1vh] pb-12 flex flex-col text-base justify-start text-start">
+                  <span
+                    id="scrollbar-remove"
+                    className="w-[40%] min-w-[400px] h-full max-h-[90vh] overflow-y-scroll min-h-[1vh] pb-12 flex flex-col text-base justify-start text-start"
+                  >
                     <div
                       className={`space-y-1 py-4 px-3 flex flex-col justify-center text-start`}
                     >
@@ -1114,10 +1285,7 @@ export default function Explore() {
                       {currentPost.post.content !== null &&
                         currentPost.post.content !== undefined &&
                         currentPost.post.content !== "" && (
-                          <span
-                            className="font-semibold break-words overflow-wrap break-word"
-                            
-                          >
+                          <span className="font-semibold break-words overflow-wrap break-word">
                             <CommentConfig
                               text={currentPost.post.content}
                               tags={true}
@@ -1219,76 +1387,75 @@ export default function Explore() {
                               </div>
                             </div>
 
-                              <div className="flex items-center space-x-1">
-                                {madeRepost ? (
-                                  <svg
-                                    onClick={() => {
-                                      handleRepost(currentPost.post.id);
-                                    }}
-                                    className="cursor-pointer text-pastelGreen"
-                                    fill={darkMode ? "#42494F" : "#adb6c3"}
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="15.5"
-                                    height="16.178"
-                                    viewBox="0 0 18.5 16.178"
+                            <div className="flex items-center space-x-1">
+                              {madeRepost ? (
+                                <svg
+                                  onClick={() => {
+                                    handleRepost(currentPost.post.id);
+                                  }}
+                                  className="cursor-pointer text-pastelGreen"
+                                  fill={darkMode ? "#42494F" : "#adb6c3"}
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="15.5"
+                                  height="16.178"
+                                  viewBox="0 0 18.5 16.178"
+                                >
+                                  <g
+                                    id="repost"
+                                    transform="translate(0 -32.133)"
                                   >
-                                    <g
-                                      id="repost"
-                                      transform="translate(0 -32.133)"
-                                    >
-                                      <path
-                                        id="Pfad_4757"
-                                        data-name="Pfad 4757"
-                                        d="M8.092,43.9a.542.542,0,0,0-.383-.159H5.729V36.7h1.78a.542.542,0,0,0,.383-.925L4.409,32.292a.542.542,0,0,0-.767,0L.159,35.775a.542.542,0,0,0,.383.925h1.78v7.586a2.864,2.864,0,0,0,2.864,2.864h4.845a.542.542,0,0,0,.383-.925Z"
-                                        transform="translate(0)"
-                                        fill={"#EB4463"}
-                                      />
-                                      <path
-                                        id="Pfad_4758"
-                                        data-name="Pfad 4758"
-                                        d="M229.923,75.05a.542.542,0,0,0-.5-.335h-1.78V67.13a2.864,2.864,0,0,0-2.864-2.864h-4.845a.542.542,0,0,0-.383.925l2.322,2.322a.542.542,0,0,0,.383.159h1.98v7.044h-1.78a.542.542,0,0,0-.383.925l3.483,3.483a.542.542,0,0,0,.767,0l3.483-3.483a.542.542,0,0,0,.118-.591Z"
-                                        transform="translate(-211.464 -30.971)"
-                                        fill={"#EB4463"}
-                                      />
-                                    </g>
-                                  </svg>
-                                ) : (
-                                  <svg
-                                    onClick={() => {
-                                      handleRepost(currentPost.post.id);
-                                    }}
-                                    className="cursor-pointer text-black"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="18.5"
-                                    height="16.178"
-                                    viewBox="0 0 18.5 16.178"
+                                    <path
+                                      id="Pfad_4757"
+                                      data-name="Pfad 4757"
+                                      d="M8.092,43.9a.542.542,0,0,0-.383-.159H5.729V36.7h1.78a.542.542,0,0,0,.383-.925L4.409,32.292a.542.542,0,0,0-.767,0L.159,35.775a.542.542,0,0,0,.383.925h1.78v7.586a2.864,2.864,0,0,0,2.864,2.864h4.845a.542.542,0,0,0,.383-.925Z"
+                                      transform="translate(0)"
+                                      fill={"#EB4463"}
+                                    />
+                                    <path
+                                      id="Pfad_4758"
+                                      data-name="Pfad 4758"
+                                      d="M229.923,75.05a.542.542,0,0,0-.5-.335h-1.78V67.13a2.864,2.864,0,0,0-2.864-2.864h-4.845a.542.542,0,0,0-.383.925l2.322,2.322a.542.542,0,0,0,.383.159h1.98v7.044h-1.78a.542.542,0,0,0-.383.925l3.483,3.483a.542.542,0,0,0,.767,0l3.483-3.483a.542.542,0,0,0,.118-.591Z"
+                                      transform="translate(-211.464 -30.971)"
+                                      fill={"#EB4463"}
+                                    />
+                                  </g>
+                                </svg>
+                              ) : (
+                                <svg
+                                  onClick={() => {
+                                    handleRepost(currentPost.post.id);
+                                  }}
+                                  className="cursor-pointer text-black"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="18.5"
+                                  height="16.178"
+                                  viewBox="0 0 18.5 16.178"
+                                >
+                                  <g
+                                    id="repost"
+                                    transform="translate(0 -32.133)"
                                   >
-                                    <g
-                                      id="repost"
-                                      transform="translate(0 -32.133)"
-                                    >
-                                      <path
-                                        id="Pfad_4757"
-                                        data-name="Pfad 4757"
-                                        d="M8.092,43.9a.542.542,0,0,0-.383-.159H5.729V36.7h1.78a.542.542,0,0,0,.383-.925L4.409,32.292a.542.542,0,0,0-.767,0L.159,35.775a.542.542,0,0,0,.383.925h1.78v7.586a2.864,2.864,0,0,0,2.864,2.864h4.845a.542.542,0,0,0,.383-.925Z"
-                                        transform="translate(0)"
-                                        fill={darkMode ? "#42494F" : "#adb6c3"}
-                                      />
-                                      <path
-                                        id="Pfad_4758"
-                                        data-name="Pfad 4758"
-                                        d="M229.923,75.05a.542.542,0,0,0-.5-.335h-1.78V67.13a2.864,2.864,0,0,0-2.864-2.864h-4.845a.542.542,0,0,0-.383.925l2.322,2.322a.542.542,0,0,0,.383.159h1.98v7.044h-1.78a.542.542,0,0,0-.383.925l3.483,3.483a.542.542,0,0,0,.767,0l3.483-3.483a.542.542,0,0,0,.118-.591Z"
-                                        transform="translate(-211.464 -30.971)"
-                                        fill={darkMode ? "#42494F" : "#adb6c3"}
-                                      />
-                                    </g>
-                                  </svg>
-                                )}
-                                <div className="text-[#728198]">
-                                  {reposts && reposts.length}
-                                </div>
+                                    <path
+                                      id="Pfad_4757"
+                                      data-name="Pfad 4757"
+                                      d="M8.092,43.9a.542.542,0,0,0-.383-.159H5.729V36.7h1.78a.542.542,0,0,0,.383-.925L4.409,32.292a.542.542,0,0,0-.767,0L.159,35.775a.542.542,0,0,0,.383.925h1.78v7.586a2.864,2.864,0,0,0,2.864,2.864h4.845a.542.542,0,0,0,.383-.925Z"
+                                      transform="translate(0)"
+                                      fill={darkMode ? "#42494F" : "#adb6c3"}
+                                    />
+                                    <path
+                                      id="Pfad_4758"
+                                      data-name="Pfad 4758"
+                                      d="M229.923,75.05a.542.542,0,0,0-.5-.335h-1.78V67.13a2.864,2.864,0,0,0-2.864-2.864h-4.845a.542.542,0,0,0-.383.925l2.322,2.322a.542.542,0,0,0,.383.159h1.98v7.044h-1.78a.542.542,0,0,0-.383.925l3.483,3.483a.542.542,0,0,0,.767,0l3.483-3.483a.542.542,0,0,0,.118-.591Z"
+                                      transform="translate(-211.464 -30.971)"
+                                      fill={darkMode ? "#42494F" : "#adb6c3"}
+                                    />
+                                  </g>
+                                </svg>
+                              )}
+                              <div className="text-[#728198]">
+                                {reposts && reposts.length}
                               </div>
-                            
+                            </div>
 
                             <div className="flex items-center space-x-1">
                               <svg
@@ -1323,8 +1490,10 @@ export default function Explore() {
                             </div>
                           </div>
                           <div className="flex flex-row justify-center items-center space-x-1">
-                           
-                            <ShareSystem postUrl={`https://animebook.io/${currentPost.post.users.username}/post/${currentPost.post.id}`} custom={false}/>
+                            <ShareSystem
+                              postUrl={`https://animebook.io/${currentPost.post.users.username}/post/${currentPost.post.id}`}
+                              custom={false}
+                            />
                             <svg
                               onClick={() => {
                                 setOpenPostOptions(true);
@@ -1409,7 +1578,9 @@ export default function Explore() {
                             </span>
                           )}
                           <span
-                            className={`flex flex-row justify-between items-center pr-2 w-full border rounded-2xl ${
+                            className={`flex ${
+                              selectedCommentMedia ? "flex-col" : "flex-row"
+                            } justify-between items-center pr-2 w-full border rounded-2xl ${
                               darkMode
                                 ? "bg-[#27292F] border-[#32353C]"
                                 : "bg-[#F9F9F9] border-[#EEEDEF]"
@@ -1432,78 +1603,78 @@ export default function Explore() {
                               } text-sm w-full bg-transparent border-none focus:ring-0`}
                               placeholder="Comment on this post..."
                             />
-                             {selectedCommentMedia ? (
-                    <label htmlFor="input-post-file">
-                      <Image
-                        src={selectedCommentMedia}
-                        alt="Invalid post media. Click to change"
-                        height={30}
-                        width={30}
-                      />
+                            {selectedCommentMedia ? (
+                              <label htmlFor="input-post-file" className="relative h-[150px] w-full">
+                                <Image
+                                  src={selectedCommentMedia}
+                                  alt="Invalid post media. Click to change"
+                                  layout="fill"
+                                  className="object-contain w-full h-full"
+                                />
 
-                      <input
-                        onChange={commentMediaChange}
-                        className="hidden"
-                        type="file"
-                        accept="image/jpeg, image/png, image/jpg, image/svg, image/gif"
-                        id="input-post-file"
-                      />
-                    </label>
-                  ) : (
-                    <label
-                      htmlFor="input-comment-file"
-                      className="relative cursor-pointer"
-                    >
-                      <span className="flex flex-row items-end">
-                        <svg
-                          fill="#000000"
-                          width="20px"
-                          height="20px"
-                          viewBox="0 0 24 24"
-                          id="image"
-                          data-name="Flat Color"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="bg-[#5D6879] rounded-lg icon flat-color"
-                        >
-                          <rect
-                            id="primary"
-                            x={2}
-                            y={3}
-                            width={20}
-                            height={18}
-                            rx={2}
-                            style={{
-                              fill: "#5D6879",
-                            }}
-                          />
-                          <path
-                            id="secondary"
-                            d="M21.42,19l-6.71-6.71a1,1,0,0,0-1.42,0L11,14.59l-1.29-1.3a1,1,0,0,0-1.42,0L2.58,19a1,1,0,0,0-.29.72,1,1,0,0,0,.31.72A2,2,0,0,0,4,21H20a2,2,0,0,0,1.4-.56,1,1,0,0,0,.31-.72A1,1,0,0,0,21.42,19Z"
-                            style={{
-                              fill: "white",
-                            }}
-                          />
-                          <circle
-                            id="secondary-2"
-                            data-name="secondary"
-                            cx={11}
-                            cy={9}
-                            r={1.5}
-                            style={{
-                              fill: "white",
-                            }}
-                          />
-                        </svg>
-                      </span>
-                      <input
-                        onChange={commentMediaChange}
-                        className="hidden"
-                        type="file"
-                        accept="image/jpeg, image/png, image/jpg, image/svg, image/gif"
-                        id="input-comment-file"
-                      />
-                    </label>
-                  )}
+                                <input
+                                  onChange={commentMediaChange}
+                                  className="hidden"
+                                  type="file"
+                                  accept="image/jpeg, image/png, image/jpg, image/svg, image/gif"
+                                  id="input-post-file"
+                                />
+                              </label>
+                            ) : (
+                              <label
+                                htmlFor="input-comment-file"
+                                className="relative cursor-pointer"
+                              >
+                                <span className="flex flex-row items-end">
+                                  <svg
+                                    fill="#000000"
+                                    width="20px"
+                                    height="20px"
+                                    viewBox="0 0 24 24"
+                                    id="image"
+                                    data-name="Flat Color"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="bg-[#5D6879] rounded-lg icon flat-color"
+                                  >
+                                    <rect
+                                      id="primary"
+                                      x={2}
+                                      y={3}
+                                      width={20}
+                                      height={18}
+                                      rx={2}
+                                      style={{
+                                        fill: "#5D6879",
+                                      }}
+                                    />
+                                    <path
+                                      id="secondary"
+                                      d="M21.42,19l-6.71-6.71a1,1,0,0,0-1.42,0L11,14.59l-1.29-1.3a1,1,0,0,0-1.42,0L2.58,19a1,1,0,0,0-.29.72,1,1,0,0,0,.31.72A2,2,0,0,0,4,21H20a2,2,0,0,0,1.4-.56,1,1,0,0,0,.31-.72A1,1,0,0,0,21.42,19Z"
+                                      style={{
+                                        fill: "white",
+                                      }}
+                                    />
+                                    <circle
+                                      id="secondary-2"
+                                      data-name="secondary"
+                                      cx={11}
+                                      cy={9}
+                                      r={1.5}
+                                      style={{
+                                        fill: "white",
+                                      }}
+                                    />
+                                  </svg>
+                                </span>
+                                <input
+                                  onChange={commentMediaChange}
+                                  className="hidden"
+                                  type="file"
+                                  accept="image/jpeg, image/png, image/jpg, image/svg, image/gif"
+                                  id="input-comment-file"
+                                />
+                              </label>
+                            )}
                           </span>
                           <span
                             onClick={() => {
@@ -1527,7 +1698,7 @@ export default function Explore() {
                                   data-name="Pfad 4721"
                                   d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
                                   fill={darkMode ? "#6A6B71" : "#5d6879"}
-                                  fill-rule="evenodd"
+                                  fillRule="evenodd"
                                 />
                               </g>
                             </svg>
@@ -1604,7 +1775,10 @@ export default function Explore() {
                             </svg>
                           </span>
                         </span>
-                        <span id="scrollbar-remove" className="h-full overflow-y-auto px-3">
+                        <span
+                          id="scrollbar-remove"
+                          className="h-full overflow-y-auto px-3"
+                        >
                           {commentValues &&
                             commentValues.map((comment) => {
                               return (
@@ -1712,9 +1886,6 @@ export default function Explore() {
             <div id="stories-overlay" className="bg-black bg-opacity-80"></div>
           </>
         )}
-        
-
-        
       </div>
       <MobileNavBar />
     </>

@@ -31,8 +31,15 @@ export const getServerSideProps = async (context) => {
 
 const Community = ({ community }) => {
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, communityInputRef, sideBarOpened, darkMode, userData, currentCommunity, setCurrentCommunity } =
-    useContext(UserContext);
+  const {
+    userNumId,
+    communityInputRef,
+    sideBarOpened,
+    darkMode,
+    userData,
+    currentCommunity,
+    setCurrentCommunity,
+  } = useContext(UserContext);
   const [reentry, setReentry] = useState(false);
   const [joined, setJoined] = useState(false);
   const [comments, setComments] = useState([]);
@@ -186,8 +193,8 @@ const Community = ({ community }) => {
   };
 
   useEffect(() => {
-    if (currentCommunity === ''){
-      setCurrentCommunity(community)
+    if (currentCommunity === "") {
+      setCurrentCommunity(community);
     }
     fetchCommunityDetails();
     fetchCommunityComments();
@@ -212,7 +219,9 @@ const Community = ({ community }) => {
                         router.push("/communities");
                       }}
                       className={`border rounded ${
-                        darkMode ? "bg-[#1E1F24] border-[#292C33] text-white" : "bg-white border-[#EEEDEF] text-black"
+                        darkMode
+                          ? "bg-[#1E1F24] border-[#292C33] text-white"
+                          : "bg-white border-[#EEEDEF] text-black"
                       } h-full px-3 text-[0.7rem] cursor-pointer flex flex-row justify-center items-center space-x-1`}
                     >
                       <svg
@@ -240,7 +249,9 @@ const Community = ({ community }) => {
                     </span>
                     <span
                       className={`text-xs w-fit border rounded ${
-                        darkMode ? "bg-[#1E1F24] border-[#292C33] text-white" : "bg-white border-[#EEEDEF] text-black"
+                        darkMode
+                          ? "bg-[#1E1F24] border-[#292C33] text-white"
+                          : "bg-white border-[#EEEDEF] text-black"
                       } p-1.5 px-2 h-full flex flex-1 flex-row justify-between items-center space-x-1`}
                     >
                       <span className="hidden lg:flex flex-row items-center space-x-1">
@@ -283,7 +294,8 @@ const Community = ({ community }) => {
                           joined ? "bg-[#EB4463]" : "bg-gray-400"
                         } h-full font-medium flex flex-row space-x-1 items-center py-1 px-3 rounded`}
                       >
-                        <span>Post</span><span>now</span>
+                        <span>Post</span>
+                        <span>now</span>
                       </span>
                     </span>
                   </span>
@@ -362,65 +374,68 @@ const Community = ({ community }) => {
                   darkMode ? "text-white" : "text-black"
                 } px-2 lg:px-0 w-full mt-2 lg:mt-20 flex flex-col`}
               >
-                
-                  <span className="mb-2 flex flex-row w-full justify-between items-center h-11 space-x-2">
-                    <span
-                      onClick={() => {
-                        setFocusPostId(null)
-                      }}
-                      className={`border rounded ${
-                        darkMode ? "bg-[#1E1F24] border-[#292C33] text-white" : "bg-white border-[#EEEDEF] text-black"
-                      } h-full px-3 text-[0.7rem] cursor-pointer flex flex-row justify-center items-center space-x-1`}
+                <span className="mb-2 flex flex-row w-full justify-between items-center h-11 space-x-2">
+                  <span
+                    onClick={() => {
+                      setFocusPostId(null);
+                    }}
+                    className={`border rounded ${
+                      darkMode
+                        ? "bg-[#1E1F24] border-[#292C33] text-white"
+                        : "bg-white border-[#EEEDEF] text-black"
+                    } h-full px-3 text-[0.7rem] cursor-pointer flex flex-row justify-center items-center space-x-1`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                      >
-                        <g id="previous" transform="translate(-62 -41)">
-                          <g
-                            id="Gruppe_3288"
-                            data-name="Gruppe 3288"
-                            transform="translate(62 41)"
-                          >
-                            <path
-                              id="Pfad_4744"
-                              data-name="Pfad 4744"
-                              d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm2.707,16.293a1,1,0,1,1-1.414,1.414l-5-5a1,1,0,0,1,0-1.414l5-5a1,1,0,0,1,1.414,1.414L10.414,12Z"
-                              fill={darkMode ? "white" : "#292c33"}
-                            />
-                          </g>
-                        </g>
-                      </svg>
-                      <span>Go Back</span>
-                    </span>
-                    <span
-                      className={`text-xs w-fit border rounded ${
-                        darkMode ? "bg-[#1E1F24] border-[#292C33] text-white" : "bg-white border-[#EEEDEF] text-black"
-                      } p-1.5 px-2 h-full flex flex-1 flex-row justify-between items-center space-x-1`}
-                    >
-                      <span className="hidden lg:flex flex-row items-center space-x-1">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="17.637"
-                          height="17.615"
-                          viewBox="0 0 23.637 23.615"
+                      <g id="previous" transform="translate(-62 -41)">
+                        <g
+                          id="Gruppe_3288"
+                          data-name="Gruppe 3288"
+                          transform="translate(62 41)"
                         >
                           <path
-                            id="about"
-                            d="M12.808,1A11.791,11.791,0,0,0,2.416,18.393l-1.36,4.533a1.312,1.312,0,0,0,1.257,1.69,1.337,1.337,0,0,0,.378-.055L7.223,23.2A11.808,11.808,0,1,0,12.808,1Zm0,5.248A1.312,1.312,0,1,1,11.5,7.56,1.312,1.312,0,0,1,12.808,6.248Zm1.312,13.12H12.808A1.312,1.312,0,0,1,11.5,18.055V12.808a1.312,1.312,0,1,1,0-2.624h1.312A1.312,1.312,0,0,1,14.12,11.5v5.248a1.312,1.312,0,1,1,0,2.624Z"
-                            transform="translate(-1 -1)"
+                            id="Pfad_4744"
+                            data-name="Pfad 4744"
+                            d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm2.707,16.293a1,1,0,1,1-1.414,1.414l-5-5a1,1,0,0,1,0-1.414l5-5a1,1,0,0,1,1.414,1.414L10.414,12Z"
                             fill={darkMode ? "white" : "#292c33"}
                           />
-                        </svg>
-                        <span>
-                          {
-                            "Interact with the community and participate in this discussion!"
-                          }
-                        </span>
+                        </g>
+                      </g>
+                    </svg>
+                    <span>Go Back</span>
+                  </span>
+                  <span
+                    className={`text-xs w-fit border rounded ${
+                      darkMode
+                        ? "bg-[#1E1F24] border-[#292C33] text-white"
+                        : "bg-white border-[#EEEDEF] text-black"
+                    } p-1.5 px-2 h-full flex flex-1 flex-row justify-between items-center space-x-1`}
+                  >
+                    <span className="hidden lg:flex flex-row items-center space-x-1">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="17.637"
+                        height="17.615"
+                        viewBox="0 0 23.637 23.615"
+                      >
+                        <path
+                          id="about"
+                          d="M12.808,1A11.791,11.791,0,0,0,2.416,18.393l-1.36,4.533a1.312,1.312,0,0,0,1.257,1.69,1.337,1.337,0,0,0,.378-.055L7.223,23.2A11.808,11.808,0,1,0,12.808,1Zm0,5.248A1.312,1.312,0,1,1,11.5,7.56,1.312,1.312,0,0,1,12.808,6.248Zm1.312,13.12H12.808A1.312,1.312,0,0,1,11.5,18.055V12.808a1.312,1.312,0,1,1,0-2.624h1.312A1.312,1.312,0,0,1,14.12,11.5v5.248a1.312,1.312,0,1,1,0,2.624Z"
+                          transform="translate(-1 -1)"
+                          fill={darkMode ? "white" : "#292c33"}
+                        />
+                      </svg>
+                      <span>
+                        {
+                          "Interact with the community and participate in this discussion!"
+                        }
                       </span>
-                      {/* <span
+                    </span>
+                    {/* <span
                         onClick={() => {
                           joinCommunity();
                         }}
@@ -430,18 +445,23 @@ const Community = ({ community }) => {
                       >
                         {joined ? "Leave" : "Join"}
                       </span> */}
-                      <span
-                        onClick={() => communityInputRef.current.scrollIntoView({ behavior: 'smooth' })} 
-                        className={`cursor-pointer text-sm text-white ${
-                          joined ? "bg-[#EB4463]" : "bg-gray-400"
-                        } h-full font-medium flex flex-row space-x-1 items-center py-1 px-3 rounded`}
-                      >
-                        <span>Comment</span><span>now</span>
-                      </span>
+                    <span
+                      onClick={() =>
+                        communityInputRef.current.scrollIntoView({
+                          behavior: "smooth",
+                        })
+                      }
+                      className={`cursor-pointer text-sm text-white ${
+                        joined ? "bg-[#EB4463]" : "bg-gray-400"
+                      } h-full font-medium flex flex-row space-x-1 items-center py-1 px-3 rounded`}
+                    >
+                      <span>Comment</span>
+                      <span>now</span>
                     </span>
                   </span>
-                
-                  <span className="relative flex h-fit w-full">
+                </span>
+
+                <span className="relative flex h-fit w-full">
                   <Image
                     src={communityDetails.cover}
                     alt="user profile"
@@ -483,171 +503,178 @@ const Community = ({ community }) => {
                   </span>
                 </span>
 
-                <span className={`mt-3 rounded-lg border ${darkMode ? 'bg-[#1E1F24] border-[#292C33]' : 'bg-white border-[#EEEDEF]'}`}>
-
-                <CommunityPostCard
-                  {...communityDetails.posts.find(
-                    (p) => p.id === parseInt(focusPostId)
-                  )}
-                  myProfileId={userNumId}
-                  community={community}
-                  comments={comments}
-                  focusPostId={focusPostId}
-                />
-
                 <span
-                  className={`border-t ${
-                    darkMode ? "border-[#32353C]" : "border-[#D0D3DB]"
-                  } px-3 pt-4 space-x-2 flex flex-row justify-between items-center`}
+                  className={`mt-3 rounded-lg border ${
+                    darkMode
+                      ? "bg-[#1E1F24] border-[#292C33]"
+                      : "bg-white border-[#EEEDEF]"
+                  }`}
                 >
-                  {userData && (
+                  <CommunityPostCard
+                    {...communityDetails.posts.find(
+                      (p) => p.id === parseInt(focusPostId)
+                    )}
+                    myProfileId={userNumId}
+                    community={community}
+                    comments={comments}
+                    focusPostId={focusPostId}
+                  />
+
+                  <span
+                    className={`border-t ${
+                      darkMode ? "border-[#32353C]" : "border-[#D0D3DB]"
+                    } px-3 pt-4 space-x-2 flex flex-row justify-between items-center`}
+                  >
+                    {userData && (
+                      <span
+                        // onClick={() => {
+                        //   fullPageReload(`/profile/${userData.username}`, "window");
+                        // }}
+                        className="relative flex flex-shrink-0"
+                      >
+                        <Image
+                          src={userData.avatar}
+                          alt="user myprofile"
+                          height={35}
+                          width={35}
+                          className="border border-black rounded-full"
+                        />
+                      </span>
+                    )}
                     <span
-                      // onClick={() => {
-                      //   fullPageReload(`/profile/${userData.username}`, "window");
-                      // }}
-                      className="relative flex flex-shrink-0"
+                      className={`w-full border rounded-2xl ${
+                        darkMode
+                          ? "bg-[#27292F] border-[#32353C]"
+                          : "bg-[#F9F9F9] border-[#EEEDEF]"
+                      }`}
                     >
-                      <Image
-                        src={userData.avatar}
-                        alt="user myprofile"
-                        height={35}
-                        width={35}
-                        className="border border-black rounded-full"
+                      <textarea
+                        ref={communityInputRef}
+                        value={commentMsg}
+                        onChange={(e) => {
+                          setCommentMsg(e.target.value);
+                          e.target.style.height = '2rem'; // Reset height
+                          e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            postCommunityComment();
+                          }
+                        }}
+                        maxLength={1900}
+                        className={`${
+                          darkMode ? "text-white" : "text-gray-800"
+                        } h-8 flex items-center text-xs w-full bg-transparent border-none focus:ring-0 resize-none overflow-hidden`}
+                        placeholder="Start discussing.."
                       />
                     </span>
-                  )}
-                  <span
-                    className={`w-full border rounded-2xl ${
-                      darkMode
-                        ? "bg-[#27292F] border-[#32353C]"
-                        : "bg-[#F9F9F9] border-[#EEEDEF]"
-                    }`}
-                  >
-                    <input
-                      ref={communityInputRef}
-                      value={commentMsg}
-                      onChange={(e) => {
-                        setCommentMsg(e.target.value);
+                    <span
+                      onClick={() => {
+                        postCommunityComment();
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          postCommunityComment();
-                        }
-                      }}
-                      maxLength={1900}
-                      className={`${
-                        darkMode ? "text-white" : "text-gray-800"
-                      } text-xs w-full bg-transparent border-none focus:ring-0`}
-                      placeholder="Start discussing.."
-                    />
-                  </span>
-                  <span
-                    onClick={() => {
-                      postCommunityComment();
-                    }}
-                    className={`rounded-full border h-8 w-8 flex justify-center items-center ${
-                      darkMode
-                        ? "bg-[#27292F] border-[#32353C]"
-                        : "bg-[#F9F9F9] border-[#EEEDEF]"
-                    }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 21.5 21.5"
+                      className={`rounded-full border h-8 w-8 flex justify-center items-center ${
+                        darkMode
+                          ? "bg-[#27292F] border-[#32353C]"
+                          : "bg-[#F9F9F9] border-[#EEEDEF]"
+                      }`}
                     >
-                      <g id="Icon" transform="translate(-1.25 -1.25)">
-                        <path
-                          id="Pfad_4721"
-                          data-name="Pfad 4721"
-                          d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
-                          fill={darkMode ? "#6A6B71" : "#5d6879"}
-                          fill-rule="evenodd"
-                        />
-                      </g>
-                    </svg>
-                  </span>
-                </span>
-                <span className="text-sm px-3 pt-4 pb-0 flex flex-row justify-between">
-                  <span className="font-semibold">All Comments</span>
-                  <span className="space-x-2 flex flex-row items-center">
-                    <span className={darkMode ? "text-white" : "text-gray-500"}>
-                      Sort by:
-                    </span>
-                    <select
-                      onChange={(e) => {
-                        // if (!cryptoCommunities || cryptoCommunities.length === 0){
-                        //   return
-                        // }
-                        // const value = e.target.value;
-                        // setCryptoCommunities((prevCommunities) => {
-                        //   let sortedCommunities = [...prevCommunities];
-                        //   if (value === "most_recent") {
-                        //     sortedCommunities.sort(
-                        //       (a, b) =>
-                        //         new Date(b.created_at) - new Date(a.created_at)
-                        //     );
-                        //   } else if (value === "most_joined") {
-                        //     sortedCommunities.sort(
-                        //       (a, b) => b.membersLength - a.membersLength
-                        //     );
-                        //   } else{
-                        //     sortedCommunities.sort(
-                        //       (a, b) => b.membersLength - a.membersLength
-                        //     );
-                        //   }
-                        //   return sortedCommunities;
-                        // });
-                      }}
-                      className="text-sm font-medium bg-transparent w-fit pr-0 border-none focus:outline-none focus:ring-0 focus:ring-none appearance-none"
-                    >
-                      <option value="default">Relevance</option>
-                      <option value="most_recent">Upvotes</option>
-                      <option value="most_joined">Time</option>
-                    </select>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="8.582"
-                      height="9.821"
-                      viewBox="0 0 8.582 9.821"
-                      fill={darkMode ? "white" : "black"}
-                    >
-                      <g id="up-arrow" transform="translate(0)">
-                        <g
-                          id="Gruppe_3153"
-                          data-name="Gruppe 3153"
-                          transform="translate(0)"
-                        >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 21.5 21.5"
+                      >
+                        <g id="Icon" transform="translate(-1.25 -1.25)">
                           <path
-                            id="Pfad_1769"
-                            data-name="Pfad 1769"
-                            d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
-                            transform="translate(-32.307 0)"
-                            fill="#292c33"
+                            id="Pfad_4721"
+                            data-name="Pfad 4721"
+                            d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
+                            fill={darkMode ? "#6A6B71" : "#5d6879"}
+                            fillRule="evenodd"
                           />
                         </g>
-                      </g>
-                    </svg>
+                      </svg>
+                    </span>
+                  </span>
+                  <span className="text-sm px-3 pt-4 pb-0 flex flex-row justify-between">
+                    <span className="font-semibold">All Comments</span>
+                    <span className="space-x-2 flex flex-row items-center">
+                      <span
+                        className={darkMode ? "text-white" : "text-gray-500"}
+                      >
+                        Sort by:
+                      </span>
+                      <select
+                        onChange={(e) => {
+                          // if (!cryptoCommunities || cryptoCommunities.length === 0){
+                          //   return
+                          // }
+                          // const value = e.target.value;
+                          // setCryptoCommunities((prevCommunities) => {
+                          //   let sortedCommunities = [...prevCommunities];
+                          //   if (value === "most_recent") {
+                          //     sortedCommunities.sort(
+                          //       (a, b) =>
+                          //         new Date(b.created_at) - new Date(a.created_at)
+                          //     );
+                          //   } else if (value === "most_joined") {
+                          //     sortedCommunities.sort(
+                          //       (a, b) => b.membersLength - a.membersLength
+                          //     );
+                          //   } else{
+                          //     sortedCommunities.sort(
+                          //       (a, b) => b.membersLength - a.membersLength
+                          //     );
+                          //   }
+                          //   return sortedCommunities;
+                          // });
+                        }}
+                        className="text-sm font-medium bg-transparent w-fit pr-0 border-none focus:outline-none focus:ring-0 focus:ring-none appearance-none"
+                      >
+                        <option value="default">Relevance</option>
+                        <option value="most_recent">Upvotes</option>
+                        <option value="most_joined">Time</option>
+                      </select>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="8.582"
+                        height="9.821"
+                        viewBox="0 0 8.582 9.821"
+                        fill={darkMode ? "white" : "black"}
+                      >
+                        <g id="up-arrow" transform="translate(0)">
+                          <g
+                            id="Gruppe_3153"
+                            data-name="Gruppe 3153"
+                            transform="translate(0)"
+                          >
+                            <path
+                              id="Pfad_1769"
+                              data-name="Pfad 1769"
+                              d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
+                              transform="translate(-32.307 0)"
+                              fill="#292c33"
+                            />
+                          </g>
+                        </g>
+                      </svg>
+                    </span>
+                  </span>
+                  <span className="px-3">
+                    {comments &&
+                      comments.map((comment) => {
+                        return (
+                          <CommunityCommentItem
+                            key={comment.id}
+                            comment={comment}
+                            comments={comments}
+                            setCommentMsg={setCommentMsg}
+                            setParentId={setParentId}
+                          />
+                        );
+                      })}
                   </span>
                 </span>
-                <span className="px-3">
-                {comments &&
-                  comments.map((comment) => {
-                    return (
-                    
-                      <CommunityCommentItem
-                        key={comment.id}
-                        comment={comment}
-                        comments={comments}
-                        setCommentMsg={setCommentMsg}
-                        setParentId={setParentId}
-                      />
-                  
-                    );
-                  })}
-                  </span>
-                  </span>
               </div>
             )}
           </div>
@@ -657,8 +684,8 @@ const Community = ({ community }) => {
           </span>
         )}
         <div className="hidden lg:block sticky right-2 top-20 heighto">
-            <LargeRightBar />
-          </div>
+          <LargeRightBar />
+        </div>
       </section>
       {sideBarOpened && <SideBar />}
       <MobileNavBar />

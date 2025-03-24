@@ -31,7 +31,7 @@ const Search = () => {
 
   const getSelectedHashTag = (htag) => {
     const selectedTag = originalPostValues.filter((post) => {
-      return post.content.toLowerCase().includes(htag.toLowerCase());
+      return post?.content?.toLowerCase().includes(htag.toLowerCase());
     });
     console.log(htag, selectedTag);
     setPostValues(selectedTag);

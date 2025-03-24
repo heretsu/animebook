@@ -17,6 +17,40 @@ import dynamic from "next/dynamic";
 import ShareSystem from "./shareSystem";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
+function PollOption({
+  selectedOption,
+  opts,
+  percentage, // e.g. 0 to 100
+  darkMode,
+}) {
+  // Clamp percentage between 0 and 100
+  const safePct = Math.min(100, Math.max(0, percentage));
+
+  return (
+    <div
+      className={`
+        relative w-full py-1 rounded-md overflow-hidden
+        ${darkMode ? "bg-[#2D2F34]" : "bg-gray-200"}
+      `}
+    >
+      {/* The bar behind everything */}
+      <div
+        className={`absolute top-0 left-0 h-full ${selectedOption !== null && selectedOption !== undefined && 'bg-[#EB4463]'} transition-all duration-300`}
+        style={{ width: `${safePct}%` }}
+      />
+
+      {/* Content above the bar */}
+      <div className="relative flex items-center justify-between w-full h-full px-2 leading-tight break-words whitespace-pre-wrap">
+        {/* Show percentage on the left (or right, up to you) */}
+        {selectedOption !== null && selectedOption !== undefined && <span className="text-white">{safePct}%</span>}
+
+        {/* The actual option text on the right */}
+        <span className={`${darkMode ? '' : 'text-black'}`}><CommentConfig text={opts} tags={true} /></span>
+      </div>
+    </div>
+  );
+}
+
 export const BinSvg = ({ pixels }) => {
   return (
     <svg
@@ -41,6 +75,7 @@ export default function PostCard({
   content,
   created_at,
   users,
+  ispoll,
   myProfileId,
   repostAuthor,
   repostQuote,
@@ -73,6 +108,7 @@ export default function PostCard({
     setCommentMsg,
     parentId: globalParentId,
     setNewListOfComments,
+    allPolls,
   } = useContext(UserContext);
   const [comments, setComments] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -97,6 +133,11 @@ export default function PostCard({
   const [myComment, setMyComment] = useState("");
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState(false);
+
+  const [randomComment, setRandomComment] = useState(null);
+
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [pollLoadedData, setPollLoadedData] = useState(false);
 
   const [selectedCommentMedia, setSelectedCommentMedia] = useState(null);
   const [commentMediaFile, setCommentMediaFile] = useState(null);
@@ -133,14 +174,14 @@ export default function PostCard({
   };
 
   const postComment = async () => {
-    console.log('here')
+    console.log("here");
     if (userData === undefined || userData === null) {
       fullPageReload("/signin");
       return;
     }
-console.log('ya')
+    console.log("ya");
     if (commentMediaFile !== null) {
-console.log('hmm')
+      console.log("hmm");
       for (const file of commentMediaFile) {
         const newName = Date.now() + file.name;
 
@@ -154,8 +195,8 @@ console.log('hmm')
             "/storage/v1/object/public/mediastore/" +
             bucketResponse.data.path;
           let commentToSend = myTextComment;
-          setMyTextComment("")
-          console.log(commentToSend)
+          setMyTextComment("");
+          console.log(commentToSend);
           await supabase.from("comments").insert({
             postid: id,
             content: commentToSend,
@@ -170,8 +211,8 @@ console.log('hmm')
       setMyTextComment("");
       fetchComments();
     } else {
-      console.log('hmm')
-      console.log(myTextComment)
+      console.log("hmm");
+      console.log(myTextComment);
       if (myTextComment !== "") {
         let commentToSend = myTextComment;
         setMyTextComment("");
@@ -571,6 +612,9 @@ console.log('hmm')
   const [commentLiked, setCommentLiked] = useState(false);
   const [commentLikes, setCommentLikes] = useState(null);
   const [loadedData, setLoadedData] = useState(false);
+  const [pollVotes, setPollVotes] = useState(null);
+
+  const [pollReentry, setPollReentry] = useState(false);
 
   const fetchCommentLikes = (id) => {
     supabase
@@ -623,7 +667,65 @@ console.log('hmm')
     commentRef.current.focus();
   };
 
-  const [randomComment, setRandomComment] = useState(null);
+  const applyVote = (id, optionid) => {
+    if (userData === undefined || userData === null) {
+      fullPageReload("/signin");
+      return;
+    }
+    if (pollReentry) {
+      console.log("b", id, optionid);
+
+      setPollReentry(false);
+      if (selectedOption === optionid) {
+        supabase
+          .from("poll_votes")
+          .delete()
+          .eq("pollid", id)
+          .eq("userid", myProfileId)
+          .then(() => {
+            fetchPollVotes(id);
+          });
+      } else if (
+        selectedOption !== null &&
+        selectedOption !== undefined &&
+        selectedOption !== optionid
+      ) {
+        supabase
+          .from("poll_votes")
+          .update({ optionid: optionid })
+          .eq("pollid", id)
+          .eq("userid", myProfileId)
+          .then(() => {
+            fetchPollVotes(id);
+          });
+      } else {
+        console.log("aaa", id, optionid);
+        supabase
+          .from("poll_votes")
+          .insert({ pollid: id, optionid: optionid, userid: myProfileId })
+          .then((res) => {
+            fetchPollVotes(id);
+          });
+      }
+    }
+  };
+
+  const fetchPollVotes = (id) => {
+    supabase
+      .from("poll_votes")
+      .select()
+      .eq("pollid", id)
+      .then((res) => {
+        if (res.data !== undefined && res.data !== null) {
+          setPollVotes(res.data);
+          setSelectedOption(
+            res.data.find((lk) => lk.userid === myProfileId)?.optionid
+          );
+          setPollReentry(true);
+        }
+      });
+  };
+
   useEffect(() => {
     if (users.id !== myProfileId) {
       fetchFollows(users.id).then((res) => {
@@ -656,7 +758,21 @@ console.log('hmm')
       fetchComments();
       setLoadedData(true);
     }
-  }, [loadedData, viewed, isBeingViewed, videoPlayingId, comments]);
+    if (!pollLoadedData && ispoll && allPolls) {
+      const pollObj = allPolls.find((poll) => poll.postid === id);
+      const pollId = pollObj?.id;
+      fetchPollVotes(pollId);
+      setPollLoadedData(true);
+    }
+  }, [
+    loadedData,
+    pollLoadedData,
+    allPolls,
+    viewed,
+    isBeingViewed,
+    videoPlayingId,
+    comments,
+  ]);
 
   return (
     likes !== null &&
@@ -683,7 +799,7 @@ console.log('hmm')
             <span className="flex flex-row justify-between items-center">
               <span
                 onClick={() => {
-                  fullPageReload(`/profile/${repostAuthor.username}`);
+                  fullPageReload(`/profile/${repostAuthor.username}`, "window");
                 }}
                 className="cursor-pointer flex flex-row justify-start items-center space-x-0"
               >
@@ -1048,7 +1164,10 @@ console.log('hmm')
                         </li>
                       )}
 
-                      <ShareSystem postUrl={`https://animebook.io/${users.username}/post/${id}`} custom={true}/>
+                      <ShareSystem
+                        postUrl={`https://animebook.io/${users.username}/post/${id}`}
+                        custom={true}
+                      />
 
                       {userData && users.id !== myProfileId && (
                         <li
@@ -1122,15 +1241,67 @@ console.log('hmm')
           </span>
           {content !== null && content !== undefined && content !== "" && (
             <span
-            onClick={() => {
-              router.push(`/${users.username}/post/${id}`);
-            }}
-            className="text-sm leading-tight break-words whitespace-pre-wrap"
-          >
-            <CommentConfig text={content} tags={true} />
-          </span>
-          
+              onClick={() => {
+                router.push(`/${users.username}/post/${id}`);
+              }}
+              className={`${ispoll && 'font-semibold'} text-sm leading-tight break-words whitespace-pre-wrap`}
+            >
+              <CommentConfig text={content} tags={true} />
+            </span>
           )}
+          {ispoll &&
+            allPolls &&
+            allPolls
+              .filter((poll) => poll.postid === id)
+              .map((poll) => (
+                <span key={poll.id} className="flex flex-col">
+                  
+                  <span className="pb-2 text-sm leading-tight break-words whitespace-pre-wrap">
+                    <CommentConfig text={poll.question} tags={true} />
+                  </span>
+                  {poll.options.length > 0 &&
+                    poll.options.map((opts, index) => {
+                      const votesForOption = pollVotes?.filter(
+                        (pv) => pv.pollid === poll.id && pv.optionid === index
+                      );
+                      const voteCount = votesForOption?.length || 0;
+                      const totalVotes =
+                        pollVotes?.filter((pv) => pv.pollid === poll.id)
+                          .length || 0;
+                      const percentage =
+                        totalVotes > 0
+                          ? Math.round((voteCount / totalVotes) * 100)
+                          : 0;
+                      return (
+                        <span
+                          key={index}
+                          onClick={() => {
+                            if (selectedOption === index) {
+                              setSelectedOption(null);
+                              applyVote(poll.id, index);
+                            } else {
+                              setSelectedOption(index);
+                              applyVote(poll.id, index);
+                            }
+                          }}
+                          className={`${
+                            darkMode
+                              ? "bg-[#292C33] border-[#32353C]"
+                              : "bg-[#F9F9F9] border-[#EEEDEF]"
+                          } h-fit mb-1.5 rounded-md cursor-pointer text-sm`}
+                        >
+                          <PollOption
+                            selectedOption={selectedOption}
+                            opts={opts}
+                            percentage={percentage}
+                            darkMode={darkMode}
+                          />
+                        </span>
+                      );
+                    })}
+                </span>
+              ))}
+
           <span
             onDoubleClick={() => {
               if (userData) {
@@ -1584,7 +1755,7 @@ console.log('hmm')
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        console.log('clicked')
+                        console.log("clicked");
                         if (router.pathname === "/[username]/post/[postid]") {
                           postGlobalComment();
                         } else {
@@ -1674,7 +1845,9 @@ console.log('hmm')
                 </span>
                 <span
                   onClick={() => {
-                    router.pathname === "/[username]/post/[postid]" ? postGlobalComment() : postComment();
+                    router.pathname === "/[username]/post/[postid]"
+                      ? postGlobalComment()
+                      : postComment();
                   }}
                   className={`rounded-full border h-8 w-8 flex justify-center items-center ${
                     darkMode
@@ -1694,7 +1867,7 @@ console.log('hmm')
                         data-name="Pfad 4721"
                         d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
                         fill={darkMode ? "#6A6B71" : "#5d6879"}
-                        fill-rule="evenodd"
+                        fillRule="evenodd"
                       />
                     </g>
                   </svg>
@@ -1746,7 +1919,7 @@ console.log('hmm')
                                 fill="#728198"
                                 stroke="#728198"
                                 stroke-width="1"
-                                fill-rule="evenodd"
+                                fillRule="evenodd"
                               />
                             </g>
                           </svg>
@@ -1831,7 +2004,7 @@ console.log('hmm')
                                 fill="#728198"
                                 stroke="#728198"
                                 stroke-width="1"
-                                fill-rule="evenodd"
+                                fillRule="evenodd"
                               />
                             </g>
                           </svg>
