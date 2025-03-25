@@ -258,21 +258,20 @@ const NavBarDependencies = () => {
         //     : [] :
         originalPostValues
           ? originalPostValues.filter((post) =>
-              post.content.toLowerCase().includes(e.target.value.toLowerCase())
+              post?.content?.toLowerCase().includes(e.target.value.toLowerCase())
             )
           : [];
 
       const foundExplorePosts = originalExplorePosts
         ? originalExplorePosts.filter((post) =>
-            post.post.content
-              .toLowerCase()
+            post?.post?.content?.toLowerCase()
               .includes(e.target.value.toLowerCase())
           )
         : [];
 
       const foundUsers = allUserObject
         ? allUserObject.filter((user) =>
-            user.username.toLowerCase().includes(e.target.value.toLowerCase())
+            user?.username?.toLowerCase().includes(e.target.value.toLowerCase())
           )
         : [];
       setTagsFilter(false);

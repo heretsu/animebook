@@ -8,7 +8,7 @@ export default function DbUsers() {
     let from = 0;
     let to = 999; // Fetch in batches of 1000
   
-    if (router.pathname === "/profile/[user]" || router.pathname === "/[username]/post/[postid]") {
+    if (router.pathname === "/profile/[user]" || router.pathname === "/[username]/post/[postid]" || router.pathname === "/search") {
       while (true) {
         const { data, error } = await supabase
           .from("posts")
@@ -46,8 +46,8 @@ export default function DbUsers() {
     
     if (allPosts.length > 0) {
       // Shuffle the posts randomly
-      const shuffledPosts = allPosts.sort(() => Math.random() - 0.5);
-      return { data: shuffledPosts, error: null };
+      // const shuffledPosts = allPosts.sort(() => Math.random() - 0.5);
+      return { data: allPosts, error: null };
     } else {
       return { data: [], error: "No posts found." };
     }

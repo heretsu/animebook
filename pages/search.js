@@ -97,8 +97,7 @@ const Search = () => {
       }
       const foundPosts = originalPostValues
         ? originalPostValues.filter((post) => {
-            return post.content
-              .trim()
+            return post?.content?.trim()
               .toLowerCase()
               .includes(e.target.value.trim().toLowerCase());
           })

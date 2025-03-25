@@ -1241,9 +1241,9 @@ export default function PostCard({
           </span>
           {content !== null && content !== undefined && content !== "" && (
             <span
-              onClick={() => {
-                router.push(`/${users.username}/post/${id}`);
-              }}
+              // onClick={() => {
+              //   router.push(`/${users.username}/post/${id}`);
+              // }}
               className={`${ispoll && 'font-semibold'} text-sm leading-tight break-words whitespace-pre-wrap`}
             >
               <CommentConfig text={content} tags={true} />

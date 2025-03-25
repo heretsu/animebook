@@ -8,7 +8,7 @@ function PollCreator({ darkMode, setOpenPoll, userNumId, postLoading, setPostLoa
   const router = useRouter()
   const { fullPageReload } = PageLoadOptions();
 
-  const [content, setContent] = useState("")
+  const [pollTopic, setPollTopic] = useState("")
   const [question, setQuestion] = useState("");
   const [choices, setChoices] = useState(["", ""]); // Start with two empty choices
   const [days, setDays] = useState(1);
@@ -61,7 +61,7 @@ function PollCreator({ darkMode, setOpenPoll, userNumId, postLoading, setPostLoa
     }
     setPostLoading(true);
 
-    if (question.trim() === "" || content.trim() === "" || choices[0] === "" || choices[1] === ""){
+    if (question.trim() === "" || pollTopic.trim() === "" || choices[0] === "" || choices[1] === ""){
       setPostLoading(false);
       setErrorMsg('Fill All Fields')
       return
@@ -69,7 +69,6 @@ function PollCreator({ darkMode, setOpenPoll, userNumId, postLoading, setPostLoa
 
     if (question.trim() !== "") {
       if (communityId !== null && communityId !== undefined && communityId !== '') {
-        console.log('b', 'a')
 
         await supabase.from("community_posts").insert({
           userid: userNumId,
@@ -97,7 +96,6 @@ function PollCreator({ darkMode, setOpenPoll, userNumId, postLoading, setPostLoa
           userid: userNumId,
           ispoll: true
         }).select('id')
-        console.log(data, error, 'a')
         if (error){
           setErrorMsg("Failed to post. Post is empty");
           return
@@ -137,11 +135,13 @@ function PollCreator({ darkMode, setOpenPoll, userNumId, postLoading, setPostLoa
       >
         
         <textarea
-          value={content}
+          value={pollTopic}
           placeholder={`Poll Topic`}
           onChange={(e) => {
-            if (e.target.value && e.target.value.length < 1900) {
-              setContent(e.target.value);
+            if (e.target.value && e.target.value.length < 35) {
+              setPollTopic(e.target.value);
+            } else if (!e.target.value){
+              setPollTopic('')
             }
           }}
           className={`text-sm resize-none w-full bg-transparent ${

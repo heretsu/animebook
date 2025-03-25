@@ -287,44 +287,49 @@ export default function App({ Component, pageProps }) {
                 fetchAllReposts().then((reposts) => {
                   fetchAllPosts().then((result1) => {
                     fetchAllPolls().then((pls) => setAllPolls(pls));
-                    fetchCommunities(res.data[0].id).then((secondResult) => {
+                    fetchCommunities(data.id).then(async (secondResult) => {
                       if (secondResult !== undefined && secondResult !== null) {
+                        if (!unreadMessagesLength && unreadMessagesLength !== 0) {
+                          const unreadMsg = await fetchUnreadChat(data.id);
+                          if (unreadMsg) {
+                            setUnreadMessagesLength(unreadMsg.length);
+                          }
+                        }
+    
                         setCommunities(
                           [...secondResult.data].sort(
                             (a, b) => b.membersLength - a.membersLength
                           )
                         );
-
-                        const mergedPosts = reposts
-                          .map((repost) => {
-                            const originalPost = result1.data.find(
-                              (post) => post.id === repost.postid
-                            );
-
-                            if (originalPost) {
-                              return {
-                                ...originalPost,
-                                repostAuthor: repost.users,
-                                repostQuote: repost.quote,
-                                repostCreatedAt: repost.created_at,
-                              };
-                            }
-                            return null;
-                          })
-                          .filter(Boolean)
-                          .concat(
-                            result1.data.filter(
-                              (post) =>
-                                !reposts.some(
-                                  (repost) => repost.postid === post.id
-                                )
-                            )
+    
+                        // Make sure we have the fresh posts data:
+                        const allPosts = result1.data; // e.g., up-to-date DB fetch
+    
+                        // 1) Merge data for each original post
+                        const mergedPosts = allPosts.map((post) => {
+                          // Try to find if there's a repost record for this post
+                          const matchingRepost = reposts.find(
+                            (repost) => repost.postid === post.id
                           );
-
-                        const shuffledPosts = mergedPosts.sort(
-                          () => Math.random() - 0.5
+    
+                          if (matchingRepost) {
+                            return {
+                              ...post,
+                              repostAuthor: matchingRepost.users,
+                              repostQuote: matchingRepost.quote,
+                              repostCreatedAt: matchingRepost.created_at,
+                            };
+                          } else {
+                            return post;
+                          }
+                        });
+    
+                        mergedPosts.sort(
+                          (a, b) => new Date(b.created_at) - new Date(a.created_at)
                         );
-
+    
+                        
+    
                         setOriginalPostValues(mergedPosts);
                         setPostValues(mergedPosts);
                       }
@@ -385,33 +390,33 @@ export default function App({ Component, pageProps }) {
                       )
                     );
 
-                    const mergedPosts = reposts
-                      .map((repost) => {
-                        const originalPost = result1.data.find(
-                          (post) => post.id === repost.postid
-                        );
+                    // Make sure we have the fresh posts data:
+                    const allPosts = result1.data; // e.g., up-to-date DB fetch
 
-                        if (originalPost) {
-                          return {
-                            ...originalPost,
-                            repostAuthor: repost.users,
-                            repostQuote: repost.quote,
-                            repostCreatedAt: repost.created_at,
-                          };
-                        }
-                        return null;
-                      })
-                      .filter(Boolean)
-                      .concat(
-                        result1.data.filter(
-                          (post) =>
-                            !reposts.some((repost) => repost.postid === post.id)
-                        )
+                    // 1) Merge data for each original post
+                    const mergedPosts = allPosts.map((post) => {
+                      // Try to find if there's a repost record for this post
+                      const matchingRepost = reposts.find(
+                        (repost) => repost.postid === post.id
                       );
 
-                    const shuffledPosts = mergedPosts.sort(
-                      () => Math.random() - 0.5
+                      if (matchingRepost) {
+                        return {
+                          ...post,
+                          repostAuthor: matchingRepost.users,
+                          repostQuote: matchingRepost.quote,
+                          repostCreatedAt: matchingRepost.created_at,
+                        };
+                      } else {
+                        return post;
+                      }
+                    });
+
+                    mergedPosts.sort(
+                      (a, b) => new Date(b.created_at) - new Date(a.created_at)
                     );
+
+                    
 
                     setOriginalPostValues(mergedPosts);
                     setPostValues(mergedPosts);
@@ -548,85 +553,51 @@ export default function App({ Component, pageProps }) {
               fetchAllReposts().then((reposts) => {
                 fetchAllPosts().then((result1) => {
                   fetchAllPolls().then((pls) => setAllPolls(pls));
-                  fetchCommunities().then((secondResult) => {
+                  fetchCommunities(data.id).then(async (secondResult) => {
                     if (secondResult !== undefined && secondResult !== null) {
+                      if (!unreadMessagesLength && unreadMessagesLength !== 0) {
+                        const unreadMsg = await fetchUnreadChat(data.id);
+                        if (unreadMsg) {
+                          setUnreadMessagesLength(unreadMsg.length);
+                        }
+                      }
+  
                       setCommunities(
                         [...secondResult.data].sort(
                           (a, b) => b.membersLength - a.membersLength
                         )
                       );
-                      setOriginalPostValues(
-                        reposts
-                          .map((repost) => {
-                            const originalPost = result1.data.find(
-                              (post) => post.id === repost.postid
-                            );
-
-                            if (originalPost) {
-                              return {
-                                ...originalPost,
-                                repostAuthor: repost.users,
-                                repostQuote: repost.quote,
-                                repostCreatedAt: repost.created_at,
-                              };
-                            }
-                            return null;
-                          })
-                          .filter(Boolean)
-                          .concat(
-                            result1.data.filter(
-                              (post) =>
-                                !reposts.some(
-                                  (repost) => repost.postid === post.id
-                                )
-                            )
-                          )
-                          .sort((a, b) => {
-                            const dateA = new Date(
-                              a.repostQuote ? a.repostCreatedAt : a.created_at
-                            );
-                            const dateB = new Date(
-                              b.repostQuote ? b.repostCreatedAt : b.created_at
-                            );
-                            return dateB - dateA;
-                          })
+  
+                      // Make sure we have the fresh posts data:
+                      const allPosts = result1.data; // e.g., up-to-date DB fetch
+  
+                      // 1) Merge data for each original post
+                      const mergedPosts = allPosts.map((post) => {
+                        // Try to find if there's a repost record for this post
+                        const matchingRepost = reposts.find(
+                          (repost) => repost.postid === post.id
+                        );
+  
+                        if (matchingRepost) {
+                          return {
+                            ...post,
+                            repostAuthor: matchingRepost.users,
+                            repostQuote: matchingRepost.quote,
+                            repostCreatedAt: matchingRepost.created_at,
+                          };
+                        } else {
+                          return post;
+                        }
+                      });
+  
+                      mergedPosts.sort(
+                        (a, b) => new Date(b.created_at) - new Date(a.created_at)
                       );
-                      setPostValues(
-                        reposts
-                          .map((repost) => {
-                            const originalPost = result1.data.find(
-                              (post) => post.id === repost.postid
-                            );
-
-                            if (originalPost) {
-                              return {
-                                ...originalPost,
-                                repostAuthor: repost.users,
-                                repostQuote: repost.quote,
-                                repostCreatedAt: repost.created_at,
-                              };
-                            }
-                            return null;
-                          })
-                          .filter(Boolean)
-                          .concat(
-                            result1.data.filter(
-                              (post) =>
-                                !reposts.some(
-                                  (repost) => repost.postid === post.id
-                                )
-                            )
-                          )
-                          .sort((a, b) => {
-                            const dateA = new Date(
-                              a.repostQuote ? a.repostCreatedAt : a.created_at
-                            );
-                            const dateB = new Date(
-                              b.repostQuote ? b.repostCreatedAt : b.created_at
-                            );
-                            return dateB - dateA;
-                          })
-                      );
+  
+                      
+  
+                      setOriginalPostValues(mergedPosts);
+                      setPostValues(mergedPosts);
                     }
                   });
                 });
