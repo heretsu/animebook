@@ -11,7 +11,50 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import animationData from "@/assets/kianimation.json";
 import dynamic from "next/dynamic";
 import PopupModal from "./popupModal";
+import ShareSystem from "./shareSystem";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
+
+function PollOption({
+  selectedOption,
+  opts,
+  percentage, // e.g. 0 to 100
+  darkMode,
+}) {
+  // Clamp percentage between 0 and 100
+  const safePct = Math.min(100, Math.max(0, percentage));
+
+  return (
+    <div
+      className={`
+        relative w-full py-1 rounded-md overflow-hidden
+        ${darkMode ? "bg-[#2D2F34]" : "bg-gray-200"}
+      `}
+    >
+      {/* The bar behind everything */}
+      <div
+        className={`absolute top-0 left-0 h-full ${
+          selectedOption !== null &&
+          selectedOption !== undefined &&
+          "bg-[#EB4463]"
+        } transition-all duration-300`}
+        style={{ width: `${safePct}%` }}
+      />
+
+      {/* Content above the bar */}
+      <div className="relative flex items-center justify-between w-full h-full px-2 leading-tight break-words whitespace-pre-wrap">
+        {/* Show percentage on the left (or right, up to you) */}
+        {selectedOption !== null && selectedOption !== undefined && (
+          <span className="text-white">{safePct}%</span>
+        )}
+
+        {/* The actual option text on the right */}
+        <span className={`${darkMode ? "" : "text-black"}`}>
+          <CommentConfig text={opts} tags={true} />
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export const BinSvg = ({ pixels }) => {
   return (
@@ -37,10 +80,12 @@ export default function CommunityPostCard({
   content,
   created_at,
   users,
+  ispoll,
   myProfileId,
   community,
   comments,
   focusPostId,
+  fetchCommunityDetails
 }) {
   const [openPostOptions, setOpenPostOptions] = useState(false)
   const { fullPageReload } = PageLoadOptions();
@@ -49,12 +94,14 @@ export default function CommunityPostCard({
   const [alreadyFollowed, setAlreadyFollowed] = useState(null);
   const { fetchFollows } = Relationships();
   const {
+    deletePost,
     setDeletePost,
     userData,
     darkMode,
     videoRef,
     handlePlay,
     activeVideo,
+    allCommunityPolls
   } = useContext(UserContext);
   const [upvoted, setUpvoted] = useState(false);
   const [upvotes, setUpvotes] = useState(null);
@@ -67,7 +114,7 @@ export default function CommunityPostCard({
   const [copied, setCopied] = useState(false);
   const [playVideo, setPlayVideo] = useState(false);
   const [open, setOpen] = useState(false)
-
+const [pollLoadedData, setPollLoadedData] = useState(false)
   const deleteAction = () => {
     setDeletePost({ postid: id, media: media });
   };
@@ -223,7 +270,68 @@ export default function CommunityPostCard({
       }
     }
   };
+
+  
   const [imgSrc, setImgSrc] = useState(users.avatar);
+
+  const [pollVotes, setPollVotes] = useState(null)
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [pollReentry, setPollReentry] = useState(false);
+
+  const applyVote = (id, optionid) => {
+    if (userData === undefined || userData === null) {
+      fullPageReload("/signin");
+      return;
+    }
+    if (pollReentry) {
+      setPollReentry(false);
+      if (selectedOption === optionid) {
+        supabase
+          .from("community_poll_votes")
+          .delete()
+          .eq("pollid", id)
+          .eq("userid", myProfileId)
+          .then(() => {
+            fetchPollVotes(id);
+          });
+      } else if (
+        selectedOption !== null &&
+        selectedOption !== undefined &&
+        selectedOption !== optionid
+      ) {
+        supabase
+          .from("community_poll_votes")
+          .update({ optionid: optionid })
+          .eq("pollid", id)
+          .eq("userid", myProfileId)
+          .then(() => {
+            fetchPollVotes(id);
+          });
+      } else {
+        supabase
+          .from("community_poll_votes")
+          .insert({ pollid: id, optionid: optionid, userid: myProfileId })
+          .then((res) => {
+            fetchPollVotes(id);
+          });
+      }
+    }
+  };
+  const fetchPollVotes = (id) => {
+    supabase
+    .from("community_poll_votes")
+    .select()
+    .eq("pollid", id)
+    .then((res) => {
+      if (res.data !== undefined && res.data !== null) {
+        setPollVotes(res.data);
+        setSelectedOption(
+          res.data.find((lk) => lk.userid === myProfileId)?.optionid
+        );
+        setPollReentry(true);
+      }
+    });
+  }
 
   useEffect(() => {
     if (users.id !== myProfileId) {
@@ -237,9 +345,15 @@ export default function CommunityPostCard({
       });
     }
     fetchUpvotes();
+    if (!pollLoadedData && ispoll && allCommunityPolls){
+      const pollObj = allCommunityPolls.find((poll) => poll.postid === id);
+      const pollId = pollObj?.id;
+      fetchPollVotes(pollId);
+      setPollLoadedData(true);
+    }
     fetchDownvotes();
     fetchBookmarkStatus();
-  }, []);
+  }, [pollLoadedData, allCommunityPolls]);
 
   return (
     comments &&
@@ -393,7 +507,9 @@ export default function CommunityPostCard({
         </span>
         {content !== null && content !== undefined && content !== "" && (
           <span
-            className="w-full break-all overflow-wrap-word whitespace-preline"
+          className={`${
+            ispoll && "font-semibold"
+          } text-sm leading-tight break-words whitespace-pre-wrap`}
             onClick={() => {
               fullPageReload(
                 `/communities/${community.split("&")[0]}&${id}`,
@@ -405,6 +521,58 @@ export default function CommunityPostCard({
             <CommentConfig text={content} tags={true} />
           </span>
         )}
+        {ispoll &&
+            allCommunityPolls &&
+            allCommunityPolls
+              .filter((poll) => poll.postid === id)
+              .map((poll) => (
+                <span key={poll.id} className="flex flex-col">
+                  <span className="pb-2 text-sm leading-tight break-words whitespace-pre-wrap">
+                    <CommentConfig text={poll.question} tags={true} />
+                  </span>
+                  {poll.options.length > 0 &&
+                    poll.options.map((opts, index) => {
+                      const votesForOption = pollVotes?.filter(
+                        (pv) => pv.pollid === poll.id && pv.optionid === index
+                      );
+                      const voteCount = votesForOption?.length || 0;
+                      const totalVotes =
+                        pollVotes?.filter((pv) => pv.pollid === poll.id)
+                          .length || 0;
+                      const percentage =
+                        totalVotes > 0
+                          ? Math.round((voteCount / totalVotes) * 100)
+                          : 0;
+                      return (
+                        <span
+                          key={index}
+                          onClick={() => {
+                            if (selectedOption === index) {
+                              setSelectedOption(null);
+                              applyVote(poll.id, index);
+                            } else {
+                              setSelectedOption(index);
+                              applyVote(poll.id, index);
+                            }
+                          }}
+                          className={`${
+                            darkMode
+                              ? "bg-[#292C33] border-[#32353C]"
+                              : "bg-[#F9F9F9] border-[#EEEDEF]"
+                          } h-fit mb-1.5 rounded-md cursor-pointer text-sm`}
+                        >
+                          <PollOption
+                            selectedOption={selectedOption}
+                            opts={opts}
+                            percentage={percentage}
+                            darkMode={darkMode}
+                          />
+                        </span>
+                      );
+                    })}
+                  {pollVotes && pollVotes.length && <span className="text-sm">{`${pollVotes.length} ${pollVotes.length === 1 ? 'vote' : 'votes'}`}</span>}
+                </span>
+              ))}
         <span className="relative w-full max-h-[600px] flex justify-center">
           {media !== null &&
             media !== undefined &&
@@ -656,57 +824,63 @@ export default function CommunityPostCard({
                     }`}
                   >
                     <ul className={`space-y-1`}>
-                      
-                      <li
-                        className={`border-b ${
-                          darkMode ? "border-gray-900" : "border-gray-100"
-                        } px-4 py-2 flex items-center space-x-2 hover:bg-gray-100 cursor-pointer`}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="12.807"
-                          height="15.338"
-                          viewBox="0 0 11.807 16.338"
+                    {userData && users.id === myProfileId && (
+                        <li
+                          onClick={() => {
+                            deleteAction();
+                          }}
+                          className={`border-b ${
+                            darkMode ? "border-gray-900" : "border-gray-100"
+                          } px-4 py-2 flex items-center space-x-2 hover:bg-gray-100 cursor-pointer`}
                         >
-                          <g
-                            id="upload_1_"
-                            data-name="upload (1)"
-                            transform="translate(-16)"
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="12.331"
+                            height="15.854"
+                            viewBox="0 0 12.331 15.854"
                           >
                             <g
-                              id="Gruppe_3317"
-                              data-name="Gruppe 3317"
-                              transform="translate(17.863)"
+                              id="delete_1_"
+                              data-name="delete (1)"
+                              transform="translate(-42.667)"
                             >
-                              <g id="Gruppe_3316" data-name="Gruppe 3316">
-                                <path
-                                  id="Pfad_4761"
-                                  data-name="Pfad 4761"
-                                  d="M135.953,4.259,132.418.175a.5.5,0,0,0-.76,0l-3.535,4.085a.514.514,0,0,0-.08.547.505.505,0,0,0,.46.3h2.02v6.637a.508.508,0,0,0,.505.511h2.02a.508.508,0,0,0,.505-.511V5.106h2.02a.5.5,0,0,0,.46-.3A.513.513,0,0,0,135.953,4.259Z"
-                                  transform="translate(-127.998)"
-                                  fill="#5d6879"
-                                />
+                              <g
+                                id="Gruppe_3315"
+                                data-name="Gruppe 3315"
+                                transform="translate(42.667)"
+                              >
+                                <g
+                                  id="Gruppe_3314"
+                                  data-name="Gruppe 3314"
+                                  transform="translate(0)"
+                                >
+                                  <path
+                                    id="Pfad_4759"
+                                    data-name="Pfad 4759"
+                                    d="M64,95.9a1.761,1.761,0,0,0,1.762,1.762h7.046A1.761,1.761,0,0,0,74.569,95.9V85.333H64Z"
+                                    transform="translate(-63.119 -81.81)"
+                                    fill="#5d6879"
+                                  />
+                                  <path
+                                    id="Pfad_4760"
+                                    data-name="Pfad 4760"
+                                    d="M51.915.881,51.034,0h-4.4L45.75.881H42.667V2.642H55V.881Z"
+                                    transform="translate(-42.667)"
+                                    fill="#5d6879"
+                                  />
+                                </g>
                               </g>
                             </g>
-                            <g
-                              id="Gruppe_3319"
-                              data-name="Gruppe 3319"
-                              transform="translate(16 11.233)"
-                            >
-                              <g id="Gruppe_3318" data-name="Gruppe 3318">
-                                <path
-                                  id="Pfad_4762"
-                                  data-name="Pfad 4762"
-                                  d="M25.936,352v3.063H17.9V352H16v4.085a.927.927,0,0,0,.787,1.021H27.02a.926.926,0,0,0,.787-1.021V352Z"
-                                  transform="translate(-16 -352)"
-                                  fill="#5d6879"
-                                />
-                              </g>
-                            </g>
-                          </g>
-                        </svg>
-                        <span>Share</span>
-                      </li>
+                          </svg>
+                          <span>Delete</span>
+                        </li>
+                      )}
+
+                      <ShareSystem
+                        postUrl={`https://animebook.io/communities/${community.split("&")[0]}&${id}`}
+                        custom={true}
+                      />
+                     
 
                       {userData && users.id !== myProfileId && (
                         <li
@@ -755,6 +929,18 @@ export default function CommunityPostCard({
             ></div>
           </>
         )}
+        {deletePost !== null && (
+        <>
+          <PopupModal success={"7"} isCommunity={true} fetchCommunityDetails={fetchCommunityDetails} />
+          <div
+            onClick={() => {
+              setDeletePost(null);
+            }}
+            id="overlay"
+            className="bg-black bg-opacity-80"
+          ></div>
+        </>
+      )}
       </div>
     )
   );

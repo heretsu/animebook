@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { UserContext } from "@/lib/userContext";
 import CommunityPostCard from "./communityPostCard";
 
-const CommunityPosts = ({posts, community, globalCommunityComments}) => {
+const CommunityPosts = ({posts, community, globalCommunityComments, fetchCommunityDetails}) => {
   const {
     userNumId,
   } = useContext(UserContext);
@@ -13,7 +13,7 @@ const CommunityPosts = ({posts, community, globalCommunityComments}) => {
         posts !== undefined &&
         (posts.length > 0 ? (
           posts.map((post) => {
-               return <CommunityPostCard key={post.id} {...post} myProfileId={userNumId} community={community} comments={globalCommunityComments.filter(c => c.community_posts.id === post.id)} />;
+               return <CommunityPostCard key={post.id} {...post} fetchCommunityDetails={fetchCommunityDetails} myProfileId={userNumId} community={community} comments={globalCommunityComments.filter(c => c.community_posts.id === post.id)} />;
           })
         ) : (
           <div className="w-full text-center text-slate-800">

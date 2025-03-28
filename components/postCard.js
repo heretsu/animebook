@@ -35,17 +35,25 @@ function PollOption({
     >
       {/* The bar behind everything */}
       <div
-        className={`absolute top-0 left-0 h-full ${selectedOption !== null && selectedOption !== undefined && 'bg-[#EB4463]'} transition-all duration-300`}
+        className={`absolute top-0 left-0 h-full ${
+          selectedOption !== null &&
+          selectedOption !== undefined &&
+          "bg-[#EB4463]"
+        } transition-all duration-300`}
         style={{ width: `${safePct}%` }}
       />
 
       {/* Content above the bar */}
       <div className="relative flex items-center justify-between w-full h-full px-2 leading-tight break-words whitespace-pre-wrap">
         {/* Show percentage on the left (or right, up to you) */}
-        {selectedOption !== null && selectedOption !== undefined && <span className="text-white">{safePct}%</span>}
+        {selectedOption !== null && selectedOption !== undefined && (
+          <span className="text-white">{safePct}%</span>
+        )}
 
         {/* The actual option text on the right */}
-        <span className={`${darkMode ? '' : 'text-black'}`}><CommentConfig text={opts} tags={true} /></span>
+        <span className={`${darkMode ? "" : "text-black"}`}>
+          <CommentConfig text={opts} tags={true} />
+        </span>
       </div>
     </div>
   );
@@ -1244,7 +1252,9 @@ export default function PostCard({
               // onClick={() => {
               //   router.push(`/${users.username}/post/${id}`);
               // }}
-              className={`${ispoll && 'font-semibold'} text-sm leading-tight break-words whitespace-pre-wrap`}
+              className={`${
+                ispoll && "font-semibold"
+              } text-sm leading-tight break-words whitespace-pre-wrap`}
             >
               <CommentConfig text={content} tags={true} />
             </span>
@@ -1255,7 +1265,6 @@ export default function PostCard({
               .filter((poll) => poll.postid === id)
               .map((poll) => (
                 <span key={poll.id} className="flex flex-col">
-                  
                   <span className="pb-2 text-sm leading-tight break-words whitespace-pre-wrap">
                     <CommentConfig text={poll.question} tags={true} />
                   </span>
@@ -1299,6 +1308,7 @@ export default function PostCard({
                         </span>
                       );
                     })}
+                  {pollVotes && pollVotes.length && <span className="text-sm">{`${pollVotes.length} ${pollVotes.length === 1 ? 'vote' : 'votes'}`}</span>}
                 </span>
               ))}
 
@@ -1537,14 +1547,14 @@ export default function PostCard({
                           data-name="Pfad 4757"
                           d="M8.092,43.9a.542.542,0,0,0-.383-.159H5.729V36.7h1.78a.542.542,0,0,0,.383-.925L4.409,32.292a.542.542,0,0,0-.767,0L.159,35.775a.542.542,0,0,0,.383.925h1.78v7.586a2.864,2.864,0,0,0,2.864,2.864h4.845a.542.542,0,0,0,.383-.925Z"
                           transform="translate(0)"
-                          fill={darkMode ? "#42494F" : "#adb6c3"}
+                          fill={"#04dbc4"}
                         />
                         <path
                           id="Pfad_4758"
                           data-name="Pfad 4758"
                           d="M229.923,75.05a.542.542,0,0,0-.5-.335h-1.78V67.13a2.864,2.864,0,0,0-2.864-2.864h-4.845a.542.542,0,0,0-.383.925l2.322,2.322a.542.542,0,0,0,.383.159h1.98v7.044h-1.78a.542.542,0,0,0-.383.925l3.483,3.483a.542.542,0,0,0,.767,0l3.483-3.483a.542.542,0,0,0,.118-.591Z"
                           transform="translate(-211.464 -30.971)"
-                          fill={darkMode ? "#42494F" : "#adb6c3"}
+                          fill={"#04dbc4"}
                         />
                       </g>
                     </svg>

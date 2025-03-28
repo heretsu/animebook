@@ -8,6 +8,7 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import DappLibrary from "@/lib/dappLibrary";
 import CommunityCommentItemChild from "./communityCommentItemChild";
 import PopupModal from "./popupModal";
+import { BinSvg } from "./communityPostCard";
 
 export default function CommunityCommentItem({
   comment,
@@ -136,6 +137,17 @@ export default function CommunityCommentItem({
     }
   };
 
+  const deleteComment = () => {
+    supabase
+      .from("community_comments")
+      .delete()
+      .eq("id", comment.id)
+      .eq("userid", userNumId)
+      .then((res) => {
+        setUpVotes(null)
+      });
+  };
+
   const replyComment = (parentCommentId, commentOwner) => {
     if (userData === undefined || userData === null) {
       fullPageReload("/signin");
@@ -159,7 +171,7 @@ export default function CommunityCommentItem({
         <span
           className={`${
             darkMode ? "text-white" : "text-black bg-white"
-          } text-black py-0.5 px-3 rounded-xl flex flex-col justify-center text-start`}
+          } text-black pt-0.5 px-3 rounded-xl flex flex-col justify-center text-start`}
         >
           <span className="flex flex-row justify-between items-center">
             <span
@@ -191,6 +203,21 @@ export default function CommunityCommentItem({
                     tags={true}
                   />
                 </span>
+                {comment.media && (
+                  <span className="w-full flex flex-row justify-start items-start">
+                    <span className="w-full flex flex-col items-start justify-start">
+                      <span className="flex justify-start items-start w-full mr-2 relative">
+                        <Image
+                          src={comment.media}
+                          alt="user profile"
+                          height={300}
+                          width={300}
+                          className="pt-1 relative max-h-[600px] mx-auto rounded-lg object-cover w-full"
+                        />
+                      </span>
+                    </span>
+                  </span>
+                )}
                 <span className="ml-1 -mt-2 flex flex-row items-center space-x-2 pr-4">
               <span
                 className={`${
@@ -346,6 +373,12 @@ export default function CommunityCommentItem({
                   fill={darkMode ? "#42494F" : "#adb6c3"}
                 />
               </svg>
+              {comment.users.id === userNumId && <span
+                      onClick={() => {
+                        deleteComment();
+                      }}
+                    > <BinSvg pixels={"15"} />
+                    </span>}
             </span>
           
               </span>

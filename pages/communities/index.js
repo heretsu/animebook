@@ -533,7 +533,7 @@ const Communities = () => {
                                   " ",
                                   "+"
                                 )
-                              );
+                              , "window");
                             }}
                             className="cursor-pointer flex-shrink-0 lg:flex-shrink rounded-2xl relative flex h-[150px] sm:h-[120px] w-[60vw] lg:w-full"
                           >
@@ -720,7 +720,7 @@ const Communities = () => {
                           onClick={() => {
                             fullPageReload(
                               `/communities/${community.name}`.replace(" ", "+")
-                            );
+                            , "window");
                           }}
                           className="cursor-pointer flex-shrink-0 lg:flex-shrink rounded-2xl relative flex h-[150px] sm:h-[120px] w-[60vw] lg:w-full"
                         >
@@ -879,7 +879,7 @@ const Communities = () => {
                           key={community.id}
                           onClick={() => {
                             fullPageReload(
-                              `/communities/${community.name}`.replace(" ", "+")
+                              `/communities/${community.name}`.replace(" ", "+"), "window"
                             );
                           }}
                           className="cursor-pointer flex-shrink-0 lg:flex-shrink rounded-2xl relative flex h-[150px] sm:h-[120px] w-[60vw] lg:w-full"
@@ -1005,7 +1005,7 @@ const Communities = () => {
                         key={community.id}
                         onClick={() => {
                           fullPageReload(
-                            `/communities/${community.name}`.replace(" ", "+")
+                            `/communities/${community.name}`.replace(" ", "+"), "window"
                           );
                         }}
                         className={`border ${

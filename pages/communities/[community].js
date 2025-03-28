@@ -17,6 +17,7 @@ import loadscreen from "@/assets/loadscreen.json";
 import darkloadscreen from "@/assets/darkloadscreen.json";
 import dynamic from "next/dynamic";
 import LargeRightBar from "@/components/largeRightBar";
+import SmallPostContainer from "@/components/smallPostContainer";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export const getServerSideProps = async (context) => {
@@ -38,7 +39,7 @@ const Community = ({ community }) => {
     darkMode,
     userData,
     currentCommunity,
-    setCurrentCommunity,
+    setCurrentCommunity, allCommunityPolls, setAllCommunityPolls
   } = useContext(UserContext);
   const [reentry, setReentry] = useState(false);
   const [joined, setJoined] = useState(false);
@@ -46,6 +47,8 @@ const Community = ({ community }) => {
   const [globalCommunityComments, setGlobalCommunityComments] = useState(null);
   const [parentId, setParentId] = useState(null);
   const [commentMsg, setCommentMsg] = useState("");
+  const [selectedCommentMedia, setSelectedCommentMedia] = useState(null);
+  const [commentMediaFile, setCommentMediaFile] = useState(null);
 
   const router = useRouter();
   const [communityDetails, setCommunityDetails] = useState(null);
@@ -53,12 +56,19 @@ const Community = ({ community }) => {
   const [focusPostId, setFocusPostId] = useState(undefined);
   const [commentPostLoading, setCommentPostLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const commentMediaChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setCommentMediaFile(e.target.files);
+      setSelectedCommentMedia(URL.createObjectURL(file));
+    }
+  };
 
   const fetchCommunityComments = async () => {
     const { data } = await supabase
       .from("community_comments")
       .select(
-        "id, created_at, content, community_posts(id), users(id, avatar, username), parentid"
+        "id, created_at, content, community_posts(id), users(id, avatar, username), parentid, media"
       )
       .order("created_at", { ascending: false });
 
@@ -80,12 +90,50 @@ const Community = ({ community }) => {
     }
   };
 
-  const postCommunityComment = () => {
+  const postCommunityComment = async () => {
     if (!userNumId) {
       fullPageReload("/signin");
       return;
     }
     setCommentPostLoading(true);
+    if (commentMediaFile !== null) {
+      for (const file of commentMediaFile) {
+        const newName = Date.now() + file.name;
+
+        const bucketResponse = await supabase.storage
+          .from("mediastore")
+          .upload(`${"community_comments/" + newName}`, file);
+
+        if (bucketResponse.data) {
+          const mediaUrl =
+            process.env.NEXT_PUBLIC_SUPABASE_URL +
+            "/storage/v1/object/public/mediastore/" +
+            bucketResponse.data.path;
+          let commentToSend = commentMsg;
+
+          supabase
+        .from("community_comments")
+        .insert({
+          postid: community.split("&")[1],
+          content: commentMsg,
+          userid: userNumId,
+          parentid: commentMsg.startsWith("@") ? parentId : null,
+          media: mediaUrl
+        })
+        .then(async () => {
+          setSelectedCommentMedia(null);
+      setCommentMediaFile(null);
+      setCommentMsg("");
+          await fetchCommunityComments();
+        });
+        }
+      }
+      
+    } 
+    else{
+
+    
+
     if (commentMsg !== "") {
       supabase
         .from("community_comments")
@@ -101,7 +149,7 @@ const Community = ({ community }) => {
     } else {
       setErrorMsg("You haven't made a comment yet. Try again");
       setCommentPostLoading(false);
-    }
+    }}
   };
 
   const fetchCommunityDetails = async () => {
@@ -119,7 +167,7 @@ const Community = ({ community }) => {
     const posts = await supabase
       .from("community_posts")
       .select(
-        "id, created_at, content, media, communityid, users(id, avatar, username, created_at, cover, bio, ki)"
+        "id, created_at, content, media, communityid, users(id, avatar, username, created_at, cover, bio, ki), ispoll"
       )
       .eq("communityid", data[0].id)
       .order("created_at", { ascending: false });
@@ -132,6 +180,11 @@ const Community = ({ community }) => {
       setFocusPostId(community.split("&")[1]);
     }
 
+    const polls = await supabase.from("community_polls").select("*")
+
+    if (setAllCommunityPolls !== null && setAllCommunityPolls !== undefined && polls && polls.data){
+      setAllCommunityPolls(polls.data)
+    }
     if (userNumId) {
       setJoined(!!members.data.find((mb) => mb.userid === userNumId));
       setReentry(true);
@@ -345,15 +398,13 @@ const Community = ({ community }) => {
 
                 {newPost ? (
                   <>
-                    <PostContainer
-                      communityId={communityDetails.id}
-                      community={community}
-                    />
+                  <SmallPostContainer setNewPost={setNewPost} communityId={communityDetails.id}
+                      community={community} />
                     <span
                       onClick={() => {
                         setNewPost(false);
                       }}
-                      className="cursor-pointer shadow-lg font-medium mx-auto rounded-lg border-2 border-red-500 text-red-500 py-1 px-3"
+                      className="cursor-pointer shadow-lg font-medium mx-auto rounded-lg border-2 border-[#EB4463] text-[#EB4463] py-1 px-3"
                     >
                       Cancel
                     </span>
@@ -364,6 +415,7 @@ const Community = ({ community }) => {
                       posts={communityDetails.posts}
                       community={communityDetails.name}
                       globalCommunityComments={globalCommunityComments}
+                      fetchCommunityDetails={fetchCommunityDetails}
                     />
                   </div>
                 )}
@@ -542,7 +594,7 @@ const Community = ({ community }) => {
                       </span>
                     )}
                     <span
-                      className={`w-full border rounded-2xl ${
+                      className={`w-full border rounded-2xl flex ${selectedCommentMedia ? "flex-col" : "flex-row"} justify-between items-center pr-2 ${
                         darkMode
                           ? "bg-[#27292F] border-[#32353C]"
                           : "bg-[#F9F9F9] border-[#EEEDEF]"
@@ -567,6 +619,78 @@ const Community = ({ community }) => {
                         } h-8 flex items-center text-xs w-full bg-transparent border-none focus:ring-0 resize-none overflow-hidden`}
                         placeholder="Start discussing.."
                       />
+                      {selectedCommentMedia ? (
+                              <label htmlFor="input-post-file" className="relative h-[150px] w-full">
+                                <Image
+                                  src={selectedCommentMedia}
+                                  alt="Invalid post media. Click to change"
+                                  layout="fill"
+                                  className="object-contain w-full h-full"
+                                />
+
+                                <input
+                                  onChange={commentMediaChange}
+                                  className="hidden"
+                                  type="file"
+                                  accept="image/jpeg, image/png, image/jpg, image/svg, image/gif"
+                                  id="input-post-file"
+                                />
+                              </label>
+                            ) : (
+                              <label
+                                htmlFor="input-comment-file"
+                                className="relative cursor-pointer"
+                              >
+                                <span className="flex flex-row items-end">
+                                  <svg
+                                    fill="#000000"
+                                    width="20px"
+                                    height="20px"
+                                    viewBox="0 0 24 24"
+                                    id="image"
+                                    data-name="Flat Color"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="bg-[#5D6879] rounded-lg icon flat-color"
+                                  >
+                                    <rect
+                                      id="primary"
+                                      x={2}
+                                      y={3}
+                                      width={20}
+                                      height={18}
+                                      rx={2}
+                                      style={{
+                                        fill: "#5D6879",
+                                      }}
+                                    />
+                                    <path
+                                      id="secondary"
+                                      d="M21.42,19l-6.71-6.71a1,1,0,0,0-1.42,0L11,14.59l-1.29-1.3a1,1,0,0,0-1.42,0L2.58,19a1,1,0,0,0-.29.72,1,1,0,0,0,.31.72A2,2,0,0,0,4,21H20a2,2,0,0,0,1.4-.56,1,1,0,0,0,.31-.72A1,1,0,0,0,21.42,19Z"
+                                      style={{
+                                        fill: "white",
+                                      }}
+                                    />
+                                    <circle
+                                      id="secondary-2"
+                                      data-name="secondary"
+                                      cx={11}
+                                      cy={9}
+                                      r={1.5}
+                                      style={{
+                                        fill: "white",
+                                      }}
+                                    />
+                                  </svg>
+                                </span>
+                                <input
+                                  onChange={commentMediaChange}
+                                  className="hidden"
+                                  type="file"
+                                  accept="image/jpeg, image/png, image/jpg, image/svg, image/gif"
+                                  id="input-comment-file"
+                                />
+                              </label>
+                            )}
                     </span>
                     <span
                       onClick={() => {
@@ -596,7 +720,7 @@ const Community = ({ community }) => {
                       </svg>
                     </span>
                   </span>
-                  <span className="text-sm px-3 pt-4 pb-0 flex flex-row justify-between">
+                  <span className="text-sm px-3 pt-1 pb-0 flex flex-row justify-between">
                     <span className="font-semibold">All Comments</span>
                     <span className="space-x-2 flex flex-row items-center">
                       <span
@@ -660,7 +784,7 @@ const Community = ({ community }) => {
                       </svg>
                     </span>
                   </span>
-                  <span className="px-3">
+                  <span className="">
                     {comments &&
                       comments.map((comment) => {
                         return (

@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import supabase from "@/hooks/authenticateUser";
 import Spinner from "./spinner";
 
-function PollCreator({ darkMode, setOpenPoll, userNumId, postLoading, setPostLoading, errorMsg, setErrorMsg, communityId, fetchPosts }) {
+function PollCreator({ setNewPost, darkMode, setOpenPoll, userNumId, postLoading, setPostLoading, errorMsg, setErrorMsg, communityId, community, fetchPosts }) {
   const router = useRouter()
   const { fullPageReload } = PageLoadOptions();
 
@@ -70,30 +70,35 @@ function PollCreator({ darkMode, setOpenPoll, userNumId, postLoading, setPostLoa
     if (question.trim() !== "") {
       if (communityId !== null && communityId !== undefined && communityId !== '') {
 
-        await supabase.from("community_posts").insert({
+        const {data, error} = await supabase.from("community_posts").insert({
           userid: userNumId,
+          content: pollTopic,
           ispoll: true,
           communityid: parseInt(communityId),
-        }).select('id')
-        // fullPageReload(`/communities/${community}`);
+        }).select('id') 
+
         if (error){
-          setErrorMsg("Failed to post. Post is empty");
+          setErrorMsg("Failed to post");
+          setPostLoading(false);
           return
         }
         const postid = data?.[0]?.id
+        console.log(postid)
 
-        await supabase.from("polls").insert({
+        await supabase.from("community_polls").insert({
           postid: postid,
           question: question,
           options: choices,
           expires_at: expiresDate
         })
+        fullPageReload(
+          `/communities/${community}`.replace(" ", "+"), "window");
 
-        // fullPageReload("/home");
-        fetchPosts();
+
       } else {
        const {data, error} = await supabase.from("posts").insert({
           userid: userNumId,
+          content: pollTopic,
           ispoll: true
         }).select('id')
         if (error){
@@ -111,6 +116,9 @@ function PollCreator({ darkMode, setOpenPoll, userNumId, postLoading, setPostLoa
 
         // fullPageReload("/home");
         fetchPosts();
+        if (setNewPost !== null && setNewPost !== undefined){
+          setNewPost(false)
+        }
       }
     } else {
       setPostLoading(false);

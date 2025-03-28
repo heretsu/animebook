@@ -9,7 +9,7 @@ import GifPicker from "./gifPicker";
 import DbUsers from "@/hooks/dbUsers";
 import PollCreator from "./pollCreator";
 
-const SmallPostContainer = ({ communityId, community }) => {
+const SmallPostContainer = ({setNewPost, communityId, community }) => {
   const { fullPageReload } = PageLoadOptions();
   const {
     userNumId,
@@ -196,7 +196,7 @@ const SmallPostContainer = ({ communityId, community }) => {
               content: content.trim() !== "" ? content.trim() : "",
               communityid: parseInt(communityId),
             });
-            fullPageReload(`/communities/${community}`);
+            fullPageReload(`/communities/${community}`, 'window');
           } else {
             await supabase.from("posts").insert({
               userid: userNumId,
@@ -222,7 +222,7 @@ const SmallPostContainer = ({ communityId, community }) => {
             content: content,
             communityid: parseInt(communityId),
           });
-          // fullPageReload(`/communities/${community}`);
+          fullPageReload(`/communities/${community}`, 'window');
           setContent("");
           setGifSelected(false);
           setSelectedMedia(null);
@@ -285,7 +285,7 @@ const SmallPostContainer = ({ communityId, community }) => {
         } ${selectedMedia && "flex-col"} space-x-0`}
       >
         {openPoll ? <>
-        <PollCreator darkMode={darkMode} setOpenPoll={setOpenPoll} userNumId={userNumId} postLoading={postLoading} setPostLoading={setPostLoading} errorMsg={errorMsg} setErrorMsg={setErrorMsg} communityId={communityId} fetchPosts={fetchPosts}/>
+        <PollCreator setNewPost={setNewPost} darkMode={darkMode} setOpenPoll={setOpenPoll} userNumId={userNumId} postLoading={postLoading} setPostLoading={setPostLoading} errorMsg={errorMsg} setErrorMsg={setErrorMsg} communityId={communityId} community={community} fetchPosts={fetchPosts}/>
         </> :  <>
         {!showGifPicker && (
           <textarea
@@ -339,7 +339,7 @@ const SmallPostContainer = ({ communityId, community }) => {
               />
             </svg>
           )} */}
-          <svg 
+          {!selectedMedia && <svg 
             onClick={()=>{ setOpenPoll(true)}}
             width="24px"
             height="24px"
@@ -349,7 +349,29 @@ const SmallPostContainer = ({ communityId, community }) => {
             className="cursor-pointer"
           >
             <path d="M7 11h7v2H7zm0-4h10.97v2H7zm0 8h13v2H7zM4 4h2v16H4z" />
-          </svg>
+          </svg>}
+          {selectedMedia &&  <span
+                    onClick={() => {
+                      setSelectedMedia(false)
+                    }}
+                    className={`${darkMode ? 'bg-white text-black' : 'bg-black text-white'} font-bold text-sm flex justify-center cursor-pointer text-center items-center text-black h-fit w-fit p-1 rounded-md`}
+                  >
+                     <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={15}
+    height={15}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="currentColor"
+    strokeWidth={4}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1={18} y1={6} x2={6} y2={18} />
+    <line x1={6} y1={6} x2={18} y2={18} />
+  </svg>
+                    
+                  </span>}
           {selectedMedia ? (
             <label
               onClick={(e) => {

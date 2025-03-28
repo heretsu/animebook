@@ -8,7 +8,6 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import animeBcc from "@/assets/animeBcc.png";
 import DarkModeToggle from "./darkModeToggle";
 import newLogo from "../assets/newLogo.png";
-import Link from "next/link";
 
 export const TopBarObjects = () => {
   const { fullPageReload } = PageLoadOptions();
@@ -361,8 +360,10 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
           ))}
 
         <span className="flex flex-row justify-center items-center space-x-3">
-          <Link
-            href={"/inbox"}
+          <span
+            onClick={()=>{
+              fullPageReload("/inbox", "window")
+            }}
             className={`p-2 flex justify-center items-center rounded-full border ${
               darkMode
                 ? "bg-[#27292F] border-[#32353C]"
@@ -391,9 +392,11 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
                 {unreadMessagesLength}
               </span>
             )}
-          </Link>
-          <Link
-            href={"/notifications"}
+          </span>
+          <span
+            onClick={()=>{
+              fullPageReload("/notifications", "window")
+            }}
             className={`flex justify-center items-center p-2 rounded-full border ${
               darkMode
                 ? "bg-[#27292F] border-[#32353C]"
@@ -432,9 +435,11 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
                 {unreadCount}
               </span>
             )}
-          </Link>
-          <Link
-            href={"/search"}
+          </span>
+          <span
+            onClick={()=>{
+              fullPageReload("/search", "window")
+            }}
             className={`justify-center items-center p-2 rounded-full border ${
               darkMode
                 ? "bg-[#27292F] border-[#32353C]"
@@ -458,7 +463,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
                 d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
               />
             </svg>
-          </Link>
+          </span>
         </span>
 
         {/*
@@ -1318,8 +1323,10 @@ const LargeTopBar = ({ relationship }) => {
 
       <span className="h-12 w-1/4 cursor-pointer flex flex-row justify-end items-center space-x-20">
         <span className="flex flex-row space-x-2">
-          <Link
-            href={"/inbox"}
+          <span
+            onClick={()=>{
+              fullPageReload("/inbox", "window")
+            }}
             className={`p-1.5 rounded-full border ${
               darkMode
                 ? "bg-[#27292F] border-[#32353C]"
@@ -1348,9 +1355,11 @@ const LargeTopBar = ({ relationship }) => {
                 {unreadMessagesLength}
               </span>
             )}
-          </Link>
-          <Link
-            href={"/notifications"}
+          </span>
+          <span
+            onClick={()=>{
+              fullPageReload("/notifications", "window")
+            }}
             className={`p-1.5 rounded-full border ${
               darkMode
                 ? "bg-[#27292F] border-[#32353C]"
@@ -1389,7 +1398,7 @@ const LargeTopBar = ({ relationship }) => {
                 {unreadCount}
               </span>
             )}
-          </Link>
+          </span>
         </span>
         <span className="flex flex-row justify-end items-center space-x-1">
           {userData ? (

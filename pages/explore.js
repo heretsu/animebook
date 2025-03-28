@@ -758,7 +758,8 @@ export default function Explore() {
   const toggleMute = () => setIsMuted((prev) => !prev);
   return (
     <>
-      {selectedIndex !== null ? <div
+      <div className="w-full xl:hidden">
+        {selectedIndex !== null ? <div
         id="scrollbar-remove"
         className={`xl:hidden h-screen snap-y snap-mandatory relative ${
           openComments
@@ -902,15 +903,16 @@ export default function Explore() {
             ></div>
           </>
         )}
-      </div> : <div
+      </div> : 
+      <div
         className={` ${
           darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"
         }`}
       >
-        <div className="hidden xl:block block z-40 sticky top-0">
+        <div className="hidden lg:block z-40 sticky top-0">
           <LargeTopBar relationship={false} />
         </div>
-        <div className="xl:hidden block z-40 sticky top-0">
+        <div className="block xl:hidden z-40 sticky top-0">
           <SmallTopBar relationship={false} />
         </div>
 
@@ -1017,7 +1019,8 @@ export default function Explore() {
        
       </div>
       }
-      <div
+      </div>
+      {<div
         className={`hidden xl:block ${
           darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"
         }`}
@@ -1886,7 +1889,7 @@ export default function Explore() {
             <div id="stories-overlay" className="bg-black bg-opacity-80"></div>
           </>
         )}
-      </div>
+      </div>}
       <MobileNavBar />
     </>
   );

@@ -170,7 +170,7 @@ export default function ExploreCard({
   return (likes && bookmarks && comments &&
     <span
       onClick={() => {
-        if (index !== null){
+        if (index !== null && index !== undefined && setSelectedIndex !== null && setSelectedIndex !== undefined){
           setSelectedIndex(index)
         } else{
           setCommentValues(comments);

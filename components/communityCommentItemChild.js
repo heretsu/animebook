@@ -6,6 +6,7 @@ import { UserContext } from "@/lib/userContext";
 import CommentConfig from "./commentConfig";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import DappLibrary from "@/lib/dappLibrary";
+import { BinSvg } from "./communityPostCard";
 
 export default function CommunityCommentItemChild({
   commentChild,
@@ -61,6 +62,17 @@ export default function CommunityCommentItemChild({
       });
   };
 
+  const deleteComment = () => {
+    supabase
+      .from("community_comments")
+      .delete()
+      .eq("id", comment.id)
+      .eq("userid", userNumId)
+      .then((res) => {
+        setUpVotes(null)
+      });
+  };
+
   const replyComment = (parentCommentId, commentOwner) => {
     if (userData === undefined || userData === null) {
       fullPageReload("/signin");
@@ -82,7 +94,7 @@ export default function CommunityCommentItemChild({
         <span
           className={`bg-transparent ${
             darkMode ? "text-white" : "text-black"
-          } w-11/12 py-2 px-3 rounded-xl flex flex-col justify-center text-start`}
+          } w-11/12 pb-0.5 px-3 rounded-xl flex flex-col justify-center text-start`}
         >
           <span className="flex flex-row justify-between items-center">
             <span
@@ -206,6 +218,12 @@ export default function CommunityCommentItemChild({
                   >
                     {upvotes.length}
                   </span>
+                  {commentChild.users.id === userNumId && <span
+                      onClick={() => {
+                        deleteComment();
+                      }}
+                    > <BinSvg pixels={"15"} />
+                    </span>}
                 </span>
               </span>
             </div>

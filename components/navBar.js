@@ -519,11 +519,10 @@ export const MobileNavBar = () => {
           {/* </span> */}
         </span>
 
-        <Link
-          href={"/communities"}
-          // onClick={() => {
-          //   router.push("/communities");
-          // }}
+        <span
+          onClick={() => {
+            fullPageReload("/communities", "window");
+          }}
           className="flex flex-col justify-center items-center"
         >
           <svg
@@ -786,13 +785,12 @@ export const MobileNavBar = () => {
             {"Comm."}
           </span>
           {/* </span> */}
-        </Link>
+        </span>
 
-        <Link
-          href={"/earn"}
-          // onClick={() => {
-          //   router.push("/notifications");
-          // }}
+        <span
+          onClick={() => {
+            router.push("/earn", "window");
+          }}
           className={"flex flex-col justify-center items-center"}
         >
           <svg
@@ -829,7 +827,7 @@ export const MobileNavBar = () => {
             Earn
           </span>
           {/* </span> */}
-        </Link>
+        </span>
       </div>
     </div>
   );
@@ -922,7 +920,7 @@ const NavBar = () => {
                 <span className="w-full flex flex-col">
                   <span
                     onClick={() => {
-                      router.push(`/search?${searchedWord}`);
+                      fullPageReload(`/search?${searchedWord}`, "window");
                       // if (
                       //   router.pathname !== "/explore" &&
                       //   openSuggestions.foundPosts &&
@@ -1077,11 +1075,11 @@ const NavBar = () => {
             {/* </div> */}
           </span>
           <span>
-            <Link
-              href={"/explore"}
-              // onClick={() => {
-              //   fullPageReload("/explore");
-              // }}
+            <span
+              // href={"/explore"}
+              onClick={() => {
+                fullPageReload("/explore", "window");
+              }}
               className={
                 currentRoute == "/explore"
                   ? `${
@@ -1119,13 +1117,13 @@ const NavBar = () => {
 
               <span>Explore</span>
               {/* </div> */}
-            </Link>
+            </span>
           </span>
-          <Link
-            href={"/search"}
-            // onClick={() => {
-            //   fullPageReload("/search");
-            // }}
+          <span
+            // href={"/search"}
+            onClick={() => {
+              fullPageReload("/search", "window");
+            }}
             className={
               currentRoute == "/search"
                 ? `${
@@ -1160,11 +1158,11 @@ const NavBar = () => {
 
             <span>Search</span>
             {/* </div> */}
-          </Link>
-          <Link
-            href={"/communities"}
+          </span>
+          <span
+            // href={"/communities"}
             onClick={() => {
-              fullPageReload("/communities");
+              fullPageReload("/communities"), "window"
             }}
             className={
               currentRoute == "/communities" ||
@@ -1425,13 +1423,13 @@ const NavBar = () => {
 
             <span>Communities</span>
             {/* </div> */}
-          </Link>
+          </span>
 
-          <Link
-            href={"/leaderboard"}
-            // onClick={() => {
-            //   router.push("/leaderboard");
-            // }}
+          <span
+            // href={"/leaderboard"}
+            onClick={() => {
+              fullPageReload("/leaderboard", "window");
+            }}
             className={
               currentRoute == "/leaderboard"
                 ? `${
@@ -1535,13 +1533,13 @@ const NavBar = () => {
             </svg>
             <span>Leaderboard</span>
             {/* </div> */}
-          </Link>
+          </span>
 
-          <Link
-            href={"/earn"}
-            // onClick={() => {
-            //   router.push("/earn");
-            // }}
+          <span
+            // href={"/earn"}
+            onClick={() => {
+              fullPageReload("/earn", "window");
+            }}
             className={
               currentRoute == "/earn"
                 ? `${
@@ -1574,13 +1572,13 @@ const NavBar = () => {
 
             <span>{"Earn & Shop"}</span>
             {/* </div> */}
-          </Link>
+          </span>
 
-          <Link
-            href={"/settings"}
-            // onClick={() => {
-            //   router.push("/settings");
-            // }}
+          <span
+            // href={"/settings"}
+            onClick={() => {
+              fullPageReload("/settings", "window");
+            }}
             className={
               currentRoute == "/settings"
                 ? `${
@@ -1631,7 +1629,7 @@ const NavBar = () => {
             </svg>
 
             <span>Settings</span>
-          </Link>
+          </span>
         </div>
         {communities &&
           communities.length > 0 &&
@@ -1657,7 +1655,7 @@ const NavBar = () => {
                         key={community.id}
                         onClick={() => {
                           fullPageReload(
-                            `/communities/${community.name}`.replace(" ", "+")
+                            `/communities/${community.name}`.replace(" ", "+"), "window"
                           );
                         }}
                         className={`${
@@ -1706,15 +1704,14 @@ const NavBar = () => {
           )}
 
         <div className="text-[0.8rem] font-semibold w-full flex justify-center pr-4">
-          <Link
-            href={"/create"}
-            // onClick={() => {
-            //   router.push("/create");
-            // }}
+          <span
+            onClick={() => {
+              fullPageReload("/create", "window");
+            }}
             className="rounded cursor-pointer w-full bg-[#EA334E] py-2 text-center text-white"
           >
             POST SOMETHING
-          </Link>
+          </span>
         </div>
       </div>
       {/* <span
@@ -1774,31 +1771,3 @@ const NavBar = () => {
   );
 };
 export default NavBar;
-
-{
-  /* <span onClick={() => {
-            router.push("/create");
-          }}
-          className="flex flex-col justify-center items-center">
-<svg
-          
-          id="Capa_1"
-          xmlns="http://www.w3.org/2000/svg"
-          xmlnsXlink="http://www.w3.org/1999/xlink"
-          height="28px"
-          width="28px"
-          stroke="transparent"
-          fill="#5d6879"
-          x="0px"
-          y="0px"
-          viewBox="0 0 52 52"
-          style={{
-            enableBackground: "new 0 0 52 52",
-          }}
-          xmlSpace="preserve"
-        >
-          <path d="M26,0C11.664,0,0,11.663,0,26s11.664,26,26,26s26-11.663,26-26S40.336,0,26,0z M38.5,28H28v11c0,1.104-0.896,2-2,2 s-2-0.896-2-2V28H13.5c-1.104,0-2-0.896-2-2s0.896-2,2-2H24V14c0-1.104,0.896-2,2-2s2,0.896,2,2v10h10.5c1.104,0,2,0.896,2,2 S39.604,28,38.5,28z" />
-        </svg>
-        <span>Create</span>
-</span> */
-}

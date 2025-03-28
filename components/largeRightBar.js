@@ -238,7 +238,7 @@ const LargeRightBar = () => {
     const tagsWithMediaCount = {};
 
 const now = new Date();
-const cutoff = new Date(now.getTime() - 24 * 7 * 60 * 60 * 1000); // 24 hours ago
+const cutoff = router.pathname === "/explore" ? new Date(now.getTime() - 24 * 90 * 60 * 60 * 1000) : new Date(now.getTime() - 24 * 7 * 60 * 60 * 1000); // 90 days for explore . 24 hours for other
 
 const filteredPosts = originalPostValues.filter((post) => {
   const createdAtDate = new Date(post.created_at);
@@ -269,7 +269,7 @@ filteredPosts.forEach((post) => {
 
     //random
     const trendingTagsWithMedia = Object.entries(tagsWithMediaCount)
-      .filter(([tag, count]) => count >= 20) // Include only tags with at least 20 posts
+      .filter(([tag, count]) => count >= 20) 
       .sort(() => 0.5 - Math.random())
       .sort(() => 0.5 - Math.random());
 
@@ -689,7 +689,7 @@ filteredPosts.forEach((post) => {
                   </svg>
                 </span>
                 <span>Trending</span>
-                <span
+                {router.pathname !== "/explore" && <span
                   className={`text-[0.7rem] font-light ${
                     darkMode
                       ? "bg-[#27292F] text-white"
@@ -697,7 +697,7 @@ filteredPosts.forEach((post) => {
                   } rounded px-1 py-[0.001rem] w-fit h-fit`}
                 >
                   24H
-                </span>
+                </span>}
               </p>
               {hashtagList.trending.slice(0, 5).map((tag) => {
                 return (

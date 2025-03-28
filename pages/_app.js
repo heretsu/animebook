@@ -73,6 +73,7 @@ export default function App({ Component, pageProps }) {
   const [playVideo, setPlayVideo] = useState(false);
   const [unreadMessagesLength, setUnreadMessagesLength] = useState(null);
   const [allPolls, setAllPolls] = useState(null);
+  const [allCommunityPolls, setAllCommunityPolls] = useState(null);
   const [newListOfComments, setNewListOfComments] = useState(null);
   const inputRef = useRef(null);
   const communityInputRef = useRef(null);
@@ -289,29 +290,32 @@ export default function App({ Component, pageProps }) {
                     fetchAllPolls().then((pls) => setAllPolls(pls));
                     fetchCommunities(data.id).then(async (secondResult) => {
                       if (secondResult !== undefined && secondResult !== null) {
-                        if (!unreadMessagesLength && unreadMessagesLength !== 0) {
+                        if (
+                          !unreadMessagesLength &&
+                          unreadMessagesLength !== 0
+                        ) {
                           const unreadMsg = await fetchUnreadChat(data.id);
                           if (unreadMsg) {
                             setUnreadMessagesLength(unreadMsg.length);
                           }
                         }
-    
+
                         setCommunities(
                           [...secondResult.data].sort(
                             (a, b) => b.membersLength - a.membersLength
                           )
                         );
-    
+
                         // Make sure we have the fresh posts data:
                         const allPosts = result1.data; // e.g., up-to-date DB fetch
-    
+
                         // 1) Merge data for each original post
                         const mergedPosts = allPosts.map((post) => {
                           // Try to find if there's a repost record for this post
                           const matchingRepost = reposts.find(
                             (repost) => repost.postid === post.id
                           );
-    
+
                           if (matchingRepost) {
                             return {
                               ...post,
@@ -323,13 +327,12 @@ export default function App({ Component, pageProps }) {
                             return post;
                           }
                         });
-    
+
                         mergedPosts.sort(
-                          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                          (a, b) =>
+                            new Date(b.created_at) - new Date(a.created_at)
                         );
-    
-                        
-    
+
                         setOriginalPostValues(mergedPosts);
                         setPostValues(mergedPosts);
                       }
@@ -415,8 +418,6 @@ export default function App({ Component, pageProps }) {
                     mergedPosts.sort(
                       (a, b) => new Date(b.created_at) - new Date(a.created_at)
                     );
-
-                    
 
                     setOriginalPostValues(mergedPosts);
                     setPostValues(mergedPosts);
@@ -561,23 +562,23 @@ export default function App({ Component, pageProps }) {
                           setUnreadMessagesLength(unreadMsg.length);
                         }
                       }
-  
+
                       setCommunities(
                         [...secondResult.data].sort(
                           (a, b) => b.membersLength - a.membersLength
                         )
                       );
-  
+
                       // Make sure we have the fresh posts data:
                       const allPosts = result1.data; // e.g., up-to-date DB fetch
-  
+
                       // 1) Merge data for each original post
                       const mergedPosts = allPosts.map((post) => {
                         // Try to find if there's a repost record for this post
                         const matchingRepost = reposts.find(
                           (repost) => repost.postid === post.id
                         );
-  
+
                         if (matchingRepost) {
                           return {
                             ...post,
@@ -589,13 +590,12 @@ export default function App({ Component, pageProps }) {
                           return post;
                         }
                       });
-  
+
                       mergedPosts.sort(
-                        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                        (a, b) =>
+                          new Date(b.created_at) - new Date(a.created_at)
                       );
-  
-                      
-  
+
                       setOriginalPostValues(mergedPosts);
                       setPostValues(mergedPosts);
                     }
@@ -623,6 +623,8 @@ export default function App({ Component, pageProps }) {
         value={{
           allPolls,
           setAllPolls,
+          allCommunityPolls,
+          setAllCommunityPolls,
           userWatchList,
           setUserWatchList,
           currentUserWatchlist,

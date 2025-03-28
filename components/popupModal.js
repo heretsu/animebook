@@ -51,6 +51,8 @@ export default function PopupModal({
   postid,
   setOpenPostOptions,
   reportType,
+  isCommunity,
+  fetchCommunityDetails,
 }) {
   const { sendNotification } = DappLibrary();
   const ercABI = ErcTwentyToken.abi;
@@ -685,7 +687,7 @@ export default function PopupModal({
     }
   };
 
-  const deletePostViaId = async () => {
+  const deletePostViaId = async (isCommunity) => {
     if (deletePost.media !== null && deletePost.media !== undefined) {
       supabase
         .from("deleted_media")
@@ -696,7 +698,7 @@ export default function PopupModal({
         .then((response) => {
           if (response && response.status === 201) {
             supabase
-              .from("posts")
+              .from(isCommunity === true ? "community_posts" : "posts")
               .delete()
               .eq("id", deletePost.postid)
               .eq("userid", userNumId)
@@ -710,13 +712,17 @@ export default function PopupModal({
                       }
                     });
                 } else {
-                  DbUsers()
-                    .fetchAllPosts()
-                    .then(({ data }) => {
-                      if (data) {
-                        setPostValues(data);
-                      }
-                    });
+                  if (isCommunity) {
+                    fetchCommunityDetails()
+                  } else {
+                    DbUsers()
+                      .fetchAllPosts()
+                      .then(({ data }) => {
+                        if (data) {
+                          setPostValues(data);
+                        }
+                      });
+                  }
                 }
               })
               .catch((e) => {
@@ -729,7 +735,7 @@ export default function PopupModal({
         });
     } else {
       supabase
-        .from("posts")
+        .from(isCommunity === true ? "community_posts" : "posts")
         .delete()
         .eq("id", deletePost.postid)
         .eq("userid", userNumId)
@@ -743,13 +749,17 @@ export default function PopupModal({
                 }
               });
           } else {
-            DbUsers()
-              .fetchAllPosts()
-              .then(({ data }) => {
-                if (data) {
-                  setPostValues(data);
-                }
-              });
+            if (isCommunity) {
+              fetchCommunityDetails()
+            } else {
+              DbUsers()
+                .fetchAllPosts()
+                .then(({ data }) => {
+                  if (data) {
+                    setPostValues(data);
+                  }
+                });
+            }
           }
         })
         .catch((e) => {
@@ -1119,7 +1129,7 @@ export default function PopupModal({
             <span className="text-white font-semibold w-full flex flex-row justify-center items-center space-x-20">
               <span
                 onClick={() => {
-                  deletePostViaId();
+                  deletePostViaId(isCommunity);
                 }}
                 className="cursor-pointer bg-red-400 px-3 py-2 rounded-lg"
               >
@@ -1144,7 +1154,9 @@ export default function PopupModal({
             } -mt-4 lg:mt-0 h-full flex flex-col pb-2 rounded-xl w-full relative`}
           >
             <span
-              className={`lg:bg-[#292C33] ${darkMode ? 'text-white' : 'text-black'} text-center lg:text-start lg:text-white p-5 rounded-t-xl w-full space-x-0.5 text-2xl lg:text-3xl font-semibold flex flex-col-reverse lg:flex-row justify-center items-center`}
+              className={`lg:bg-[#292C33] ${
+                darkMode ? "text-white" : "text-black"
+              } text-center lg:text-start lg:text-white p-5 rounded-t-xl w-full space-x-0.5 text-2xl lg:text-3xl font-semibold flex flex-col-reverse lg:flex-row justify-center items-center`}
             >
               <span className="flex flex-col">
                 {post === true ? (
@@ -1336,7 +1348,11 @@ export default function PopupModal({
               )}
             </span>
           </div>
-          <div className={`-mt-16 mb-8 lg:mt-0 ${darkMode ? 'bg-zinc-800 text-white' : 'bg-white text-black'} lg:mb-0 font-semibold text-xl cursor-pointer text-center items-center h-8 w-8 rounded-full pointer-events-none`}>
+          <div
+            className={`-mt-16 mb-8 lg:mt-0 ${
+              darkMode ? "bg-zinc-800 text-white" : "bg-white text-black"
+            } lg:mb-0 font-semibold text-xl cursor-pointer text-center items-center h-8 w-8 rounded-full pointer-events-none`}
+          >
             x
           </div>
         </div>
