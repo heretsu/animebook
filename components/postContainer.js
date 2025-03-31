@@ -6,9 +6,52 @@ import { UserContext } from "@/lib/userContext";
 import Spinner from "./spinner";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 
-const PostContainer = ({communityId, community}) => {
+export function GifPicker({ onGifSelect }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [gifs, setGifs] = useState([]);
+
+  const fetchGifs = async () => {
+    const response = await fetch(
+      `https://api.giphy.com/v1/gifs/search?api_key=${process.env.NEXT_PUBLIC_GIPHY_API_KEY}&q=${searchTerm}&limit=10`
+    );
+    const data = await response.json();
+    setGifs(data.data);
+  };
+
+  return (
+    <div className="gif-picker">
+      {/* <input
+        type="text"
+        placeholder="Search GIFs"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && fetchGifs()}
+      />
+      <div className="gif-grid w-full bg-blue-200">
+        {gifs.map((gif) => (
+          <img
+            key={gif.id}
+            src={gif.images.fixed_height.url}
+            alt={gif.title}
+            onClick={() => onGifSelect(gif.images.fixed_height.url)}
+            className="gif-item"
+          />
+        ))}
+      </div> */}
+    </div>
+  );
+}
+
+const PostContainer = ({ communityId, community }) => {
+  const [showGifPicker, setShowGifPicker] = useState(false);
+
+  const handleGifSelect = (gifUrl) => {
+    setInputValue((prev) => `${prev} ${gifUrl}`);
+    setShowGifPicker(false); // Close the GIF picker
+  };
+
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId } = useContext(UserContext);
+  const { userNumId, darkMode } = useContext(UserContext);
   const router = useRouter();
   const [content, setContent] = useState("");
   const [mediaContent, setMediaContent] = useState("");
@@ -43,8 +86,8 @@ const PostContainer = ({communityId, community}) => {
   };
 
   const createPost = async () => {
-    if (!userNumId){
-      fullPageReload('/signin')
+    if (!userNumId) {
+      fullPageReload("/signin");
       return;
     }
     setPostLoading(true);
@@ -52,6 +95,15 @@ const PostContainer = ({communityId, community}) => {
       if (mediaFile !== null) {
         for (const file of mediaFile) {
           const newName = Date.now() + file.name;
+
+          const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+          if (file.type.startsWith("video/") && file.size > MAX_FILE_SIZE) {
+            setPostLoading(false);
+            setErrorMsg("Video exceeds 50MB");
+            return;
+          }
+
           const bucketResponse = await supabase.storage
             .from("mediastore")
             .upload(
@@ -68,16 +120,15 @@ const PostContainer = ({communityId, community}) => {
               await supabase.from("community_posts").insert({
                 userid: userNumId,
                 media: mediaUrl,
-                content: !mediaContent ? '' : mediaContent.trim(),
-                communityid: parseInt(communityId)
+                content: !mediaContent ? "" : mediaContent.trim(),
+                communityid: parseInt(communityId),
               });
-              fullPageReload(`/communities/${community}`)
-
+              fullPageReload(`/communities/${community.replace(/&.*/, "")}`);
             } else {
               await supabase.from("posts").insert({
                 userid: userNumId,
                 media: mediaUrl,
-                content: !mediaContent ? '' : mediaContent.trim(),
+                content: !mediaContent ? "" : mediaContent.trim(),
               });
               fullPageReload("/home");
             }
@@ -91,16 +142,15 @@ const PostContainer = ({communityId, community}) => {
       }
     } else {
       if (content.trim() !== "") {
-        if (communityId){
+        if (communityId) {
           await supabase.from("community_posts").insert({
             userid: userNumId,
             media: null,
             content: content,
-            communityid: parseInt(communityId)
+            communityid: parseInt(communityId),
           });
-          fullPageReload(`/communities/${community}`)
-        }
-        else{
+          fullPageReload(`/communities/${community.replace(/&.*/, "")}`);
+        } else {
           await supabase.from("posts").insert({
             userid: userNumId,
             media: null,
@@ -108,19 +158,14 @@ const PostContainer = ({communityId, community}) => {
           });
           fullPageReload("/home");
         }
-        
       } else {
         setPostLoading(false);
         setErrorMsg("Failed to post. Post is empty");
       }
     }
-    
   };
 
   useEffect(() => {
-    if (community){
-      setMediaPost(false)
-    }
     // Media blob revoked after component is unmounted. Doing this to prevent memory leaks
     return () => {
       if (selectedMedia) {
@@ -129,16 +174,17 @@ const PostContainer = ({communityId, community}) => {
     };
   }, [selectedMedia]);
   return (
-    <div className="p-4 flex flex-col space-y-4 rounded-xl shadow-lg w-full bg-white justify-center items-center">
+    <div className={`p-4 flex flex-col space-y-4 rounded-xl shadow-lg w-full bg-white justify-center items-center`}>
       <span className="flex flex-row w-full justify-center space-x-2">
         <span
           onClick={() => {
             setErrorMsg("");
+            setPostLoading(false);
             setMediaPost(true);
           }}
           className={`cursor-pointer rounded py-1 px-2 text-center ${
             mediaPost
-              ? "bg-pastelGreen text-white"
+              ? "bg-[#EB4463] text-white"
               : "bg-gray-100 border border-gray-200 text-gray-500"
           }`}
         >
@@ -147,11 +193,12 @@ const PostContainer = ({communityId, community}) => {
         <span
           onClick={() => {
             setErrorMsg("");
+            setPostLoading(false);
             setMediaPost(false);
           }}
           className={`cursor-pointer rounded py-1 px-2 text-center ${
             !mediaPost
-              ? "bg-pastelGreen text-white"
+              ? "bg-[#EB4463] text-white"
               : "bg-gray-100 border border-gray-200 text-gray-500"
           }`}
         >
@@ -254,7 +301,9 @@ const PostContainer = ({communityId, community}) => {
           <textarea
             value={mediaContent}
             onChange={(e) => {
-              setMediaContent(e.target.value);
+              if (e.target.value && e.target.value.length < 1900) {
+                setMediaContent(e.target.value);
+              }
             }}
             placeholder="Give us a description. Add tags to rank higher and get seen by others"
             className="h-18 resize-none w-full px-2 text-black border-none focus:outline-none focus:ring-0"
@@ -264,14 +313,17 @@ const PostContainer = ({communityId, community}) => {
         <textarea
           value={content}
           onChange={(e) => {
-            setContent(e.target.value);
+            if (e.target.value && e.target.value.length < 1900) {
+              setContent(e.target.value);
+            }
           }}
           placeholder="Sodesuka. Tell us..."
           className="px-8 h-18 resize-none w-full px-2 text-black border-none focus:outline-none focus:ring-0"
         />
       )}
+      <GifPicker onGifSelect={handleGifSelect} />
       <span className="pb-2 flex flex-col">
-        {postLoading && (!mediaPost && content.trim() !== '') ? (
+        {postLoading && (selectedMedia || content.trim() !== "") ? (
           <span className="mx-auto">
             <Spinner spinnerSize={"medium"} />
           </span>
@@ -280,7 +332,7 @@ const PostContainer = ({communityId, community}) => {
             onClick={() => {
               createPost();
             }}
-            className="w-fit mx-auto hover:shadow cursor-pointer px-12 py-1 bg-pastelGreen text-center text-white font-bold border rounded-lg"
+            className="w-fit mx-auto hover:shadow cursor-pointer px-12 py-1 bg-[#EB4463] text-center text-white font-bold border rounded-lg"
           >
             Post
           </span>

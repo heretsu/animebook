@@ -5,10 +5,11 @@ import { UserContext } from "@/lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import Relationships from "@/hooks/relationships";
 import NotifCard from "@/components/notifCard";
+import LargeTopBar, { SmallTopBar } from "@/components/largeTopBar";
 
 const Notifications = () => {
   const { fetchFollows } = Relationships();
-  const { userNumId, notifyUserObject, setNotifyUserObject } =
+  const { userNumId, notifyUserObject, setNotifyUserObject, darkMode } =
     useContext(UserContext);
   // const [notifyUserObject, setNotifyUserObject] = useState(null);
 
@@ -82,26 +83,35 @@ const Notifications = () => {
   //     return "Older";
   //   }
   // };
-  
+
   const updateReadNotification = async () => {
     const { error } = await supabase
       .from("users")
       .update({
         lastreadnotification: new Date().toISOString(),
-    })
+      })
       .eq("id", userNumId);
-      console.log(error)
+    console.log(error);
   };
 
   useEffect(() => {
     updateReadNotification();
-    setNotifyUserObject(null)
+    setNotifyUserObject(null);
   }, []);
 
   return (
-    <main>
-      <section className="mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full">
+    <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
+      <div className="hidden lg:block block z-40 sticky top-0">
+        <LargeTopBar relationship={false} />
+      </div>{" "}
+      <section
+        className={`${
+          darkMode ? "text-white" : "text-black"
+        } mb-5 flex flex-col lg:flex-row lg:space-x-2 w-full`}
+      >
         <NavBar />
+        <SmallTopBar middleTab={true} />
+
         <div className="w-full pb-2 space-y-8 lg:pl-lPostCustom px-2 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
           {notifyUserObject !== null &&
             notifyUserObject !== undefined &&
@@ -119,6 +129,7 @@ const Notifications = () => {
                               note={note}
                               myProfileId={userNumId}
                               typeOfNotif={note.type}
+                              darkMode={darkMode}
                             />
                           );
                         })}
@@ -127,7 +138,11 @@ const Notifications = () => {
                 );
               })
             ) : (
-              <span className="w-full pt-20 text-slate-600 text-center">
+              <span
+                className={`${
+                  darkMode ? " text-slate-200" : " text-slate-600"
+                } w-full pt-20 text-center`}
+              >
                 You have no notifications yet
               </span>
             ))}

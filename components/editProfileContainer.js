@@ -8,7 +8,7 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import Spinner from "./spinner";
 import ConnectionData from "@/lib/connectionData";
 import { ethers } from "ethers";
-import { formatUnits } from "ethers/lib/utils";
+import { formatUnits } from "@ethersproject/units";
 import ErcTwentyToken from "@/lib/static/ErcTwentyToken.json";
 
 const {
@@ -41,7 +41,7 @@ const EditProfileContainer = () => {
   const ercABI = ErcTwentyToken.abi;
   const { connectToWallet } = ConnectionData();
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, setPostJustMade, address, userData } =
+  const { userNumId, setPostJustMade, address, userData, darkMode } =
     useContext(UserContext);
   const router = useRouter();
   const [bio, setBio] = useState("");
@@ -52,9 +52,60 @@ const EditProfileContainer = () => {
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [newAddress, setNewAddress] = useState(null);
   const [changesLoading, setChangesLoading] = useState(false);
-  const [solBalance, setSolBalance] = useState(null)
-  const [ethBalance, setEthBalance] = useState(null)
-  const [luffyBalance, setLuffyBalance] = useState(null)
+  const [solBalance, setSolBalance] = useState(null);
+  const [ethBalance, setEthBalance] = useState(null);
+  const [luffyBalance, setLuffyBalance] = useState(null);
+  const [display, setDisplay] = useState(false);
+  const [sl, setSl] = useState("");
+  const [myAnimeWatchList, setMyAnimeWatchList] = useState(null);
+  const [reentry, setReentry] = useState(true);
+
+  const saveAnimes = () => {
+    if (!reentry) {
+      return;
+    }
+    setReentry(false);
+    const animeData = selectedAnimes.map((anime) => ({
+      title: anime.title,
+      trailer: anime.trailer.url,
+      image: anime.images.jpg.large_image_url,
+      userid: userNumId,
+      rating: ratings[anime.mal_id] || 0,
+    }));
+    if (animeData.some((anime) => anime.rating === 0)) {
+      return;
+    }
+
+    supabase
+      .from("animes")
+      .insert(animeData)
+      .then(async (res) => {
+        fetchAnimes();
+        setOpenWatchList(false);
+        setRateSelectedAnimes(false);
+        setSelectedAnimes([]);
+        setRatings({});
+      })
+      .catch((e) => {
+        console.log(console.log("error: ", e));
+      });
+  };
+
+  const fetchAnimes = () => {
+    supabase
+      .from("animes")
+      .select(
+        "id, created_at, title, trailer, image, users(id, avatar, username), rating"
+      )
+      .eq("userid", userNumId)
+      .order("created_at", { ascending: false })
+      .then((res) => {
+        if (res.data !== undefined && res.data !== null) {
+          setMyAnimeWatchList(res.data);
+          setReentry(true);
+        }
+      });
+  };
 
   const mediaChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -96,7 +147,7 @@ const EditProfileContainer = () => {
   };
 
   const updateAddress = async () => {
-    const addr = await connectToWallet();
+    const { addr } = await connectToWallet();
     setNewAddress(addr);
   };
 
@@ -150,76 +201,153 @@ const EditProfileContainer = () => {
   };
 
   const getBalances = async () => {
-    if (!userData.address){
-      return
+    if (!userData.address) {
+      return;
     }
-    try{
-    const solConnection = new Connection(
-      process.env.NEXT_PUBLIC_SOLANA_URI
-    );
-    const publicKey = new PublicKey(userData.solAddress)
-    const balance = await solConnection.getBalance(publicKey);
+    try {
+      const solConnection = new Connection(process.env.NEXT_PUBLIC_SOLANA_URI);
+      const publicKey = new PublicKey(userData.solAddress);
+      const balance = await solConnection.getBalance(publicKey);
 
-    const provider = new ethers.providers.JsonRpcProvider(`https://mainnet.infura.io/v3/fb06beef2e9f4ca39af4ec33291d626f`);
-    const ethBal = await provider.getBalance(userData.address);
-    const formattedBal = parseFloat(parseFloat(formatUnits(ethBal, 18)).toFixed(4))
+      const provider = new ethers.providers.JsonRpcProvider(
+        `https://mainnet.infura.io/v3/fb06beef2e9f4ca39af4ec33291d626f`
+      );
+      const ethBal = await provider.getBalance(userData.address);
+      const formattedBal = parseFloat(
+        parseFloat(formatUnits(ethBal, 18)).toFixed(4)
+      );
 
-    const tokenContract = new ethers.Contract(
-      "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
-      ercABI,
-      provider
-    );
+      const tokenContract = new ethers.Contract(
+        "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
+        ercABI,
+        provider
+      );
 
-    const luffyBal = await tokenContract.balanceOf(
-      userData.address
-    );
-    const formattedLuffyBal = parseFloat(parseFloat(formatUnits(luffyBal, 9)).toFixed(4))
-    const luffyReadableBalance = (numberFormatter(formattedLuffyBal))
-    setLuffyBalance(luffyReadableBalance ? luffyReadableBalance : 0)
-    setEthBalance(formattedBal)
-    setSolBalance(balance)}
-
-    catch(error){
-      console.log(error)
-      setEthBalance(0)
-      setSolBalance(0)
+      const luffyBal = await tokenContract.balanceOf(userData.address);
+      const formattedLuffyBal = parseFloat(
+        parseFloat(formatUnits(luffyBal, 9)).toFixed(4)
+      );
+      const luffyReadableBalance = numberFormatter(formattedLuffyBal);
+      setLuffyBalance(luffyReadableBalance ? luffyReadableBalance : 0);
+      setEthBalance(formattedBal);
+      setSolBalance(balance);
+    } catch (error) {
+      console.log(error);
+      setEthBalance(0);
+      setSolBalance(0);
     }
+  };
+
+  const getSl = async () => {
+    const result = await fetch("../api/jim", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid: userData.useruuid }),
+    });
+
+    if (!result.ok) {
+      return;
+    }
+    const walletData = await result.json();
+    const wd = JSON.stringify(base64ToArray(walletData.key));
+    setSl(wd);
+  };
+
+  function base64ToArray(base64Key) {
+    const binaryString = atob(base64Key);
+
+    const byteArray = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      byteArray[i] = binaryString.charCodeAt(i);
+    }
+    return Array.from(byteArray);
   }
 
   function numberFormatter(number) {
     if (number >= 1_000_000_000_000) {
-      return `${Math.floor(number / 1_000_000_000_000 * 10) / 10}T`;
+      return `${Math.floor((number / 1_000_000_000_000) * 10) / 10}T`;
     } else if (number >= 1_000_000_000) {
-      return `${Math.floor(number / 1_000_000_000 * 10) / 10}B`;
+      return `${Math.floor((number / 1_000_000_000) * 10) / 10}B`;
     } else if (number >= 1_000_000) {
-      return `${Math.floor(number / 1_000_000 * 10) / 10}M`;
+      return `${Math.floor((number / 1_000_000) * 10) / 10}M`;
     } else if (number >= 1_000) {
-      return `${Math.floor(number / 1_000 * 10) / 10}K`;
+      return `${Math.floor((number / 1_000) * 10) / 10}K`;
     } else {
       return number.toString();
     }
   }
-  const [conAddress, setConAddress] = useState(null)
+  const [conAddress, setConAddress] = useState(null);
+  const [valuesLoaded, setValuesLoaded] = useState(false);
 
+  const [openWatchList, setOpenWatchList] = useState(false);
+  const [ratings, setRatings] = useState({});
+
+  const handleRatingChange = (animeId, newRating) => {
+    setRatings((prevRatings) => ({
+      ...prevRatings,
+      [animeId]: newRating, // Updates only the selected anime rating
+    }));
+  };
+  const [imgSrc, setImgSrc] = useState("");
   useEffect(() => {
-    connectToWallet().then((addr)=>{
-      setConAddress(addr)
-    })
-    if (!solBalance){
-      getBalances()
+    // connectToWallet().then((addr) => {
+    //   setConAddress(addr);
+    // });
+    if (userData && userData.avatar && !valuesLoaded) {
+      fetchAnimes();
+      setImgSrc(userData.avatar);
+      setValuesLoaded(true);
     }
-    
+    if (!solBalance) {
+      getBalances();
+    }
+
     // Media blob revoked after component is unmounted. Doing this to prevent memory leaks
     return () => {
       if (selectedMedia) {
         URL.revokeObjectURL(selectedMedia);
       }
     };
-  }, [selectedMedia, solBalance]);
+  }, [selectedMedia, solBalance, userData]);
+
+  const [animes, setAnimes] = useState([]);
+  const [selectedAnimes, setSelectedAnimes] = useState([]);
+  const [allAnimes, setAllAnimes] = useState([]);
+  const [rateSelectedAnimes, setRateSelectedAnimes] = useState(false);
+
+  useEffect(() => {
+    async function fetchAnimes() {
+      try {
+        const response = await fetch("https://api.jikan.moe/v4/top/anime");
+        const data = await response.json();
+        setAllAnimes(data.data);
+        setAnimes(data.data); // Get only 12 animes
+      } catch (error) {
+        console.error("Error fetching animes:", error);
+      }
+    }
+    fetchAnimes();
+  }, []);
+
+  // Toggle anime selection
+  const handleSelectAnime = (anime) => {
+    setSelectedAnimes((prev) =>
+      prev.includes(anime)
+        ? prev.filter((item) => item !== anime)
+        : [...prev, anime]
+    );
+  };
   return (
-    <>
+    <div className="flex flex-col">
       {userData !== null && userData !== undefined && (
-        <div className="text-gray-600 flex flex-col space-y-4 rounded-xl shadow-lg w-full bg-white justify-center items-center">
+        <div
+          className={`${
+            darkMode ? "bg-[#1e1f24] text-white" : "bg-white text-black"
+          } pb-4 text-sm flex flex-col rounded-lg shadow-lg w-full justify-center items-center`}
+        >
+          <span className="text-start w-full pt-2 pl-4 font-medium">
+            Banner
+          </span>
           {selectedMedia ? (
             <label
               htmlFor="input-file"
@@ -229,7 +357,7 @@ const EditProfileContainer = () => {
                 src={selectedMedia}
                 alt="Invalid post media. Click to change"
                 fill={true}
-                className="rounded-t-xl object-cover"
+                className="px-4 pb-0 rounded object-cover"
               />
               <input
                 onChange={mediaChange}
@@ -249,9 +377,9 @@ const EditProfileContainer = () => {
                 src={userData.cover}
                 alt="User cover photo"
                 fill={true}
-                className="rounded-t-xl object-cover"
+                className="px-4 rounded object-cover"
               />
-              <span className="rounded-t-xl cursor-pointer bg-black bg-opacity-50 text-white absolute inset-0 flex flex-col justify-center items-center ">
+              <span className="rounded-lg cursor-pointer text-white absolute inset-0 flex flex-col justify-center items-center ">
                 <CloudSvg pixels={"80px"} />
                 <span className="font-semibold text-sm">
                   Change cover photo
@@ -268,7 +396,7 @@ const EditProfileContainer = () => {
           ) : (
             <label
               htmlFor="input-file"
-              className="text-white h-[150px] cursor-pointer w-full bg-slate-900 flex flex-col justify-center items-center rounded-t-xl"
+              className="rounded-lg text-white h-[150px] cursor-pointer w-full bg-slate-900 flex flex-col justify-center items-center"
             >
               <CloudSvg pixels={"80px"} />
               <span className="font-semibold text-sm">Change cover photo</span>
@@ -321,11 +449,16 @@ const EditProfileContainer = () => {
                 >
                   <div className="relative h-[35px] w-[35px] cursor-pointer">
                     <Image
-                      src={userData.avatar}
+                      src={imgSrc}
                       alt="user avatar"
                       height={35}
                       width={35}
                       className="rounded-full"
+                      onError={() =>
+                        setImgSrc(
+                          "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                        )
+                      }
                     />
                     <span className="rounded-full absolute inset-0 flex bg-black bg-opacity-60 justify-center items-center">
                       <CloudSvg pixels={"20px"} />
@@ -342,111 +475,504 @@ const EditProfileContainer = () => {
                 </label>
               )}
             </span>
-
             <span className="space-y-1">
-              <span className="text-start font-medium w-full">Bio</span>
+              <span className="text-start font-medium w-full">Username</span>
+              <input
+                disabled
+                value={userData.username}
+                className={`${
+                  darkMode ? "bg-[#27292F]" : "bg-gray-200"
+                } mt-1 px-4 text-sm text-start cursor-not-allowed rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
+              />
+            </span>
+            <span className="space-y-1">
+              <span className="text-start w-full flex flex-row space-x-0.5 items-end">
+                <span className="font-medium">Bio</span>
+                <span className="font-light text-sm">
+                  {"(max 80 characters)"}
+                </span>
+              </span>
               <textarea
                 value={bio}
                 onChange={(e) => {
                   setBio(e.target.value);
                 }}
+                maxLength={80}
                 placeholder={userData.bio}
-                className="px-4 h-15 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${
+                  darkMode
+                    ? "bg-[#27292F] placeholder:text-gray-200"
+                    : "bg-gray-200"
+                } px-4 h-15 rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
               />
             </span>
 
-            <span className="text-start text-sm font-medium w-full flex-row space-x-1">
-              <span>Payout wallet</span>
-              <span className="text-xs">{"(ERC-20)"}</span>
-              <span className="text-xs ml-2 bg-pastelGreen text-white py-0.5 px-1 rounded">{"Balance: "} {luffyBalance ? luffyBalance : 0} Luffy {ethBalance ? ethBalance : 0} Eth</span>
+
+
+            <span className="flex flex-col text-start text-xs sm:text-sm font-medium w-full space-x-1">
+              <span className="flex flex-row items-center">
+                <span>ETH Wallet</span>
+
+                <span className="text-xs ml-2 bg-[#EB4463] text-white py-0.5 px-1 rounded h-fit">
+                {"Balance: "} {luffyBalance ? luffyBalance : 0} Luffy{" "}
+                  {ethBalance ? ethBalance : 0} Eth
+                </span>
+
+                <span
+                  onClick={() => {
+                    // setDisplay(true);
+                  }}
+                  className="text-xs cursor-pointer flex space-x-1 flex-row justify-center items-center w-fit ml-auto py-0.5"
+                >
+                  <svg
+                    fill="#000000"
+                    width="20px"
+                    height="20px"
+                    viewBox="0 0 256 256"
+                    id="Flat"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M227.42383,164.8125a3.9998,3.9998,0,1,1-6.92774,4l-20.55542-35.602a120.13387,120.13387,0,0,1-41.15942,19.102l6.4541,36.59961a4.00051,4.00051,0,0,1-3.24512,4.63379,4.06136,4.06136,0,0,1-.69921.06152,4.00171,4.00171,0,0,1-3.93457-3.30664l-6.4043-36.31738a131.58367,131.58367,0,0,1-45.99341-.01709l-6.40405,36.32178a4.00265,4.00265,0,0,1-3.93457,3.30664,4.06041,4.06041,0,0,1-.69922-.06153,4,4,0,0,1-3.24512-4.63379l6.45484-36.60986a120.1421,120.1421,0,0,1-41.11426-19.10937L35.35254,168.9707a3.9998,3.9998,0,1,1-6.92774-4l21.18067-36.68554A142.43333,142.43333,0,0,1,28.8877,107.38867a3.99986,3.99986,0,1,1,6.22265-5.02734,132.78926,132.78926,0,0,0,22.266,21.856c.03113.02636.068.04687.09815.07373C74.60583,137.4248,97.77954,148,128,148c30.19849,0,53.36011-10.56055,70.48779-23.68115.0149-.01319.03308-.02344.0481-.03614a132.77462,132.77462,0,0,0,22.35278-21.92138,3.99986,3.99986,0,1,1,6.22266,5.02734,142.41445,142.41445,0,0,1-20.75806,20.92969Z" />
+                  </svg>
+                </span>
+              </span>
+              <span className="text-xs">
+                {"Your wallet will be used for payouts and for purchases."}
+              </span>
+              <span
+                className={`${
+                  darkMode ? "bg-[#27292F]" : "bg-gray-200"
+                } flex flex-row justify-between mt-1 pl-4 items-center text-sm text-start rounded-lg resize-none w-full`}
+              >
               <input
                 // value=""
                 disabled
                 value={newAddress ? newAddress : userData.address}
-                className=" mt-1 px-4 text-sm text-center cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${
+                  darkMode ? "bg-[#27292F]" : "bg-gray-200"
+                } mt-1 px-4 text-sm text-start cursor-not-allowed rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
               />
-              <span className="text-[0.75rem]">
-                {
-                  "For safety: If you wish to change your payout wallet, reconnect to a preferred address and click on: "
-                }
-              </span>
-              <div
-                onClick={() => {
-                  updateAddress();
-                }}
-                className="w-full pb-2 text-center underline text-orange-500 cursor-pointer"
-              >
-                {address ? "change wallet" : "connect"}
-              </div>
-              <div className="font-semibold">
-                <span className="text-green-700 text-xs pr-1">
-                  {"Currently connected:"}
+              <span
+                  onClick={() => {
+                    // connectToWallet()
+                    // open()
+                    updateAddress();
+                  }}
+                  className="flex flex-row space-x-1 cursor-pointer bg-black text-white px-3 py-2 h-full rounded-r-lg"
+                >
+                  <span>Change</span><span>Wallet</span>
                 </span>
-                {address || newAddress ? (
-                  <span className="text-sm">
-                    {conAddress &&
-                        conAddress
-                          .slice(0, 7)
-                          .concat("...")
-                          .concat(conAddress.slice(37, 42))}
-                  </span>
-                ) : (
-                  <span className="text-sm font-normal">
-                    {
-                      "No address connected yet. Connect your address so you can earn from Animebook"
-                    }
-                  </span>
-                )}
-              </div>
+                </span>
             </span>
 
-            <span className="text-start text-sm font-medium w-full flex-row space-x-1">
-              <span>Payout wallet 2</span>
-              <span className="text-xs">{"(Solana)"}</span>
-              <span className="text-xs ml-2 bg-pastelGreen text-white py-0.5 px-1 rounded">{"Balance: "} {solBalance}</span>
+            <span className="flex flex-col text-start text-xs sm:text-sm font-medium w-full space-x-1">
+              <span className="flex flex-row items-center">
+                <span>Sol Wallet</span>
+
+                <span className="text-xs ml-2 bg-[#EB4463] text-white py-0.5 px-1 rounded h-fit">
+                  {"Balance: "} {solBalance}
+                </span>
+
+                <span
+                  onClick={() => {
+                    setDisplay(true);
+                  }}
+                  className="text-xs cursor-pointer flex space-x-1 flex-row justify-center items-center w-fit ml-auto py-0.5"
+                >
+                  <svg
+                    fill="#000000"
+                    width="20px"
+                    height="20px"
+                    viewBox="0 0 256 256"
+                    id="Flat"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M227.42383,164.8125a3.9998,3.9998,0,1,1-6.92774,4l-20.55542-35.602a120.13387,120.13387,0,0,1-41.15942,19.102l6.4541,36.59961a4.00051,4.00051,0,0,1-3.24512,4.63379,4.06136,4.06136,0,0,1-.69921.06152,4.00171,4.00171,0,0,1-3.93457-3.30664l-6.4043-36.31738a131.58367,131.58367,0,0,1-45.99341-.01709l-6.40405,36.32178a4.00265,4.00265,0,0,1-3.93457,3.30664,4.06041,4.06041,0,0,1-.69922-.06153,4,4,0,0,1-3.24512-4.63379l6.45484-36.60986a120.1421,120.1421,0,0,1-41.11426-19.10937L35.35254,168.9707a3.9998,3.9998,0,1,1-6.92774-4l21.18067-36.68554A142.43333,142.43333,0,0,1,28.8877,107.38867a3.99986,3.99986,0,1,1,6.22265-5.02734,132.78926,132.78926,0,0,0,22.266,21.856c.03113.02636.068.04687.09815.07373C74.60583,137.4248,97.77954,148,128,148c30.19849,0,53.36011-10.56055,70.48779-23.68115.0149-.01319.03308-.02344.0481-.03614a132.77462,132.77462,0,0,0,22.35278-21.92138,3.99986,3.99986,0,1,1,6.22266,5.02734,142.41445,142.41445,0,0,1-20.75806,20.92969Z" />
+                  </svg>
+                  <span className="underline">{"Export Sol private key"}</span>
+                </span>
+              </span>
+              <span className="text-xs">
+                {"Your wallet will be used for payouts and for purchases."}
+              </span>
+              <span
+                className={`${
+                  darkMode ? "bg-[#27292F]" : "bg-gray-200"
+                } flex flex-row justify-between mt-1 pl-4 items-center text-sm text-start rounded-lg resize-none w-full`}
+              >
               <input
                 // value=""
                 disabled
                 value={userData.solAddress}
-                className="mt-1 px-4 text-center text-sm cursor-not-allowed rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${
+                  darkMode ? "bg-[#27292F]" : "bg-gray-200"
+                } mt-1 px-4 text-sm text-start cursor-not-allowed rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
               />
+              <span
+                  onClick={() => {
+                    // connectToWallet()
+                    // open()
+                    updateAddress();
+                  }}
+                  className="flex flex-row space-x-1 cursor-pointer bg-black text-white px-3 py-2 h-full rounded-r-lg"
+                >
+                  <span>Change</span><span>Wallet</span>
+                </span>
+                </span>
             </span>
 
-            <span className="pt-2 pb-3 flex flex-col">
-              {changesLoading ? (
-                <span className="mx-auto">
-                  <Spinner spinnerSize={"medium"} />
-                </span>
-              ) : (
+            <span className="text-start text-xs sm:text-sm w-full flex flex-col">
+              <span className="flex flex-row font-medium">
+                <span>Anime Watch History</span>
+              </span>
+
+              <span className="text-xs">
+                {"Add Animes you have watched and rate them"}
+              </span>
+
+              <span id="scrollbar-remove" className="relative flex flex-row space-x-1 overflow-x-scroll">
                 <span
                   onClick={() => {
-                    updateProfile();
+                    setOpenWatchList(true);
                   }}
-                  className="w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold border rounded-lg"
+                  className={`border ${
+                    darkMode
+                      ? "bg-[#27292F] border-[#32353C]"
+                      : "bg-[#F9F9F9] border-[#D0D3DB]"
+                  } text-2xl font-bold flex items-center justify-center rounded-xl relative w-20 h-20 overflow-hidden cursor-pointer`}
                 >
-                  Save changes
+                  +
                 </span>
-              )}
-              {errorMsg !== "" && (
-                <span className="text-sm w-full flex flex-row justify-center items-center">
-                  <svg
-                    fill="red"
-                    width="20px"
-                    height="20px"
-                    viewBox="0 -8 528 528"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <title>{"fail"}</title>
-                    <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
-                  </svg>
-                  <p className="text-red-500">{errorMsg}</p>
-                </span>
-              )}
+
+                {myAnimeWatchList !== null &&
+                  myAnimeWatchList !== undefined &&
+                  myAnimeWatchList.length > 0 &&
+                  myAnimeWatchList.map((anime) => (
+                    <span
+                      key={anime.id}
+                      className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-300 shadow-md"
+                    >
+                      {/* Anime Image */}
+                      <img
+                        src={anime.image}
+                        alt={anime.title}
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                      {/* Rating Stars */}
+                      <span className="absolute bottom-1 left-1 right-1 bg-black/60 px-2 py-0.5 rounded-md flex justify-center space-x-0.5">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <span
+                            key={i}
+                            className={`text-xs ${
+                              i < anime.rating ? "text-[#EB4463]" : "text-white"
+                            }`}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </span>
+                    </span>
+                  ))}
+              </span>
             </span>
           </span>
+
+          {openWatchList && (
+            <>
+              <div
+                id="manga-modal"
+                className="w-full m-auto lg:p-4 flex flex-col-reverse lg:flex-row lg:space-x-1 justify-center items-center space-y-2 lg:space-y-0 lg:items-start rounded-lg"
+              >
+                {rateSelectedAnimes &&
+                selectedAnimes &&
+                selectedAnimes.length > 0 ? (
+                  <div className="bg-white w-[90%] md:w-[60%] rounded-lg overflow-hidden">
+                    <div className="bg-transparent lg:bg-zinc-800 text-black lg:text-white px-6 py-4 flex justify-between items-center">
+                      <h2 className="text-xl font-semibold">
+                        Rate your Animes
+                      </h2>
+                    </div>
+                    <div className="px-4 py-2">
+                      {selectedAnimes.map((anime) => {
+                        return (
+                          <span
+                            key={anime.mal_id}
+                            className="flex border-b py-2 border-[#D0D3DB] flex-row w-full items-center justify-between"
+                          >
+                            <span className="flex flex-row space-x-2 items-center">
+                              <span className="flex">
+                                <img
+                                  src={anime.images.jpg.image_url}
+                                  alt={anime.title || "anime"}
+                                  width={50}
+                                  height={50}
+                                  className="w-full border-2 h-16 border-black rounded-lg object-cover"
+                                />
+                              </span>
+                              <span className="font-semibold">
+                                {anime.title}
+                              </span>
+                            </span>
+
+                            <span className="flex items-center bg-[#292C33E6] px-2 py-0.5 rounded-full">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <span
+                                  key={i}
+                                  className={`text-lg cursor-pointer ${
+                                    i < (ratings[anime.mal_id] || 0)
+                                      ? "text-[#EB4463]"
+                                      : "text-white"
+                                  }`}
+                                  onClick={() =>
+                                    handleRatingChange(anime.mal_id, i + 1)
+                                  }
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <span className="pt-10 pb-3 text-center text-white flex flex-row space-x-1 px-4">
+                      <span
+                        onClick={() => {
+                          setRateSelectedAnimes(false);
+                        }}
+                        className="cursor-pointer font-bold px-8 py-3 bg-[#2A2C33] rounded-lg"
+                      >
+                        BACK
+                      </span>
+                      <span className="cursor-pointer py-1 w-full flex flex-col rounded-lg bg-[#EB4463]">
+                        <span
+                          onClick={() => {
+                            saveAnimes();
+                          }}
+                          className="font-bold"
+                        >
+                          SAVE ANIMES
+                        </span>
+                        <span>
+                          {selectedAnimes.length}{" "}
+                          {selectedAnimes.length === 1 ? "Anime" : "Animes"}{" "}
+                          selected
+                        </span>
+                      </span>
+                    </span>
+                  </div>
+                ) : (
+                  <div className="bg-white w-[90%] md:w-[60%] rounded-lg overflow-hidden">
+                    <div className="bg-transparent lg:bg-zinc-800 text-white px-6 py-4 flex justify-between items-center">
+                      <h2 className="text-xl font-semibold">
+                        Add an anime to your watchlist
+                      </h2>
+                    </div>
+
+                    <div className="rounded-lg text-black flex flex-row space-x-0 w-[98%] mt-2 mx-auto px-2 p-1 items-center bg-[#F9F9F9] border border-[#EEEDEF]">
+                      <svg
+                        className="w-4 h-8 text-black"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                        />
+                      </svg>
+                      <input
+                        type="text"
+                        onChange={(e) => {
+                          setAnimes(
+                            allAnimes.filter((an) => {
+                              return an.title
+                                .toLowerCase()
+                                .includes(e.target.value.toLowerCase());
+                            })
+                          );
+                        }}
+                        placeholder="Search for animes"
+                        className="text-black placeholder:text-gray-800 w-full border-none text-sm bg-transparent focus:ring-0 focus:ring-0"
+                      />
+                    </div>
+
+                    <div className="px-4 py-2">
+                      <h3 className={`text-sm text-black font-medium mb-2`}>
+                        Popular animes
+                      </h3>
+                      <div className="flex justify-center w-full">
+                      <div className="w-fit grid grid-cols-3 md:grid-cols-8 gap-3">
+                        {animes.slice(0, 16).map((anime) => (
+                          <div
+                            key={anime.mal_id}
+                            className={`relative cursor-pointer w-24 rounded-lg overflow-hidden shadow-md ${
+                              selectedAnimes.includes(anime)
+                                ? "border-2 border-[#EB4463]"
+                                : ""
+                            }`}
+                            onClick={() => handleSelectAnime(anime)}
+                          >
+                            <span className="flex">
+                              <img
+                                src={anime.images.jpg.image_url}
+                                alt={anime.title || "anime"}
+                                width={50}
+                                height={50}
+                                className="w-full h-24 object-cover"
+                              />
+                            </span>
+                            <div
+                              className={`absolute bottom-0 w-full p-1 text-center text-xs font-medium text-white ${
+                                selectedAnimes.includes(anime)
+                                  ? "bg-[#EB4463]"
+                                  : "bg-black/60"
+                              }`}
+                            >
+                              {anime.title}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      </div>
+                    </div>
+
+                    <div className="px-4 pt-2 pb-4">
+                      <button
+                        className="w-full bg-[#EB4463] text-white py-2 rounded-lg text-center"
+                        disabled={selectedAnimes.length === 0}
+                        onClick={() => {
+                          if (selectedAnimes.length > 0) {
+                            setRateSelectedAnimes(true);
+                          }
+                        }}
+                      >
+                        <span className="font-bold">NEXT</span>
+                        <br />
+                        {selectedAnimes.length}{" "}
+                        {selectedAnimes.length === 1 ? "Anime" : "Animes"}{" "}
+                        selected
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <span className="h-[1px] lg:hidden lg:h-0"></span>
+                <span
+                  onClick={() => {
+                    setOpenWatchList(false);
+                    setRateSelectedAnimes(false);
+                    setSelectedAnimes([]);
+                  }}
+                  className="cursor-pointer bg-white rounded-full p-2"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="9.848"
+                    height="9.527"
+                    viewBox="0 0 14.848 14.527"
+                  >
+                    <path
+                      id="Pfad_4751"
+                      data-name="Pfad 4751"
+                      d="M5.662-12.827.364-19.96H4.09l3.494,4.687,3.494-4.687H14.8l-5.3,7.133,5.5,7.395H11.252L7.584-10.382,3.916-5.433H.16Z"
+                      transform="translate(-0.16 19.96)"
+                      fill="#292c33"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div id="overlay" className="bg-black backdrop-blur-md"></div>
+            </>
+          )}
+
+          {display && (
+            <>
+              <div
+                id="tip-modal"
+                className="w-[400px] bg-white p-4 flex flex-col justify-center items-center rounded-lg"
+              >
+                <span className="font-bold">Exporting Private Key</span>
+                <p className="pb-4 text-xs font-medium text-gray-700">
+                  Keep your private key secure. Do not share it with anyone.
+                  Exposing your private key may result in the loss of your
+                  assets
+                </p>
+                <span className="flex flex-row justify-center items-center text-sm text-gray-700 font-medium px-2 py-1 rounded-lg border border-slate-300 bg-slate-100">
+                  <svg
+                    fill="#000000"
+                    width="20px"
+                    height="20px"
+                    viewBox="0 0 256 256"
+                    id="Flat"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M227.42383,164.8125a3.9998,3.9998,0,1,1-6.92774,4l-20.55542-35.602a120.13387,120.13387,0,0,1-41.15942,19.102l6.4541,36.59961a4.00051,4.00051,0,0,1-3.24512,4.63379,4.06136,4.06136,0,0,1-.69921.06152,4.00171,4.00171,0,0,1-3.93457-3.30664l-6.4043-36.31738a131.58367,131.58367,0,0,1-45.99341-.01709l-6.40405,36.32178a4.00265,4.00265,0,0,1-3.93457,3.30664,4.06041,4.06041,0,0,1-.69922-.06153,4,4,0,0,1-3.24512-4.63379l6.45484-36.60986a120.1421,120.1421,0,0,1-41.11426-19.10937L35.35254,168.9707a3.9998,3.9998,0,1,1-6.92774-4l21.18067-36.68554A142.43333,142.43333,0,0,1,28.8877,107.38867a3.99986,3.99986,0,1,1,6.22265-5.02734,132.78926,132.78926,0,0,0,22.266,21.856c.03113.02636.068.04687.09815.07373C74.60583,137.4248,97.77954,148,128,148c30.19849,0,53.36011-10.56055,70.48779-23.68115.0149-.01319.03308-.02344.0481-.03614a132.77462,132.77462,0,0,0,22.35278-21.92138,3.99986,3.99986,0,1,1,6.22266,5.02734,142.41445,142.41445,0,0,1-20.75806,20.92969Z" />
+                  </svg>
+                  <span
+                    onClick={() => {
+                      getSl();
+                    }}
+                    className="pl-1 cursor-pointer"
+                  >
+                    export
+                  </span>
+                </span>
+                {sl !== "" && sl !== null && sl !== undefined && (
+                  <span className="mt-2 rounded-lg bg-white p-2.5 break-words whitespace-normal overflow-auto border border-gray-300 max-w-full">
+                    {sl}
+                  </span>
+                )}
+              </div>
+              <div
+                onClick={() => {
+                  setSl("");
+                  setDisplay(false);
+                }}
+                id="overlay"
+                className="bg-black bg-opacity-80"
+              ></div>
+            </>
+          )}
         </div>
       )}
-    </>
+      <span className="pt-1 pb-3 flex flex-col">
+        {changesLoading ? (
+          <span className="mx-auto">
+            <Spinner spinnerSize={"medium"} />
+          </span>
+        ) : (
+          <span
+            onClick={() => {
+              updateProfile();
+            }}
+            className={`${
+              darkMode ? "border-none" : "border"
+            } w-full mx-auto hover:shadow cursor-pointer px-7 py-2 bg-[#EB4463] text-center text-white font-semibold rounded-lg`}
+          >
+            SAVE CHANGES
+          </span>
+        )}
+        {errorMsg !== "" && (
+          <span className="text-sm w-full flex flex-row justify-center items-center">
+            <svg
+              fill="red"
+              width="20px"
+              height="20px"
+              viewBox="0 -8 528 528"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <title>{"fail"}</title>
+              <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
+            </svg>
+            <p className="text-[#EB4463]">{errorMsg}</p>
+          </span>
+        )}
+      </span>
+    </div>
   );
 };
 export default EditProfileContainer;

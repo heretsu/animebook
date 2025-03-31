@@ -7,15 +7,22 @@ import { UserContext } from "@/lib/userContext";
 import Posts from "@/components/posts";
 import DbUsers from "@/hooks/dbUsers";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
+import { useRouter } from "next/router";
+import LargeTopBar, { SmallTopBar } from "@/components/largeTopBar";
 
 const Search = () => {
+  const router = useRouter();
+
   const {
     originalPostValues,
     setPostValues,
     postValues,
     allUserObject,
     setAllUserObject,
+    darkMode,
   } = useContext(UserContext);
+  const [searchedHash, setSearchedHash] = useState("");
+  const [searchInitialized, setSearchInitialized] = useState(false);
   const [hashtagList, setHashtagList] = useState(null);
   const [topicSelected, setTopicSelected] = useState(false);
   const [openSuggestions, setOpenSuggestions] = useState(null);
@@ -23,32 +30,43 @@ const Search = () => {
   const { fullPageReload } = PageLoadOptions();
 
   const getSelectedHashTag = (htag) => {
-    const selectedTag = originalPostValues.filter((post) =>
-      post.content.toLowerCase().includes(htag[0].toLowerCase())
-    );
+    const selectedTag = originalPostValues.filter((post) => {
+      return post?.content?.toLowerCase().includes(htag.toLowerCase());
+    });
+    console.log(htag, selectedTag);
     setPostValues(selectedTag);
     setTopicSelected(true);
   };
+  const [hashtagPhotos, setHashtagPhotos] = useState(null);
+
+  const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 
   const fetchAllHashTags = () => {
-    // Initialize counters for all hashtags and hashtags with media
     const allTagsCount = {};
+    const allTagsPhotos = {};
 
     originalPostValues.forEach((post) => {
-      const tags = post.content ? (post.content.match(/#\w+/g) || []) : [];
+      const tags = post.content
+        ? post.content.toLowerCase().match(/#\w+/g) || []
+        : [];
       const uniqueTags = [...new Set(tags)];
 
-      // Count hashtags for all posts
       uniqueTags.forEach((tag) => {
         allTagsCount[tag] = (allTagsCount[tag] || 0) + 1;
+        if (post.media && imageExtensions.some(ext => post.media.toLowerCase().endsWith(ext))) {
+          if (!allTagsPhotos[tag]) {
+            allTagsPhotos[tag] = []; // Initialize array if not present
+          }
+          allTagsPhotos[tag].push(post.media);
+        }
       });
     });
-    // console.log(allTagsCount)
 
     const trendingAllTags = Object.entries(allTagsCount).sort(
       (a, b) => b[1] - a[1]
     );
-    setHashtagList(trendingAllTags);
+    setHashtagList(trendingAllTags.sort(() => Math.random() - 0.5));
+    setHashtagPhotos(allTagsPhotos);
   };
 
   const getAllSearchData = () => {
@@ -69,21 +87,29 @@ const Search = () => {
         .catch((e) => console.log(e, "search.js file users error"));
     }
   };
+
   const searchForItem = (e) => {
+    setSearchInitialized(true);
+    setSearchedHash(e.target.value);
     if (e.target.value !== "") {
       if (!postValues || !allUserObject || !originalPostValues) {
         getAllSearchData();
       }
       const foundPosts = originalPostValues
-        ? originalPostValues.filter((post) =>
-            post.content.toLowerCase().includes(e.target.value.toLowerCase())
-          )
+        ? originalPostValues.filter((post) => {
+            return post?.content?.trim()
+              .toLowerCase()
+              .includes(e.target.value.trim().toLowerCase());
+          })
         : [];
 
       const foundUsers = allUserObject
-        ? allUserObject.filter((user) =>
-            user.username.toLowerCase().includes(e.target.value.toLowerCase())
-          )
+        ? allUserObject.filter((user) => {
+            return user.username
+              .trim()
+              .toLowerCase()
+              .includes(e.target.value.trim().toLowerCase());
+          })
         : [];
 
       setOpenSuggestions({
@@ -96,7 +122,26 @@ const Search = () => {
   };
 
   useEffect(() => {
-    if (originalPostValues !== null && originalPostValues !== undefined) {
+    if (!searchInitialized) {
+      const hash = router.asPath.split("#")[1];
+
+      const queryP = router.asPath.split("/search?")[1];
+
+      if (hash && originalPostValues) {
+        console.log("Hash:", hash);
+        setSearchedHash("#".concat(hash));
+        getSelectedHashTag(hash);
+      } else if (queryP && originalPostValues) {
+        setSearchedHash(queryP);
+        getSelectedHashTag(queryP);
+      }
+    }
+
+    if (
+      originalPostValues !== null &&
+      originalPostValues !== undefined &&
+      !hashtagList
+    ) {
       fetchAllHashTags();
     }
     if (allUserObject === null || allUserObject === undefined) {
@@ -106,10 +151,10 @@ const Search = () => {
         })
         .catch((e) => console.log(e, "useEffect in search tab users error"));
     }
-  }, [originalPostValues, allUserObject]);
+  }, [searchInitialized, router, originalPostValues, allUserObject]);
 
   return (
-    <main>
+    <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
       <Head>
         <title>Animebook Search</title>
         <link
@@ -136,10 +181,24 @@ const Search = () => {
         />
         <meta property="og:image" content="/assets/animeBcc.png" />
       </Head>
-      <section className="mb-5 flex flex-row px-1 w-full">
+
+      <div className="hidden lg:block block z-40 sticky top-0">
+        <LargeTopBar relationship={false} />
+      </div>
+      <div className=" lg:hidden block z-40 sticky top-0">
+        <SmallTopBar relationship={false} />
+      </div>
+
+      <section className="mb-5 flex flex-row">
         <NavBar />
-        <div className="w-full py-2 lg:pl-[13.9rem] flex flex-col">
-          <span className="px-2 py-1 w-full flex flex-row items-center border-[1.5px] border-gray-300 rounded-3xl bg-gray-100">
+        <div className="w-full py-2 lg:pl-[16rem] lg:pr-[18rem] xl:pl-[18rem] xl:pr-[20rem] flex flex-col">
+          <span
+            className={`${
+              darkMode
+                ? "bg-zinc-800 text-white"
+                : "border-[1.5px] border-gray-300 bg-gray-100 text-gray-500"
+            } px-2 py-1 w-full flex flex-row items-center rounded-xl`}
+          >
             <svg
               className="w-4 h-4 text-slate-400"
               aria-hidden="true"
@@ -157,8 +216,9 @@ const Search = () => {
             </svg>
             <input
               type="search"
+              value={searchedHash}
               onChange={searchForItem}
-              className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+              className="w-full text-sm bg-transparent border-none focus:ring-0 placeholder-gray-400"
               placeholder="Search"
             />
           </span>
@@ -166,20 +226,27 @@ const Search = () => {
           {openSuggestions !== null && (
             <span className="w-full flex flex-col">
               {openSuggestions !== null && (
-                <span className="w-full flex flex-col">
+                <span
+                  className={`${
+                    darkMode ? "text-white" : "text-black"
+                  } w-full flex flex-col`}
+                >
                   <span
                     id="anime-book-font"
-                    className="text-gray-700 text-xl font-bold pt-1"
+                    className={`${
+                      darkMode ? "text-white" : "text-gray-700 "
+                    } text-xl font-bold pt-1`}
                   >
                     Search results
                   </span>
                   <span
                     onClick={() => {
-                      setPostValues(openSuggestions.foundPosts);
-                      setOpenSuggestions(null);
-                      setTopicSelected(true);
+                      // setPostValues(openSuggestions.foundPosts);
+                      // setOpenSuggestions(null);
+                      // setTopicSelected(true);
+                      fullPageReload(`/search?${searchedHash}`, "window");
                     }}
-                    className="p-2 flex flex-row items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                    className="p-2 flex flex-row items-center cursor-pointer hover:bg-[#EB4463] hover:text-white font-medium"
                   >
                     {`${openSuggestions.foundPosts.length} posts found`}
                   </span>
@@ -188,10 +255,12 @@ const Search = () => {
               {openSuggestions.foundUsers !== undefined &&
                 openSuggestions.foundUsers !== null &&
                 openSuggestions.foundUsers.length !== 0 && (
-                  <span>
+                  <span className={darkMode ? "text-white" : "text-black"}>
                     <span
                       id="anime-book-font"
-                      className="text-gray-700 text-xl font-bold py-1"
+                      className={`${
+                        darkMode ? "text-white" : "text-gray-700"
+                      } text-xl font-bold py-1`}
                     >
                       People
                     </span>
@@ -202,7 +271,7 @@ const Search = () => {
                           onClick={() => {
                             fullPageReload(`/profile/${os.username}`);
                           }}
-                          className="p-2 flex flex-row space-x-1 items-center cursor-pointer hover:bg-pastelGreen hover:text-white font-medium"
+                          className="p-2 flex flex-row space-x-1 items-center cursor-pointer hover:bg-[#EB4463] hover:text-white font-medium"
                         >
                           <span className="relative h-8 w-8 flex">
                             <Image
@@ -226,6 +295,7 @@ const Search = () => {
             <span className="mt-2 space-y-2 flex flex-col">
               <svg
                 onClick={() => {
+                  setSearchInitialized(true);
                   setTopicSelected(false);
                   setPostValues(originalPostValues);
                 }}
@@ -252,26 +322,132 @@ const Search = () => {
             hashtagList !== undefined &&
             hashtagList.length > 0 && (
               <span className="px-2 lg:px-0">
-                {hashtagList.map((tag, index) => {
-                  return (
-                    <div
-                      key={tag}
-                      onClick={() => {
-                        getSelectedHashTag(tag);
-                      }}
-                      className="cursor-default py-2.5 border-b border-gray-300 text-sm flex flex-col justify-between"
-                    >
-                      <span className="font-bold">
-                        {index + 1} {" . "}
-                        {tag[0].replace(/#/g, "").charAt(0).toUpperCase() +
-                          tag[0].replace(/#/g, "").slice(1)}
-                      </span>
-                      <span className="text-xs font-medium text-gray-400">{`${
-                        tag[1]
-                      } ${tag[1] > 1 ? "posts" : "post"}`}</span>
-                    </div>
-                  );
-                })}
+                {hashtagList
+                  .filter((tag) => tag[1] > 10)
+                  .map((tag, index) => {
+                    return (
+                      <div
+                        key={tag}
+                        onClick={() => {
+                          getSelectedHashTag(tag[0]);
+                        }}
+                        className={`${
+                          darkMode ? "text-white" : "text-black"
+                        } cursor-default py-2.5 text-sm flex flex-row justify-start items-center space-x-2`}
+                      >
+                        <span className="flex flex-col">
+                          <span className="font-bold">
+                            {index + 1} {" . "}
+                            {tag[0].replace(/#/g, "").charAt(0).toUpperCase() +
+                              tag[0].replace(/#/g, "").slice(1)}
+                          </span>
+                          <span className="text-xs font-medium text-gray-400">{`${
+                            tag[1]
+                          } ${tag[1] > 1 ? "posts" : "post"}`}</span>
+                        </span>
+                        {hashtagPhotos && <span className="relative h-12 w-12 flex">
+                          <Image
+                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 1]}
+                            alt="t"
+                            width={80}
+                            height={80}
+                            className="rounded-xl absolute left-0"
+                          />
+                          <Image
+                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 2]}
+                            alt="t"
+                            width={80}
+                            height={80}
+                            className="rounded-xl absolute left-4" 
+                          />
+                          <Image
+                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 3]}
+                            alt="t"
+                            width={80}
+                            height={80}
+                            className="rounded-xl absolute left-10" 
+                          />
+                          <Image
+                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 4]}
+                            alt="t"
+                            width={80}
+                            height={80}
+                            className="rounded-xl absolute left-20" 
+                          />
+                          <Image
+                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 5]}
+                            alt="t"
+                            width={80}
+                            height={80}
+                            className="rounded-xl absolute left-28"
+                          />
+                        </span>}
+                      </div>
+                    );
+                  })}
+                {hashtagList
+                  .filter((tag) => tag[1] <= 10)
+                  .map((tag, index) => {
+                    return (
+                      <div
+                        key={tag}
+                        onClick={() => {
+                          getSelectedHashTag(tag[0]);
+                        }}
+                        className={`${
+                          darkMode ? "text-white" : "text-black"
+                        } cursor-default py-2.5 text-sm flex flex-row justify-start space-x-2`}
+                      >
+                        <span className="flex flex-col">
+                          <span className="font-bold">
+                            {index + 1} {" . "}
+                            {tag[0].replace(/#/g, "").charAt(0).toUpperCase() +
+                              tag[0].replace(/#/g, "").slice(1)}
+                          </span>
+                          <span className="text-xs font-medium text-gray-400">{`${
+                            tag[1]
+                          } ${tag[1] > 1 ? "posts" : "post"}`}</span>
+                        </span>
+                        {tag[1] > 5 && hashtagPhotos && hashtagPhotos[tag[0]] && <span className="relative h-12 w-12 flex">
+                          <Image
+                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 1]}
+                            alt="t"
+                            width={80}
+                            height={80}
+                            className="rounded-xl absolute left-0"
+                          />
+                          <Image
+                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 2]}
+                            alt="t"
+                            width={80}
+                            height={80}
+                            className="rounded-xl absolute left-4" 
+                          />
+                          <Image
+                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 3]}
+                            alt="t"
+                            width={80}
+                            height={80}
+                            className="rounded-xl absolute left-10" 
+                          />
+                          <Image
+                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 4]}
+                            alt="t"
+                            width={80}
+                            height={80}
+                            className="rounded-xl absolute left-20" 
+                          />
+                          <Image
+                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 5]}
+                            alt="t"
+                            width={80}
+                            height={80}
+                            className="rounded-xl absolute left-28"
+                          />
+                        </span>}
+                      </div>
+                    );
+                  })}
               </span>
             )
           )}

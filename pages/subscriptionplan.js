@@ -6,7 +6,7 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 
 const SubscriptionPlan = () => {
   const { fullPageReload } = PageLoadOptions();
-  const { userData } = useContext(UserContext);
+  const { userData, darkMode } = useContext(UserContext);
   const [errorMsg, setErrorMsg] = useState("");
   const [sub, setSub] = useState("");
   const [saveLoading, setSaveLoading] = useState(false);
@@ -38,17 +38,17 @@ const SubscriptionPlan = () => {
       <section className="mb-5 flex flex-row space-x-2 w-full">
         <NavBar />
         <div className="w-full pb-2 space-y-8 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
-          <div className="text-gray-600 flex flex-col rounded-xl shadow-lg w-full bg-white justify-center items-center">
-            <span className="text-slate-500 border-b font-semibold text-lg pt-2">
+          <div className={`${darkMode ? 'bg-[#17181C] text-white' : 'bg-[#F9F9F9] text-slate-500'} flex flex-col rounded-xl shadow-lg w-full justify-center items-center`}>
+            <span className="border-b font-semibold text-lg pt-2">
               Subscription Plan
             </span>
-            <span className="text-center py-2 font-medium text-slate-500 text-sm">
+            <span className="text-center py-2 font-medium text-sm">
               {
                 "How much should your subscribers pay monthly to access your premium mangas?"
               }
             </span>
             <span className="pt-2 w-full justify-center items-center flex flex-row space-x-1">
-              <span className="text-slate-600 text-base text-start font-medium">
+              <span className="text-base text-start font-medium">
                 {"Price: ($)"}
               </span>
               <input
@@ -59,16 +59,16 @@ const SubscriptionPlan = () => {
                   );
                 }}
                 placeholder={userData.subprice ? parseFloat(userData.subprice).toFixed(2) : ""}
-                className="px-4 w-fit rounded-xl resize-none px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`px-4 w-fit rounded-xl resize-none px-2 ${darkMode ? "bg-gray-600" : "bg-gray-200"} border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
               />
               {saveLoading ? (
-                <span className="text-slate-500">saving...</span>
+                <span>saving...</span>
               ) : (
                 <span
                   onClick={() => {
                     savePrice();
                   }}
-                  className="w-fit mx-auto hover:shadow cursor-pointer px-4 py-1 bg-pastelGreen text-center text-white font-bold border rounded-lg"
+                  className="w-fit mx-auto hover:shadow cursor-pointer px-4 py-1 bg-pastelGreen text-center text-white font-bold rounded-lg"
                 >
                   Save
                 </span>

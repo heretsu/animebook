@@ -16,6 +16,8 @@ import AttachmentsContainer from "@/components/attachmentsContainer";
 import DbUsers from "@/hooks/dbUsers";
 import Relationships from "@/hooks/relationships";
 import { MessageContext } from "@/lib/messageContext";
+import LargeTopBar from "@/components/largeTopBar";
+import Messages from "./inboxutils/messages";
 
 export const getServerSideProps = async (context) => {
   const { message } = context.query;
@@ -27,19 +29,33 @@ export const getServerSideProps = async (context) => {
   };
 };
 
-const TextConfiguration = ({ text, highlight }) => {
+export const TextConfiguration = ({ text, highlight }) => {
   if (!highlight.trim()) {
-    return <span className="text-sm break-all">{text}</span>;
+    return (
+      <span
+        className="text-sm break-all"
+        style={{ wordBreak: "break-word", whiteSpace: "pre-wrap" }}
+      >
+        {text}
+      </span>
+    );
   }
 
-  const regex = new RegExp(`(${highlight})`, 'gi');
+  const regex = new RegExp(`(${highlight})`, "gi");
   const parts = text.split(regex);
 
   return (
-    <span className="text-sm break-all">
+    <span
+      className="text-sm break-all"
+      style={{ wordBreak: "break-word", whiteSpace: "pre-wrap" }}
+    >
       {parts.map((part, index) =>
         part.toLowerCase() === highlight.toLowerCase() ? (
-          <span key={index} className="bg-yellow-300">
+          <span
+            key={index}
+            className="bg-yellow-300"
+            style={{ wordBreak: "break-word", whiteSpace: "pre-wrap" }}
+          >
             {part}
           </span>
         ) : (
@@ -55,7 +71,7 @@ const Message = ({ message }) => {
   const [currentQuery, setCurrentQuery] = useState(null);
   const { fullPageReload } = PageLoadOptions();
   const router = useRouter();
-  const { userNumId, userData, allUserObject, setAllUserObject } =
+  const { userNumId, userData, allUserObject, setAllUserObject, darkMode } =
     useContext(UserContext);
   const [following, setFollowing] = useState(null);
   const [userToSearch, setUserToSearch] = useState("");
@@ -152,7 +168,6 @@ const Message = ({ message }) => {
 
     const messages = response.data;
     setEntireMessages(messages);
-    // Create a map to store the latest message for each conversation
     const latestMessages = new Map();
 
     const createConversationKey = (senderId, receiverId) => {
@@ -272,7 +287,6 @@ const Message = ({ message }) => {
 
       // Save original chats if not already saved
       if (originalChats === null) {
-        console.log("cypher: originalChats");
         setOriginalChats(allChats);
       } else {
         // Collect chat participants whose usernames include the search text
@@ -336,73 +350,82 @@ const Message = ({ message }) => {
 
     // setOpenSearchNav(true)
   };
+  const [imgSrc, setImgSrc] = useState("");
+  const [secondImgSrc, setSecondImgSrc] = useState("");
 
   useEffect(() => {
+    if (userData && userData.avatar) {
+      setImgSrc(userData.avatar);
+    }
+    if (userDetail) {
+      setSecondImgSrc(userDetail.avatar);
+    }
     if (currenctChat === null || (userNumId && !allUserObject)) {
       setCurrentChat(message);
 
-      fetchFollowing(userNumId)
-        .then(({ data }) => {
-          if (!data) {
-            console.log("something wrong with data");
-            return;
-          }
-          if (!allUserObject) {
-            fetchAllUsers()
-              .then((response) => {
-                setAllUserObject(response.data);
-                const uDetail = response.data.find(
-                  (user) =>
-                    user.username.toLowerCase() === message.toLowerCase()
-                );
+      if (userNumId) {
+        fetchFollowing(userNumId)
+          .then(({ data, error }) => {
+            if (!data) {
+              return;
+            }
+            if (!allUserObject) {
+              fetchAllUsers()
+                .then((response) => {
+                  setAllUserObject(response.data);
+                  const uDetail = response.data.find(
+                    (user) =>
+                      user.username.toLowerCase() === message.toLowerCase()
+                  );
 
-                fetchAllChats().then((info) => {
-                  if (info && info.length > 0) {
-                    setAllChats(info);
-                  } else {
-                    setFollowing(
-                      response.data.filter((user) =>
-                        data.some(
-                          (dataItem) => dataItem.following_userid === user.id
+                  fetchAllChats().then((info) => {
+                    if (info && info.length > 0) {
+                      setAllChats(info);
+                    } else {
+                      setFollowing(
+                        response.data.filter((user) =>
+                          data.some(
+                            (dataItem) => dataItem.following_userid === user.id
+                          )
                         )
+                      );
+                    }
+                  });
+
+                  fetchChat(uDetail.id).then((res) => {
+                    setUserDetail(uDetail);
+                    setChatsObject(res.data);
+                  });
+                })
+                .catch((e) => console.log(e, "inbox index.js users error"));
+            } else {
+              const uDetail = allUserObject.find(
+                (user) => user.username.toLowerCase() === message.toLowerCase()
+              );
+
+              fetchAllChats().then((info) => {
+                if (info && info.length > 0) {
+                  setAllChats(info);
+                } else {
+                  setFollowing(
+                    allUserObject.filter((user) =>
+                      data.some(
+                        (dataItem) => dataItem.following_userid === user.id
                       )
-                    );
-                  }
-                });
-
-                fetchChat(uDetail.id).then((res) => {
-                  setUserDetail(uDetail);
-                  setChatsObject(res.data);
-                });
-              })
-              .catch((e) => console.log(e, "inbox index.js users error"));
-          } else {
-            const uDetail = allUserObject.find(
-              (user) => user.username.toLowerCase() === message.toLowerCase()
-            );
-
-            fetchAllChats().then((info) => {
-              if (info && info.length > 0) {
-                setAllChats(info);
-              } else {
-                setFollowing(
-                  allUserObject.filter((user) =>
-                    data.some(
-                      (dataItem) => dataItem.following_userid === user.id
                     )
-                  )
-                );
-              }
-            });
-            fetchChat(uDetail.id).then((res) => {
-              setUserDetail(uDetail);
-              setChatsObject(res.data);
-            });
-          }
-        })
-        .catch((e) => {
-          console.log("error: ", e);
-        });
+                  );
+                }
+              });
+              fetchChat(uDetail.id).then((res) => {
+                setUserDetail(uDetail);
+                setChatsObject(res.data);
+              });
+            }
+          })
+          .catch((e) => {
+            console.log("error: ", e);
+          });
+      }
     } else if (currenctChat !== message && allUserObject) {
       const newChatUser = allUserObject.find(
         (user) => user.username === message
@@ -414,8 +437,14 @@ const Message = ({ message }) => {
       });
     }
 
-    if (messageRefs && messageRefs.current && messageRefs.current.length > 0) {
-      messageRefs.current[messageRefs.current.length - 1
+    if (
+      messageRefs &&
+      messageRefs.current &&
+      messageRefs.current.length > 0 &&
+      messageRefs.current[messageRefs.current.length - 1].current
+    ) {
+      messageRefs.current[
+        messageRefs.current.length - 1
       ].current.scrollIntoView();
     }
 
@@ -500,6 +529,8 @@ const Message = ({ message }) => {
       .subscribe();
   }, [
     userNumId,
+    userDetail,
+    userData,
     allUserObject,
     allChats,
     chatsObject,
@@ -511,17 +542,15 @@ const Message = ({ message }) => {
   ]);
 
   return (
-    <main>
-      <section className="mb-5 flex flex-row space-x-2 w-full">
+    <main className={`fixed w-full lg:w-[90vw] max-w-[1400px] mx-auto ${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
+      <div className="hidden lg:block block z-40 sticky top-0">
+        <LargeTopBar relationship={false} />
+      </div>
+      <section className="flex flex-row lg:space-x-2 w-full">
         <NavBar />
-
-        {userDetail ? (
-          <div className="w-full py-2 space-y-8 pl-2 lg:pl-60 pr-4 lg:pr-12 flex flex-col">
-            <span className="h-screen pb-10 lg:pb-2 w-full flex flex-col">
-              <span className="sticky top-0 left-0 p-1.5 w-full flex flex-row justify-between items-center bg-dmGreen">
-                {/* back button */}
-
-                <svg
+        <div className="w-full top-0 lg:pt-4 space-y-2 lg:pl-72 pr-0 flex flex-col">
+          {/* Back button */}
+          {/* <svg
                   onClick={() => {
                     router.push("/inbox");
                   }}
@@ -545,182 +574,33 @@ const Message = ({ message }) => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                </svg>
-
-                <span
-                  onClick={() => {
-                    fullPageReload(`/profile/${userDetail.username}`);
-                  }}
-                  className="space-x-1 flex flex-row flex-shrink-0 items-center justify-center"
-                >
-                  <Image
-                    src={userDetail.avatar}
-                    alt="post"
-                    height={35}
-                    width={35}
-                    className="rounded-full object-cover"
-                  />
-                  <span className="font-semibold text-sm">
-                    {userDetail.username}
-                  </span>
-                </span>
-
-                <svg
-                  onClick={() => {
-                    setDeleteConvo(true);
-                  }}
-                  width="20px"
-                  height="20px"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="cursor-pointer"
-                >
-                  <rect x={0} fill="none" width={20} height={20} />
-                  <g>
-                    <path
-                      fill="red"
-                      d="M12 4h3c.6 0 1 .4 1 1v1H3V5c0-.6.5-1 1-1h3c.2-1.1 1.3-2 2.5-2s2.3.9 2.5 2zM8 4h3c-.2-.6-.9-1-1.5-1S8.2 3.4 8 4zM4 7h11l-.9 10.1c0 .5-.5.9-1 .9H5.9c-.5 0-.9-.4-1-.9L4 7z"
-                    />
-                  </g>
-                </svg>
-              </span>
-              <span className="relative bg-white h-full overflow-scroll flex flex-col justify-between">
-                <span className="flex flex-col pt-5 px-2 space-y-2.5">
-                  {chatsObject !== null &&
-                  chatsObject !== undefined &&
-                  chatsObject.length > 0 ? (
-                    chatsObject.map((chat, chatIndex) => {
-                      return (
-                        <span
-                          key={chat.id}
-                          className={`flex ${
-                            chat.senderid === userNumId
-                              ? "flex-row-reverse"
-                              : "flex-row"
-                          } justify-start items-center`}
-                        >
-                          <span className="mx-1 flex flex-row flex-shrink-0 items-center justify-center">
-                            <Image
-                              src={
-                                chat.senderid === userNumId
-                                  ? userData.avatar
-                                  : userDetail.avatar
-                              }
-                              alt="post"
-                              height={30}
-                              width={30}
-                              className="rounded-full object-cover"
-                            />
-                          </span>
-                          <span
-                            className={`flex ${chat.attachments && "flex-col"}`}
-                          >
-                            {chat.attachments &&
-                              chat.attachments.length > 0 && (
-                                <span className="bg-dmGreen flex flex-col p-1">
-                                  {chat.attachments.map((att, index) => {
-                                    return (
-                                      <span key={index}>
-                                        {att
-                                          .toString()
-                                          .toLowerCase()
-                                          .endsWith("gif") ||
-                                        att
-                                          .toString()
-                                          .toLowerCase()
-                                          .endsWith("png") ||
-                                        att
-                                          .toString()
-                                          .toLowerCase()
-                                          .endsWith("jpg") ||
-                                        chat.attachments
-                                          .toString()
-                                          .toLowerCase()
-                                          .endsWith("jpeg") ? (
-                                          <Image
-                                            src={att.toString()}
-                                            alt="chat attachment"
-                                            height={250}
-                                            width={250}
-                                          />
-                                        ) : (
-                                          att
-                                            .toString()
-                                            .toLowerCase()
-                                            .endsWith("mp4") ||
-                                          att
-                                            .toString()
-                                            .toLowerCase()
-                                            .endsWith("3gp") ||
-                                          (att
-                                            .toString()
-                                            .toLowerCase()
-                                            .endsWith("mov") && (
-                                            <video
-                                              src={att.toString()}
-                                              width={250}
-                                              height={250}
-                                              controls
-                                            ></video>
-                                          ))
-                                        )}
-                                      </span>
-                                    );
-                                  })}
-                                </span>
-                              )}
-                            {chat.message && (
-                              <span
-                                ref={getMessageRef(chatIndex)}
-                                className={`bg-dmGreen flex ${
-                                  chat.message.length < 20
-                                    ? "flex-row"
-                                    : "flex-col"
-                                } justify-between items-end p-1.5`}
-                              >
-                                <TextConfiguration text={chat.message} highlight={messageItem} />
-                                
-                                <span className="pl-2 text-xs font-medium text-gray-500">
-                                  {formatTimeFromTimestamp(chat.created_at)}
-                                </span>
-                              </span>
-                            )}
-                          </span>
-                        </span>
-                      );
-                    })
-                  ) : (
-                    <span className="flex w-fit mx-auto flex-row justify-center text-sm text-white px-1.5 rounded-md bg-gray-400 font-semibold">
-                      Start conversation
-                    </span>
-                  )}
-                </span>
-                <span className="sticky bottom-5 md:bottom-0 left-0 right-0 w-full">
-                  <MessageContext.Provider
-                    value={{
-                      chatsObject,
-                      messageRefs,
-                      foundMessageIndices,
-                      setFoundMessageIndices,
-                      currentFoundIndex,
-                      setCurrentFoundIndex,
-                      setMessageItem
-                    }}
-                  >
-                    <AttachmentsContainer receiverid={userDetail.id} />
-                  </MessageContext.Provider>
-                </span>
-              </span>
+                </svg>          */}
+                 {userDetail ? (
+            <span className={`flex h-[screen] lg:h-full rounded-r-lg relative w-full items-center justify-center ${darkMode ? "bg-[url('/assets/chat_bg_dark.png')]" : "bg-[url('/assets/chat_bg_light.png')]"} bg-no-repeat bg-cover bg-center`}>
+              <Messages message={userDetail.username} />
             </span>
-          </div>
-        ) : (
-          <span className="w-full italic text-sm text-gray-800 pb-2 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">{`得る Loading chat with ${message}`}</span>
-        )}
+          ) : (
+            <span
+              className={`${
+                darkMode ? "text-white" : "text-gray-800"
+              } w-full italic text-sm pb-2 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col`}
+            >{`得る Loading...`}</span>
+          )}
 
-        <div className="bg-white px-2 hidden lg:block sticky right-2 top-20 heighto">
+          {/* <div
+          className={`px-5 ${
+            darkMode ? "bg-[#1e1f24] text-white" : "bg-white text-black"
+          } invisible lg:visible fixed h-screen right-[5%] h-fit overflow-hidden block`}
+        >
           <span className="flex flex-col w-full min-h-screen h-full overflow-scroll">
-            <span className="sticky top-0 bg-white pt-2">
-              <span className="bg-gray-100 mt-2 py-1 pl-4 w-full flex flex-row items-center bg-gray-100">
+            <span className="sticky top-0 bg-transparent pt-0">
+              <span
+                className={`rounded-lg border ${
+                  darkMode
+                    ? "bg-zinc-800 border-[#32353C]"
+                    : "bg-white border-[#D0D3DB]"
+                } mt-2 py-1 pl-4 w-full flex flex-row items-center`}
+              >
                 <svg
                   className="w-4 h-4 text-gray-500"
                   aria-hidden="true"
@@ -740,7 +620,9 @@ const Message = ({ message }) => {
                   value={messageItem}
                   onChange={searchForMessage}
                   type="search"
-                  className="w-full text-sm text-gray-500 bg-transparent border-none focus:ring-0 placeholder-gray-400"
+                  className={`${
+                    darkMode ? "text-white" : "text-gray-500"
+                  } w-full text-xs bg-transparent border-none focus:ring-0 placeholder-gray-400`}
                   placeholder="Search chat"
                 />
               </span>
@@ -753,7 +635,9 @@ const Message = ({ message }) => {
                   return (
                     <span
                       key={sr.id}
-                      className="flex flex-row w-full border-b border-gray-300 items-center py-2"
+                      className={`${
+                        darkMode ? "border-gray-700" : "border-gray-300"
+                      } flex flex-row w-full border-b items-center py-2`}
                     >
                       <span
                         onClick={() => {
@@ -815,7 +699,9 @@ const Message = ({ message }) => {
                           </span>
                         </span>
                         <span
-                          className={`cursor-default font-bold flex flex-row text-gray-500 text-[0.77rem]`}
+                          className={`${
+                            darkMode ? "text-white" : "text-gray-500"
+                          } cursor-default font-bold flex flex-row text-[0.77rem]`}
                         >
                           {sr.message.length > 110
                             ? sr.message.slice(0, 110).trim().concat("...")
@@ -834,10 +720,12 @@ const Message = ({ message }) => {
                   return (
                     <span
                       key={singleChat.id}
-                      className="relative flex flex-row w-full border-b border-gray-300 items-end py-2"
+                      className={`${
+                        darkMode ? "border-gray-700" : "border-gray-300"
+                      } relative flex flex-row w-full border-b items-end py-2`}
                       onClick={() => {
                         setMessageItem("");
-                        setSearchResult(null)
+                        setSearchResult(null);
                         router.push(
                           `/inbox/${
                             getUserFromId(
@@ -883,7 +771,9 @@ const Message = ({ message }) => {
                               <span className="h-1.5 w-1.5 flex flex-shrink-0 mr-1 bg-pastelGreen rounded-full"></span>
                             )}
                           <span
-                            className={`cursor-default font-bold text-gray-500 text-[0.77rem] truncate ${
+                            className={`${
+                              darkMode ? "text-white" : "text-gray-500"
+                            } cursor-default font-bold text-[0.77rem] truncate ${
                               singleChat.receiverid === userNumId &&
                               !singleChat.isread &&
                               "font-black"
@@ -934,6 +824,7 @@ const Message = ({ message }) => {
               )}
             </span>
           </span>
+        </div> */}
         </div>
       </section>
       {deleteConvo && (
@@ -976,7 +867,6 @@ const Message = ({ message }) => {
           ></span>
         </>
       )}
-      <MobileNavBar />
     </main>
   );
 };

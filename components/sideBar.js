@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import ConnectionData from "@/lib/connectionData";
 import supabase from "@/hooks/authenticateUser";
+import DarkModeToggle from "./darkModeToggle";
 
 const SideBar = () => {
   const { fullPageReload } = PageLoadOptions();
@@ -37,6 +38,7 @@ const SideBar = () => {
     setChosenTag,
     userData,
     myRelationships,
+    darkMode
   } = useContext(UserContext);
 
   const toggleContentFilter = (postContents) => {
@@ -55,7 +57,7 @@ const SideBar = () => {
       return true;
     }
     const filteredPosts = originalExplorePosts.filter((post) => {
-      const media = post[0].media?.toLowerCase();
+      const media = post.post.media?.toLowerCase();
       if (
         postContents.images &&
         media &&
@@ -193,13 +195,13 @@ const SideBar = () => {
 
   return (
     <div id="sidebar" className="h-screen overflow-scroll flex">
-      <div className="h-full flex flex-col w-full">
-        <span className="flex flex-row justify-between items-center bg-gray-100 px-3 py-1.5">
-          <span className="text-slate-500 flex flex-row justify-center items-center space-x-2">
+      <div className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-slate-500'} h-full flex flex-col w-full`}>
+        <span className={`flex flex-row justify-between items-center ${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-gray-100 text-slate-500'} px-3 py-1.5`}>
+          <span className="flex flex-row justify-center items-center space-x-2">
             {userData && (
               <span
                 onClick={() => {
-                  fullPageReload(`/profile/${userData.username}`);
+                  fullPageReload(`/profile/${userData.username}`, 'window');
                 }}
                 className="relative flex flex-col flex-shrink-0"
               >
@@ -259,7 +261,7 @@ const SideBar = () => {
 
         <span className="flex flex-col px-2 py-3 space-y-4 text-slate-500 text-[13px] font-bold">
           <span onClick={() => {
-                fullPageReload(`/profile/${userData.username}`);
+                fullPageReload(`/profile/${userData.username}`, "window");
               }} className="cursor-pointer w-fit flex flex-row items-center space-x-2">
             <svg
               id="ninja"
@@ -282,8 +284,8 @@ const SideBar = () => {
                     fill={
                       router.pathname === "/profile" ||
                       router.pathname === "/profile/[user]"
-                        ? "#04dbc4"
-                        : "#5d6879"
+                        ? "#EA334E"
+                        : (darkMode ? "white" : "#5d6879")
                     }
                   />
                 </g>
@@ -302,8 +304,8 @@ const SideBar = () => {
                     fill={
                       router.pathname === "/profile" ||
                       router.pathname === "/profile/[user]"
-                        ? "#04dbc4"
-                        : "#5d6879"
+                        ? "#EA334E"
+                        : (darkMode ? "white" : "#5d6879")
                     }
                   />
                 </g>
@@ -317,8 +319,8 @@ const SideBar = () => {
                     fill={
                       router.pathname === "/profile" ||
                       router.pathname === "/profile/[user]"
-                        ? "#04dbc4"
-                        : "#5d6879"
+                        ? "#EA334E"
+                        : (darkMode ? "white" : "#5d6879")
                     }
                   />
                 </g>
@@ -337,8 +339,8 @@ const SideBar = () => {
                     fill={
                       router.pathname === "/profile" ||
                       router.pathname === "/profile/[user]"
-                        ? "#04dbc4"
-                        : "#5d6879"
+                        ? "#EA334E"
+                        : (darkMode ? "white" : "#5d6879")
                     }
                   />
                 </g>
@@ -357,8 +359,8 @@ const SideBar = () => {
                     fill={
                       router.pathname === "/profile" ||
                       router.pathname === "/profile/[user]"
-                        ? "#04dbc4"
-                        : "#5d6879"
+                        ? "#EA334E"
+                        : (darkMode ? "white" : "#5d6879")
                     }
                   />
                 </g>
@@ -368,8 +370,8 @@ const SideBar = () => {
               className={`${
                 router.pathname === "/profile" ||
                 router.pathname === "/profile/[user]"
-                  ? "text-pastelGreen"
-                  : "text-[#5d6879]"
+                  ? "text-[#EA334E]"
+                  : (darkMode ? "text-white" : "text-[#5d6879]")
               }`}
             >
               Profile
@@ -396,27 +398,134 @@ const SideBar = () => {
                   data-name="Pfad 4702"
                   d="M9.052,15.187a1.2,1.2,0,0,0-.953.686L5.033,22.538a.359.359,0,0,0,.477.477L12.052,20a1.2,1.2,0,0,0,.69-.982,1.23,1.23,0,0,1,2.448-.025,1.2,1.2,0,0,0,.686.953l6.666,3.069a.353.353,0,0,0,.148.032.364.364,0,0,0,.256-.1.352.352,0,0,0,.072-.4L20,16a1.2,1.2,0,0,0-.982-.69,1.228,1.228,0,0,1-.852-1.993,1.206,1.206,0,0,1,.823-.451,1.209,1.209,0,0,0,.953-.686l3.069-6.669a.359.359,0,0,0-.477-.477L16,8.041a1.207,1.207,0,0,0-.693.986,1.221,1.221,0,0,1-.426.827,1.227,1.227,0,0,1-2.018-.8,1.209,1.209,0,0,0-.686-.95L5.506,5.029a.359.359,0,0,0-.477.477l3.015,6.543a1.186,1.186,0,0,0,.982.69,1.233,1.233,0,0,1,.906,1.917,1.189,1.189,0,0,1-.881.531Zm3.69-2.441a1.81,1.81,0,1,1,1.282,3.091,1.813,1.813,0,0,1-1.282-3.091Z"
                   transform="translate(0 0)"
-                  fill={router.pathname === "/settings" ? "#04dbc4" : "#5d6879"}
+                  fill={router.pathname === "/settings" ? "#EA334E" : (darkMode ? "white" : "#5d6879")}
                 />
                 <path
                   id="Pfad_4703"
                   data-name="Pfad 4703"
                   d="M28.838,28.846a1.088,1.088,0,1,0-1.538,0,1.092,1.092,0,0,0,1.538,0Z"
                   transform="translate(-14.048 -14.053)"
-                  fill={router.pathname === "/settings" ? "#04dbc4" : "#5d6879"}
+                  fill={router.pathname === "/settings" ? "#EA334E" : (darkMode ? "white" : "#5d6879")}
                 />
               </g>
             </svg>
             <span
               className={`${
                 router.pathname === "/settings"
-                  ? "text-pastelGreen"
-                  : "text-[#5d6879]"
+                  ? "text-[#EA334E]"
+                  : (darkMode ? "text-white" : "text-[#5d6879]")
               }`}
             >
               Settings
             </span>
           </span>
+
+          <span
+            onClick={() => {
+              router.push("/leaderboard");
+            }}
+            className="cursor-pointer w-fit flex flex-row items-center space-x-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18.399"
+              height="20.944"
+              viewBox="0 0 18.399 20.944"
+            >
+              <g id="podium" transform="translate(-4.768)">
+                <g
+                  id="Gruppe_3296"
+                  data-name="Gruppe 3296"
+                  transform="translate(9.715)"
+                >
+                  <g id="Gruppe_3295" data-name="Gruppe 3295">
+                    <path
+                      id="Pfad_4752"
+                      data-name="Pfad 4752"
+                      d="M148.347,3.429a.637.637,0,0,0-.5-.466l-2.2-.357L144.673.382a.587.587,0,0,0-1.1,0l-.983,2.224-2.2.357a.637.637,0,0,0-.5.466.741.741,0,0,0,.155.7l1.59,1.731-.376,2.444a.724.724,0,0,0,.244.67.561.561,0,0,0,.646.052l1.965-1.154,1.964,1.154a.56.56,0,0,0,.646-.052.724.724,0,0,0,.244-.67L146.6,5.862l1.59-1.731A.743.743,0,0,0,148.347,3.429Z"
+                      transform="translate(-139.869)"
+                      fill={
+                        router.pathname == "/leaderboard"
+                          ? "#EA334E"
+                          : darkMode
+                          ? "white"
+                          : "#5d6879"
+                      }
+                    />
+                  </g>
+                </g>
+                <g
+                  id="Gruppe_3298"
+                  data-name="Gruppe 3298"
+                  transform="translate(10.901 10.439)"
+                >
+                  <g id="Gruppe_3297" data-name="Gruppe 3297">
+                    <path
+                      id="Pfad_4753"
+                      data-name="Pfad 4753"
+                      d="M177.776,255.185h-4.906a.652.652,0,0,0-.613.685v9.82h6.133v-9.82A.652.652,0,0,0,177.776,255.185Z"
+                      transform="translate(-172.256 -255.185)"
+                      fill={
+                        router.pathname == "/leaderboard"
+                          ? "#EA334E"
+                          : darkMode
+                          ? "white"
+                          : "#5d6879"
+                      }
+                    />
+                  </g>
+                </g>
+                <g
+                  id="Gruppe_3300"
+                  data-name="Gruppe 3300"
+                  transform="translate(4.768 13.179)"
+                >
+                  <g id="Gruppe_3299" data-name="Gruppe 3299">
+                    <path
+                      id="Pfad_4754"
+                      data-name="Pfad 4754"
+                      d="M5.381,322.18a.652.652,0,0,0-.613.685V329.4a.516.516,0,0,0,.485.542H9.674V322.18Z"
+                      transform="translate(-4.768 -322.18)"
+                      fill={
+                        router.pathname == "/leaderboard"
+                          ? "#EA334E"
+                          : darkMode
+                          ? "white"
+                          : "#5d6879"
+                      }
+                    />
+                  </g>
+                </g>
+                <g
+                  id="Gruppe_3302"
+                  data-name="Gruppe 3302"
+                  transform="translate(18.261 15.92)"
+                >
+                  <g id="Gruppe_3301" data-name="Gruppe 3301">
+                    <path
+                      id="Pfad_4755"
+                      data-name="Pfad 4755"
+                      d="M377.535,389.175h-4.293V394.2h4.422a.516.516,0,0,0,.485-.542v-3.8A.652.652,0,0,0,377.535,389.175Z"
+                      transform="translate(-373.242 -389.175)"
+                      fill={
+                        router.pathname == "/leaderboard"
+                          ? "#EA334E"
+                          : darkMode
+                          ? "white"
+                          : "#5d6879"
+                      }
+                    />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            <span className={`${
+                router.pathname === "/leaderboard"
+                  ? "text-[#EA334E]"
+                  : (darkMode ? "text-white" : "text-[#5d6879]")
+              }`}>Leaderboard</span>
+          </span>
+
           <span
             onClick={() => {
               router.push("/earn");
@@ -425,29 +534,38 @@ const SideBar = () => {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="22.317"
-              height="19.842"
-              viewBox="0 0 22.317 19.842"
+              width="24.818"
+              height="24.842"
+              viewBox="0 0 19.818 22.944"
             >
-              <path
-                id="sushi-roll"
-                d="M21.078,14.516V10.534c0-1.882-2.483-3.3-5.78-3.3s-5.78,1.422-5.78,3.3v3.981C6.427,14.624,4.14,16,4.14,17.808v5.96c0,1.882,2.483,3.3,5.78,3.3,2.511,0,4.554-.825,5.379-2.055.825,1.23,2.868,2.055,5.379,2.055,3.3,0,5.78-1.422,5.78-3.3v-5.96c0-1.806-2.287-3.184-5.379-3.292ZM13.757,24.2a.4.4,0,0,1-.773,0v-.445a.4.4,0,0,1,.773,0Zm0-1.838a.4.4,0,0,1-.773,0V21.092a.4.4,0,0,1,.773,0ZM9.92,20.311c-2.752,0-4.979-1.121-4.979-2.5s2.227-2.5,4.979-2.5,4.979,1.121,4.979,2.5S12.671,20.311,9.92,20.311Zm5.379-7.27c-2.752,0-4.979-1.121-4.979-2.507s2.227-2.5,4.979-2.5,4.979,1.109,4.979,2.5S18.05,13.042,15.3,13.042Zm3.837.777v.8c-.268.036-.525.088-.773.144v-.945a.4.4,0,0,1,.773,0ZM24.511,24.2a.4.4,0,0,1-.773,0v-.445a.4.4,0,0,1,.773,0Zm0-1.838a.4.4,0,0,1-.773,0V21.092a.4.4,0,0,1,.773,0Zm-3.837-2.047c-2.752,0-4.979-1.121-4.979-2.5s2.227-2.5,4.979-2.5,4.979,1.121,4.979,2.5-2.223,2.5-4.975,2.5Zm0-4.129c-1.782,0-3.228.725-3.228,1.622s1.446,1.6,3.228,1.6,3.228-.725,3.228-1.6-1.434-1.622-3.216-1.622ZM18.247,17.8c0-.112.264-.344.749-.533a6.224,6.224,0,0,1,.973,1.306c-1.1-.144-1.71-.6-1.71-.773Zm2.4.381a7.265,7.265,0,0,0-.673-.993c-.036-.048-.084-.1-.124-.144a5.423,5.423,0,0,1,.8-.064,5.207,5.207,0,0,1,.8.06c-.04.052-.084.1-.124.148a6.862,6.862,0,0,0-.653.993Zm.7.4a6.048,6.048,0,0,1,.977-1.314c.493.192.761.425.761.537s-.577.629-1.71.773ZM9.9,16.182c-1.782,0-3.228.725-3.228,1.622s1.446,1.6,3.228,1.6,3.224-.725,3.224-1.6-1.43-1.622-3.2-1.622ZM7.472,17.8c0-.112.264-.344.749-.533a6.224,6.224,0,0,1,.973,1.306c-1.085-.144-1.694-.6-1.694-.773Zm2.4.381a7.266,7.266,0,0,0-.673-.993c-.036-.048-.084-.1-.124-.144a5.423,5.423,0,0,1,.8-.064,5.207,5.207,0,0,1,.8.06c-.04.052-.084.1-.124.148a6.861,6.861,0,0,0-.637.993Zm.7.4a6.048,6.048,0,0,1,.977-1.314c.493.192.761.425.761.537s-.573.629-1.694.773ZM15.3,8.912c-1.782,0-3.228.725-3.228,1.622s1.446,1.622,3.228,1.622,3.228-.725,3.228-1.622S17.089,8.912,15.3,8.912Zm-2.4,1.622c0-.112.264-.344.749-.533a6.224,6.224,0,0,1,.973,1.306c-1.129-.144-1.722-.6-1.722-.773Zm2.4.381a7.265,7.265,0,0,0-.673-.973c-.036-.048-.084-.1-.124-.144a5.423,5.423,0,0,1,.8-.064,5.207,5.207,0,0,1,.8.06c-.04.052-.084.1-.124.148A6.861,6.861,0,0,0,15.3,10.915Zm.7.4A6.048,6.048,0,0,1,16.973,10c.493.192.761.425.761.537A2.466,2.466,0,0,1,16,11.311Z"
-                transform="translate(-4.14 -7.23)"
-                fill={router.pathname === "/earn" ? "#04dbc4" : "#5d6879"}
-              />
+              <g id="layer1" transform="translate(-1.059 -280.596)">
+                <path
+                  id="path4503"
+                  d="M10.968,280.6a13,13,0,0,0-6.938,1.846,5.7,5.7,0,0,0-2.97,4.655v9.943a5.7,5.7,0,0,0,2.97,4.655,13,13,0,0,0,6.938,1.846,13,13,0,0,0,6.936-1.846,5.7,5.7,0,0,0,2.973-4.655V287.1a5.7,5.7,0,0,0-2.973-4.655A13,13,0,0,0,10.968,280.6Zm0,.765a12.384,12.384,0,0,1,6.575,1.739,4.356,4.356,0,0,1,0,7.995,12.384,12.384,0,0,1-6.575,1.739,12.394,12.394,0,0,1-6.578-1.739,4.358,4.358,0,0,1,0-7.995A12.394,12.394,0,0,1,10.968,281.361Zm0,1.911A9.977,9.977,0,0,0,6.3,284.32,3.353,3.353,0,0,0,4.244,287.1a3.161,3.161,0,0,0,1.729,2.578c3.55-1.015,5.919-3.268,6.4-6.319a12.045,12.045,0,0,0-1.408-.083Zm2.1.188A8.741,8.741,0,0,1,11.488,287a9.387,9.387,0,0,0,5.833,1.365,2.434,2.434,0,0,0,.371-1.27,3.357,3.357,0,0,0-2.064-2.778,8.7,8.7,0,0,0-2.558-.859Zm-2.044,4.13a9.686,9.686,0,0,1-4.08,2.582,10.521,10.521,0,0,0,4.021.746,9.968,9.968,0,0,0,4.661-1.047,5.311,5.311,0,0,0,1.023-.715,10.1,10.1,0,0,1-5.625-1.566Z"
+                  transform="translate(0 0)"
+                  fill={
+                    router.pathname == "/earn"
+                      ? "#EA334E"
+                      : darkMode
+                      ? "white"
+                      : "#5d6879"
+                  }
+                />
+              </g>
             </svg>
             <span
               className={`${
                 router.pathname === "/earn"
-                  ? "text-pastelGreen"
-                  : "text-[#5d6879]"
+                  ? "text-[#EA334E]"
+                  : (darkMode ? "text-white" : "text-[#5d6879]")
               }`}
             >
               Earn
             </span>
           </span>
+
           <span
-            onClick={() => {}}
+            onClick={() => {fullPageReload('/privacy-policy')}}
             className="cursor-pointer w-fit flex flex-row items-center space-x-2"
           >
             <svg
@@ -462,20 +580,24 @@ const SideBar = () => {
                   data-name="Pfad 4708"
                   d="M33.77,24.3A13.2,13.2,0,0,1,31.1,23.3q-.395-.2-.726-.379c-.437-.242-.784-.458-1.011-.605a.158.158,0,0,0-.042-.021,1.053,1.053,0,0,0-1.095.021,15.634,15.634,0,0,1-4.411,1.99A1.061,1.061,0,0,0,23,25.329v.9a7.889,7.889,0,0,0,3.516,6.57l.49.326,1.2.8a1.019,1.019,0,0,0,.311.137h.005a.775.775,0,0,0,.268.042,1.073,1.073,0,0,0,.584-.179l1.69-1.127a7.889,7.889,0,0,0,3.516-6.57v-.9A1.061,1.061,0,0,0,33.77,24.3Zm-3.027,2.879-2.106,2.106a.534.534,0,0,1-.748,0l-1.053-1.053a.529.529,0,1,1,.748-.748l.679.684L30,26.434a.529.529,0,0,1,.748.748Z"
                   transform="translate(-9.472 -9.068)"
-                  fill="#5d6879"
+                  fill={darkMode ? "white" : "#5d6879"}
                 />
                 <path
                   id="Pfad_4709"
                   data-name="Pfad 4709"
                   d="M20.151,8.39l-4.5-4.6a2.629,2.629,0,0,0-.542-.421V7.211A1.584,1.584,0,0,0,16.687,8.79h3.785A2.89,2.89,0,0,0,20.151,8.39Zm.716,1.453h-4.18a2.632,2.632,0,0,1-2.632-2.632V3.021A1.722,1.722,0,0,0,13.77,3H5.632A2.632,2.632,0,0,0,3,5.632V22.477a2.632,2.632,0,0,0,2.632,2.632H17.218L16.46,24.6a8.932,8.932,0,0,1-3.985-7.443v-.9a2.106,2.106,0,0,1,.837-1.679H6.685a.526.526,0,1,1,0-1.053h9.339a16.646,16.646,0,0,0,2.153-1.169,2.127,2.127,0,0,1,2.085-.111l.037.016.158.095c.111.074.258.163.442.274v-2.4a2.382,2.382,0,0,0-.032-.39ZM12.475,20.372a.526.526,0,0,1-.526.526H6.685a.526.526,0,0,1,0-1.053h5.264A.526.526,0,0,1,12.475,20.372ZM6.685,16.687H10.9a.526.526,0,1,1,0,1.053H6.685a.526.526,0,0,1,0-1.053Zm0-9.475H10.9a.526.526,0,0,1,0,1.053H6.685a.526.526,0,0,1,0-1.053Zm7.37,4.211H6.685a.526.526,0,1,1,0-1.053h7.37a.526.526,0,0,1,0,1.053Z"
-                  fill="#5d6879"
+                  fill={darkMode ? "white" : "#5d6879"}
                 />
               </g>
             </svg>
-            <span>Privacy Policy</span>
+            <span className={`${
+                router.pathname === "/privacy-policy"
+                  ? "text-[#EA334E]"
+                  : (darkMode ? "text-white" : "text-[#5d6879]")
+              }`}>Privacy Policy</span>
           </span>
           <span
-            onClick={() => {}}
+            onClick={() => {fullPageReload('/terms-of-service')}}
             className="cursor-pointer w-fit flex flex-row items-center space-x-2"
           >
             <svg
@@ -490,23 +612,22 @@ const SideBar = () => {
                   data-name="Pfad 4710"
                   d="M21.424,2H6.685A3.666,3.666,0,0,0,3,5.647V22.666a3.666,3.666,0,0,0,3.685,3.647h14.74a3.666,3.666,0,0,0,3.685-3.647V5.647A3.666,3.666,0,0,0,21.424,2ZM9.141,6.255h4.913a1.216,1.216,0,1,1,0,2.431H9.141a1.216,1.216,0,1,1,0-2.431Zm9.826,15.8H9.141a1.216,1.216,0,1,1,0-2.431h9.826a1.216,1.216,0,1,1,0,2.431Zm0-4.461H9.141a1.216,1.216,0,1,1,0-2.431h9.826a1.216,1.216,0,1,1,0,2.431Zm0-4.449H9.141a1.216,1.216,0,1,1,0-2.431h9.826a1.216,1.216,0,1,1,0,2.431Z"
                   transform="translate(0)"
-                  fill="#5d6879"
+                  fill={darkMode ? "white" : "#5d6879"}
                 />
               </g>
             </svg>
-            <span>Terms of service</span>
+            <span className={`${
+                router.pathname === "/terms-of-service"
+                  ? "text-[#EA334E]"
+                  : (darkMode ? "text-white" : "text-[#5d6879]")
+              }`}>Terms of service</span>
           </span>
         </span>
         {youMayKnow !== null &&
           youMayKnow !== undefined &&
           youMayKnow.length > 0 && (
             <span className="pt-2 px-2">
-              <p
-                id="anime-book-font"
-                className="border-t-[1.5px] pt-3 text-xl text-gray-600 text-start font-semibold"
-              >
-                YOU MAY KNOW
-              </p>
+              
 
               <span className="">
                 {youMayKnow
@@ -515,11 +636,11 @@ const SideBar = () => {
                     return (
                       <span
                         key={thisUser.id}
-                        className="py-1.5 border-b border-gray-200 flex flex-row justify-between items-center"
+                        className={`py-1.5 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex flex-row justify-between items-center`}
                       >
                         <span
                           onClick={() => {
-                            fullPageReload(`/profile/${thisUser.username}`);
+                            fullPageReload(`/profile/${thisUser.username}`, "window");
                           }}
                           className="cursor-pointer flex justify-start items-center space-x-2"
                         >
@@ -538,6 +659,7 @@ const SideBar = () => {
                         </span>
 
                         <PlusIcon
+                        ymk={true}
                           sideBar={true}
                           alreadyFollowed={alreadyFollowed}
                           setAlreadyFollowed={setAlreadyFollowed}
@@ -554,10 +676,10 @@ const SideBar = () => {
             </span>
           )}
 
-        {router.pathname !== "/inbox" && <span className="bg-white p-2 pt-4 text-sm flex flex-col items-start space-y-3">
+        {router.pathname !== "/inbox" && <span className="p-2 pt-4 text-sm flex flex-col items-start space-y-3">
           <p
             id="anime-book-font"
-            className="text-xl text-gray-600 text-start font-semibold"
+            className={`text-sm font-bold ${darkMode ? 'text-gray-200' : 'text-gray-600'} text-start font-semibol`}
           >
             CONTENT PREFERENCES
           </p>
@@ -576,7 +698,7 @@ const SideBar = () => {
 
                 toggleContentFilter(newState);
               }}
-              className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
+              className="w-4 h-4 text-[#EA334E] bg-transparent border-[#EA334E] rounded focus:text-[#EA334E] focus:ring-0"
             />
             <span>Images</span>
           </span>
@@ -594,7 +716,7 @@ const SideBar = () => {
 
                 toggleContentFilter(newState);
               }}
-              className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
+              className="w-4 h-4 text-[#EA334E] bg-transparent border-[#EA334E] rounded focus:text-[#EA334E] focus:ring-0"
             />
             <span>Videos</span>
           </span>
@@ -613,7 +735,7 @@ const SideBar = () => {
 
                   toggleContentFilter(newState);
                 }}
-                className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
+                className="w-4 h-4 text-[#EA334E] bg-transparent border-[#EA334E] rounded focus:text-[#EA334E] focus:ring-0"
               />
               <span>Stories</span>
             </span>
@@ -633,13 +755,17 @@ const SideBar = () => {
 
                   toggleContentFilter(newState);
                 }}
-                className="w-4 h-4 text-pastelGreen bg-white border-pastelGreen rounded focus:text-pastelGreen focus:ring-0"
+                className="w-4 h-4 text-[#EA334E] bg-transparent border-[#EA334E] rounded focus:text-[#EA334E] focus:ring-0"
               />
               <span>People</span>
             </span>
           )}
         </span>}
+        <span className="absolute bottom-2 right-2">
+        <DarkModeToggle/>
+        </span>
       </div>
+      
     </div>
   );
 };

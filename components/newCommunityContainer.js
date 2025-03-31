@@ -6,7 +6,7 @@ import { UserContext } from "@/lib/userContext";
 import CloudSvg from "./cloudSvg";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import Spinner from "./spinner";
-import animeBookLogo from "@/assets/animeBookLogo.png"
+import animeBookLogo from "@/assets/animeBookLogo.png";
 
 export const BinSvg = ({ pixels }) => {
   return (
@@ -25,19 +25,19 @@ export const BinSvg = ({ pixels }) => {
     </svg>
   );
 };
-const NewCommunityContainer = () => {
+const NewCommunityContainer = ({ isAdmin }) => {
   const { fullPageReload } = PageLoadOptions();
-  const { userData, userNumId } =
-    useContext(UserContext);
+  const { userData, userNumId, darkMode } = useContext(UserContext);
   const router = useRouter();
   const [bio, setBio] = useState("");
-  const [animeName, setAnimeName] = useState("")
+  const [animeName, setAnimeName] = useState("");
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState(null);
-  const [changesLoading, setChangesLoading] = useState(false)
+  const [changesLoading, setChangesLoading] = useState(false);
+  const [requestSent, setRequestSent] = useState(false)
 
   const mediaChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -79,51 +79,64 @@ const NewCommunityContainer = () => {
   };
 
   const addToCommunity = async () => {
-    setChangesLoading(true)
+    setChangesLoading(true);
     setErrorMsg("");
     let coverUrl = null;
     let avatarUrl = null;
 
     if (coverFile !== null) {
+      const folder = isAdmin ? "community/cover/" : "community/cover/requests/";
       for (const file of coverFile) {
-        coverUrl = await uploadToBucket(file, "community/cover/");
+        coverUrl = await uploadToBucket(file, folder);
       }
     }
 
     if (avatarFile !== null) {
+      const folder = isAdmin
+        ? "community/avatar/"
+        : "community/avatar/requests/";
       for (const file of avatarFile) {
-        avatarUrl = await uploadToBucket(file, "community/avatar/");
+        avatarUrl = await uploadToBucket(file, folder);
       }
     }
 
     if (
       coverUrl === null ||
       avatarUrl === null ||
-      bio === "" || animeName === ""
-      
+      bio === "" ||
+      animeName === ""
     ) {
       setErrorMsg("All field inputs needed");
-      setChangesLoading(false)
+      setChangesLoading(false);
       return;
     }
 
     // Update the user profile
     const { error } = await supabase
-      .from("communities")
+      .from(isAdmin ? "communities" : "community_requests")
       .insert({
         cover: coverUrl,
         avatar: avatarUrl,
         bio: bio,
         owner: userNumId,
-        name: animeName.trim().toLowerCase().replace(/\s+(?!\s*$)/g, '+')
-      })
+        name: animeName
+          .trim()
+          .toLowerCase()
+          .replace(/\s+(?!\s*$)/g, "+"),
+      });
 
     if (error) {
+      setChangesLoading(false)
       setErrorMsg("Something went wrong");
-      console.log(error)
+      console.log(error);
       return;
     }
-    fullPageReload(`/communities`);
+    if (isAdmin) {
+      fullPageReload(`/communities`);
+    } else {
+      setChangesLoading(false)
+      setRequestSent(true)
+    }
   };
 
   useEffect(() => {
@@ -137,7 +150,7 @@ const NewCommunityContainer = () => {
   return (
     <>
       {userData !== null && userData !== undefined && (
-        <div className="text-gray-600 flex flex-col space-y-4 rounded-xl shadow-lg w-full bg-white justify-center items-center">
+        <div className={`${darkMode ? 'bg-[#1e1f24] text-white' : 'bg-white text-gray-600'} flex flex-col space-y-4 rounded-xl shadow-lg w-full justify-center items-center`}>
           {selectedMedia ? (
             <label
               htmlFor="input-file"
@@ -157,7 +170,7 @@ const NewCommunityContainer = () => {
                 id="input-file"
               />
             </label>
-          ) :
+          ) : (
             <label
               onClick={mediaChange}
               htmlFor="input-file"
@@ -183,7 +196,7 @@ const NewCommunityContainer = () => {
                 id="input-file"
               />
             </label>
-          }
+          )}
           <span className="flex flex-col px-4 w-full space-y-2">
             <span className="text-start font-medium w-full flex-col items-start">
               <span>Anime image</span>
@@ -247,7 +260,9 @@ const NewCommunityContainer = () => {
             </span>
 
             <span className="space-y-1">
-            <span className="text-start font-medium w-full">Community name</span>
+              <span className="text-start font-medium w-full">
+                Community name
+              </span>
               <input
                 value={animeName}
                 onChange={(e) => {
@@ -255,7 +270,7 @@ const NewCommunityContainer = () => {
                 }}
                 maxLength={50}
                 placeholder={"One piece community"}
-                className="px-4 h-15 rounded-xl w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${darkMode ? 'bg-gray-700' : 'bg-gray-200'} px-4 rounded-xl w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
               />
 
               <span className="text-start font-medium w-full">Description</span>
@@ -266,7 +281,7 @@ const NewCommunityContainer = () => {
                 }}
                 maxLength={250}
                 placeholder={"One piece community for all..."}
-                className="px-4 h-15 rounded-xl resize-none w-full px-2 bg-gray-200 border-none focus:outline-none focus:border-gray-500 focus:ring-0"
+                className={`${darkMode ? 'bg-gray-700' : 'bg-gray-200'} resize-none px-4 h-15 rounded-xl w-full px-2 border-none focus:outline-none focus:border-gray-500 focus:ring-0`}
               />
             </span>
 
@@ -275,14 +290,26 @@ const NewCommunityContainer = () => {
                 <span className="mx-auto">
                   <Spinner spinnerSize={"medium"} />
                 </span>
+              ) : requestSent ? (
+                <span className="flex flex-col space-y-3">
+                  <span
+                    onClick={() => {}}
+                    className="cursor-not-allowed shadow-xl border border-gray-300 font-semibold mx-auto w-fit py-1 px-3 rounded-lg bg-transparent text-textGreen"
+                  >
+                    Request Submitted
+                  </span>
+                  <span className="text-center italic text-sm">
+                    Your community suggestion is saved and will be considered
+                  </span>
+                </span>
               ) : (
                 <span
                   onClick={() => {
                     addToCommunity();
                   }}
-                  className="w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold border rounded-lg"
+                  className="w-fit mx-auto hover:shadow cursor-pointer px-7 py-2 bg-pastelGreen text-center text-white font-bold rounded-lg"
                 >
-                  Add community
+                  {isAdmin ? "Add community" : "Request community"}
                 </span>
               )}
               {errorMsg !== "" && (
