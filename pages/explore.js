@@ -244,6 +244,7 @@ export default function Explore() {
         setExplorePosts(originalExplorePosts);
       } else {
         setChosenTag(htag[0]);
+        console.log(htag[0])
 
         const selectedTag = originalExplorePosts.filter(
           (post) =>
@@ -252,6 +253,8 @@ export default function Explore() {
             post.post.media !== undefined
         );
         setExplorePosts(selectedTag);
+        setVisibleEposts(selectedTag)
+        setVisibleExplorePosts(selectedTag)
       }
     }
   };
@@ -631,17 +634,6 @@ export default function Explore() {
     }
   };
 
-
-  useEffect(() => {
-    // Scroll to the selected post when it changes
-    if (videoRefs.current[selectedIndex]) {
-      videoRefs.current[selectedIndex].scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }
-  }, [selectedIndex]);
-
   const loadMorePosts = useCallback(() => {
     if (explorePosts) {
       setVisibleExplorePosts(explorePosts.slice(0, currentChunk * chunkSize));
@@ -655,6 +647,13 @@ export default function Explore() {
   }, [explorePosts, originalExplorePosts, currentChunk, chunkSize]);
 
   useEffect(() => {
+    if (videoRefs.current[selectedIndex]) {
+      videoRefs.current[selectedIndex].scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -676,7 +675,7 @@ export default function Explore() {
 
     return () =>
       videoRefs.current.forEach((video) => video && observer.unobserve(video));
-  }, [visibleExplorePosts]);
+  }, [selectedIndex, visibleExplorePosts]);
 
   useEffect(() => {
     videoRefs.current.forEach((video, index) => {
