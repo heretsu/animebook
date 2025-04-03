@@ -1366,6 +1366,7 @@ export default function PostCard({
                     height={600}
                     width={600}
                     onPlay={() => handlePlay(id)}
+                    controls
 
                     // onProgress={(e) => {
                     //   loadVideoSnippet(e);
@@ -1378,6 +1379,7 @@ export default function PostCard({
                   ref={videoRef}
                   height={600}
                   width={600}
+                  controls
                   
                   // onProgress={(e) => {
                   //   loadVideoSnippet(e);
