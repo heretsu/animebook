@@ -1465,7 +1465,6 @@ export default function User({ user }) {
                                         ref={(el) =>
                                           (videoRef.current[pst.id] = el)
                                         }
-                                        controls
                                       />
                                     ) : (
                                       <Image
@@ -1560,7 +1559,6 @@ export default function User({ user }) {
                                     className="w-[80px] h-[80px] object-cover rounded"
                                     src={pst.media}
                                     crossOrigin="anonymous"
-                                    controls
                                   />
                                 ) : (
                                   <Image
