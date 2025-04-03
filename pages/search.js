@@ -269,7 +269,7 @@ const Search = () => {
                         <span
                           key={os.id}
                           onClick={() => {
-                            fullPageReload(`/profile/${os.username}`);
+                            fullPageReload(`/profile/${os.username}`, "window");
                           }}
                           className="p-2 flex flex-row space-x-1 items-center cursor-pointer hover:bg-[#EB4463] hover:text-white font-medium"
                         >

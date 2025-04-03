@@ -143,7 +143,6 @@ export default function ExploreActions({id, myProfileId, ownerDetails}){
           .order("created_at", { ascending: false })
           .then((res) => {
             if (res.data !== undefined && res.data !== null) {
-                console.log(res.data)
                setComments(res.data);
             }
           });

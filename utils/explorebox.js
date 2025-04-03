@@ -327,7 +327,7 @@ export default function ExploreBox({
                   onDoubleClick={() => {
                     likePost(currentPost.id, currentPost.users);
                   }}
-                  className="w-[60%]"
+                  className="w-[60%] m-auto"
                 >
                   {currentPost.media.endsWith("mp4") ||
                   currentPost.media.endsWith("MP4") ||
@@ -436,6 +436,7 @@ export default function ExploreBox({
   style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
 >
   <CommentConfig text={currentPost.content} tags={true} />
+  <CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} />
 </span>
 
                       )}

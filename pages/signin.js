@@ -18,180 +18,224 @@ import img8 from "@/assets/icons/img8_registration.png";
 import img9 from "@/assets/icons/img9_registration.png";
 import img10 from "@/assets/icons/img10_registration.png";
 
-
-export function AnimeGrid({ img1, img2, img3, img4, img5, img6, img7, img8, img9, img10 }) {
+export function AnimeGrid({
+  img1,
+  img2,
+  img3,
+  img4,
+  img5,
+  img6,
+  img7,
+  img8,
+  img9,
+  img10,
+}) {
   return (
-    <div className="main-container w-full justify-end px-2 h-screen space-x-3 flex flex-row items-center">
-      <span className="w-[40%] relative h-full flex flex-col items-start justify-end space-y-1 overflow-hidden">
-<div class="marquee-wrapper">
-  <div class="container">
-    <div class="marquee-block">
-      <div class="marquee-inner to-left">
-        <span>
+    <div className="main-container w-full justify-end justify-center px-2 h-screen space-x-3 flex flex-row items-center">
+      <span className="w-[40%] relative h-full flex flex-col items-center justify-end space-y-1 overflow-hidden">
+        <div className="w-full">
+          <div className="container">
+            <div className="marquee-block">
+              <div className="w-full marquee-inner to-left">
+                <span>
+                  <div className="marquee-item blackbox">
+                    <p className="text-white">
+                      <b className="big">+500</b> Registred Users
+                    </p>
+                  </div>
 
-          <div class="marquee-item blackbox">
-            <p class="text-white"><b class="big">+500</b> Registred Users</p>
+                  <div className="marquee-item">
+                    <p className="text-white">
+                      <Image
+                        src={img1}
+                        alt="Anime Image 1"
+                        height={500}
+                        width={500}
+                        className="marqimg contain"
+                      />
+                    </p>
+                  </div>
+
+                  <div className="marquee-item blackbox">
+                    <p className="text-white">
+                      <b className="big">Earn</b> Money by interacting
+                    </p>
+                  </div>
+
+                  <div className="marquee-item">
+                    <p className="text-white">
+                      <Image
+                        src={img2}
+                        alt="Anime Image 1"
+                        height={500}
+                        width={500}
+                        className="marqimg"
+                      />
+                    </p>
+                  </div>
+
+                  <div className="marquee-item blackbox">
+                    <p className="text-white">
+                      <b className="big">Chibis</b> Collect them all
+                    </p>
+                  </div>
+                </span>
+                <span>
+                  <div className="marquee-item">
+                    <p className="text-white">
+                      <Image
+                        src={img3}
+                        alt="Anime Image 1"
+                        height={500}
+                        width={500}
+                        className="marqimg"
+                      />
+                    </p>
+                  </div>
+
+                  <div className="marquee-item blackbox">
+                    <p className="text-white">
+                      <b className="big">Explore</b> Anime content
+                    </p>
+                  </div>
+
+                  <div className="marquee-item">
+                    <p className="text-white">
+                      <Image
+                        src={img4}
+                        alt="Anime Image 1"
+                        height={500}
+                        width={500}
+                        className="marqimg"
+                      />
+                    </p>
+                  </div>
+
+                  <div className="marquee-item blackbox">
+                    <p className="text-white">
+                      <b className="big">12</b> Weekly MVP Awards
+                    </p>
+                  </div>
+
+                  <div className="marquee-item">
+                    <p className="text-white">
+                      <Image
+                        src={img5}
+                        alt="Anime Image 1"
+                        height={500}
+                        width={500}
+                        className="marqimg"
+                      />
+                    </p>
+                  </div>
+                </span>
+              </div>
+            </div>
           </div>
-
-          <div class="marquee-item">
-            <p class="text-white"><Image
-            src={img1}
-            alt="Anime Image 1"
-            height={500}
-            width={500}
-            className="marqimg"
-          /></p>
-          </div>
-
-          <div class="marquee-item blackbox">
-            <p class="text-white"><b class="big">Earn</b> Money by interacting</p>
-          </div>
-
-          <div class="marquee-item">
-            <p class="text-white"><Image
-            src={img2}
-            alt="Anime Image 1"
-            height={500}
-            width={500}
-            className="marqimg"
-          /></p>
-          </div>
-
-          <div class="marquee-item blackbox">
-            <p class="text-white"><b class="big">Chibis</b> Collect them all</p>
-          </div>
-        </span>
-        <span>
-
-          <div class="marquee-item">
-            <p class="text-white"><Image
-            src={img3}
-            alt="Anime Image 1"
-            height={500}
-            width={500}
-            className="marqimg"
-          /></p>
-          </div>
-
-          <div class="marquee-item blackbox">
-            <p class="text-white"><b class="big">Explore</b> Anime content</p>
-          </div>
-
-          <div class="marquee-item">
-            <p class="text-white"><Image
-            src={img4}
-            alt="Anime Image 1"
-            height={500}
-            width={500}
-            className="marqimg"
-          /></p>
-          </div>
-
-          <div class="marquee-item blackbox">
-            <p class="text-white"><b class="big">12</b> Weekly MVP Awards</p>
-          </div>
-
-          <div class="marquee-item">
-            <p class="text-white"><Image
-            src={img5}
-            alt="Anime Image 1"
-            height={500}
-            width={500}
-            className="marqimg"
-          /></p>
-          </div>
-
-        </span>
-      </div>
-    </div>
-  </div>
-</div>
-
+        </div>
       </span>
 
-      <span className="w-[40%] relative h-full flex flex-col items-start justify-end space-y-1 overflow-hidden">
-       <div class="marquee-wrapper">
-  <div class="container">
-    <div class="marquee-block">
-      <div class="marquee-inner to-right">
-        <span>
-          <div class="marquee-item blackbox">
-            <p class="text-white"><b class="big">+Hundreds</b> Of communities</p>
-          </div>
+      <span className="w-[40%] relative h-full flex flex-col items-center justify-end space-y-1 overflow-hidden">
+        <div className="w-full">
+          <div className="container">
+            <div className="marquee-block">
+              <div className="marquee-inner to-right">
+                <span>
+                  <div className="marquee-item blackbox">
+                    <p className="text-white">
+                      <b className="big">+Hundreds</b> Of communities
+                    </p>
+                  </div>
 
-          <div class="marquee-item">
-            <p class="text-white"><Image
-            src={img6}
-            alt="Anime Image 1"
-            height={500}
-            width={500}
-            className="marqimg"
-          /></p>
-          </div>
+                  <div className="marquee-item">
+                    <p className="text-white">
+                      <Image
+                        src={img6}
+                        alt="Anime Image 1"
+                        height={500}
+                        width={500}
+                        className="marqimg"
+                      />
+                    </p>
+                  </div>
 
-          <div class="marquee-item blackbox">
-            <p class="text-white"><b class="big">Web3</b> Fully Integrated</p>
-          </div>
+                  <div className="marquee-item blackbox">
+                    <p className="text-white">
+                      <b className="big">Web3</b> Fully Integrated
+                    </p>
+                  </div>
 
-          <div class="marquee-item">
-            <p class="text-white"><Image
-            src={img7}
-            alt="Anime Image 1"
-            height={500}
-            width={500}
-            className="marqimg"
-          /></p>
-          </div>
+                  <div className="marquee-item">
+                    <p className="text-white">
+                      <Image
+                        src={img7}
+                        alt="Anime Image 1"
+                        height={500}
+                        width={500}
+                        className="marqimg"
+                      />
+                    </p>
+                  </div>
 
-          <div class="marquee-item blackbox">
-            <p class="text-white"><b class="big">Message</b> Users and connect</p>
-          </div>
-        </span>
-        <span>
+                  <div className="marquee-item blackbox">
+                    <p className="text-white">
+                      <b className="big">Message</b> Users and connect
+                    </p>
+                  </div>
+                </span>
+                <span>
+                  <div className="marquee-item">
+                    <p className="text-white">
+                      <Image
+                        src={img8}
+                        alt="Anime Image 1"
+                        height={500}
+                        width={500}
+                        className="marqimg"
+                      />
+                    </p>
+                  </div>
 
-          <div class="marquee-item">
-            <p class="text-white"><Image
-            src={img8}
-            alt="Anime Image 1"
-            height={500}
-            width={500}
-            className="marqimg"
-          /></p>
-          </div>
+                  <div className="marquee-item blackbox">
+                    <p className="text-white">
+                      <b className="big">Mangas</b> from new Mangakas
+                    </p>
+                  </div>
 
-          <div class="marquee-item blackbox">
-            <p class="text-white"><b class="big">Mangas</b> from new Mangakas</p>
-          </div>
+                  <div className="marquee-item">
+                    <p className="text-white">
+                      <Image
+                        src={img9}
+                        alt="Anime Image 1"
+                        height={500}
+                        width={500}
+                        className="marqimg"
+                      />
+                    </p>
+                  </div>
 
-          <div class="marquee-item">
-            <p class="text-white"><Image
-            src={img9}
-            alt="Anime Image 1"
-            height={500}
-            width={500}
-            className="marqimg"
-          /></p>
-          </div>
+                  <div className="marquee-item blackbox">
+                    <p className="text-white">
+                      <b className="big">2023</b> Established
+                    </p>
+                  </div>
 
-          <div class="marquee-item blackbox">
-            <p class="text-white"><b class="big">2023</b> Established</p>
+                  <div className="marquee-item">
+                    <p className="text-white">
+                      <Image
+                        src={img10}
+                        alt="Anime Image 1"
+                        height={500}
+                        width={500}
+                        className="marqimg"
+                      />
+                    </p>
+                  </div>
+                </span>
+              </div>
+            </div>
           </div>
-
-          <div class="marquee-item">
-            <p class="text-white"><Image
-            src={img10}
-            alt="Anime Image 1"
-            height={500}
-            width={500}
-            className="marqimg"
-          /></p>
-          </div>
-        </span>
-        
-      </div>
-    </div>
-  </div>
-</div>
+        </div>
       </span>
     </div>
   );
@@ -288,12 +332,23 @@ const Signin = () => {
   }, [router.query]);
 
   return (
-    <div className="h-screen flex flex-row md:items-center">
-      <div className="flex md:hidden w-full h-screen">
-        <AnimeGrid img1={img1} img2={img2} img3={img3} img4={img4} />
+    <div className="bg-[#F9F9F9] h-screen flex flex-row md:items-center">
+      <div className="flex md:hidden w-full md:w-1/2">
+        <AnimeGrid
+          img1={img1}
+          img2={img2}
+          img3={img3}
+          img4={img4}
+          img5={img5}
+          img6={img6}
+          img7={img7}
+          img8={img8}
+          img9={img9}
+          img10={img10}
+        />
       </div>
 
-      <div className="whitebox absolute flex flex-col justify-between bottom-0 md:relative bg-white mx-auto p-2 rounded-3xl w-full md:w-[40%] mgl">
+      <div className="whitebox absolute flex flex-col justify-between bottom-0 md:relative bg-white mx-auto p-2 rounded-3xl w-full md:w-[50%] mgl">
         {verificationLink ? (
           <div className="flex flex-col">
             <div className="pt-2 pb-0.5 mx-auto relative h-18 w-18 flex rounded-full">
@@ -315,6 +370,16 @@ const Signin = () => {
                 {"A confirmation link was sent to your email:"}
               </span>
               <span className="font-bold">{manualEmail}</span>
+            </span>
+            <span
+              onClick={() => {
+                setSignInMethod(true);
+                setSignUpMethod(false);
+                setOpenVerificationLink(false);
+              }}
+              className="bg-[#EB4463] my-2.5 text-white cursor-pointer w-full py-2 flex items-center justify-center rounded-full"
+            >
+              Login
             </span>
           </div>
         ) : (
@@ -363,8 +428,18 @@ const Signin = () => {
                         setNote("");
                         setManualEmail(e.target.value);
                       }}
-                      placeholder={signInMethod ? "Input E-mail for sign in" :  signUpMethod ?  "Input E-mail for registration" : "E-mail"}
-                      className={`${(signInMethod || signUpMethod) ? "placeholder:text-red-400" : ""} text-start border-none bg-transparent text-center text-black w-full focus:border-none focus:ring-0 `}
+                      placeholder={
+                        signInMethod
+                          ? "Input E-mail for sign in"
+                          : signUpMethod
+                          ? "Input E-mail for registration"
+                          : "E-mail"
+                      }
+                      className={`${
+                        signInMethod || signUpMethod
+                          ? "placeholder:text-red-400"
+                          : ""
+                      } text-start border-none bg-transparent text-center text-black w-full focus:border-none focus:ring-0 `}
                     />
                     <svg
                       onClick={() => {
@@ -782,8 +857,19 @@ const Signin = () => {
           </>
         )}
       </div>
-      <div className="hidden md:flex w-1/2">
-        <AnimeGrid img1={img1} img2={img2} img3={img3} img4={img4} img5={img5} img6={img6} img7={img7} img8={img8} img9={img9} img10={img10} />
+      <div className="hidden md:flex justify-center w-1/2">
+        <AnimeGrid
+          img1={img1}
+          img2={img2}
+          img3={img3}
+          img4={img4}
+          img5={img5}
+          img6={img6}
+          img7={img7}
+          img8={img8}
+          img9={img9}
+          img10={img10}
+        />
       </div>
     </div>
   );

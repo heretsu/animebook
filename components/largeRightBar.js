@@ -256,23 +256,21 @@ filteredPosts.forEach((post) => {
     allTagsCount[tag] = (allTagsCount[tag] || 0) + 1;
   });
 
-  if (post.media !== null) {
+  if (
+  post.media !== null && post.media !== undefined && (post.media.toLowerCase().endsWith('mp4') || post.media.toLowerCase().endsWith('3gp'))
+  
+) {
     uniqueTags.forEach((tag) => {
       tagsWithMediaCount[tag] = (tagsWithMediaCount[tag] || 0) + 1;
     });
   }
 });
    
-    // const trendingTagsWithMedia = Object.entries(tagsWithMediaCount).sort(
-    //   (a, b) => b[1] - a[1]
-    // );
+    const trendingTagsWithMedia = Object.entries(tagsWithMediaCount).sort(
+      (a, b) => b[1] - a[1]
+    );
 
-    //random
-    const trendingTagsWithMedia = Object.entries(tagsWithMediaCount)
-      .filter(([tag, count]) => count >= 20) 
-      .sort(() => 0.5 - Math.random())
-      .sort(() => 0.5 - Math.random());
-
+    
     const trendingAllTags = Object.entries(allTagsCount).sort(
       (a, b) => b[1] - a[1]
     );

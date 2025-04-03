@@ -15,7 +15,6 @@ import Badge from "@/components/badge";
 import LargeRightBar from "@/components/largeRightBar";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
-
 const Leaderboard = () => {
   const { fetchAllPosts } = DbUsers();
   const [loadedData, setLoadedData] = useState(false);
@@ -84,7 +83,7 @@ const Leaderboard = () => {
           bio, 
           ki
         )
-      `);
+      `).order("created_at", {ascending: false})
 
     if (error) {
       console.error("Error fetching reposts:", error);
@@ -95,14 +94,19 @@ const Leaderboard = () => {
       const originalUser = repost.posts?.users;
       const reposter = repost.users;
 
-      if (originalUser && reposter && originalUser.id !== reposter.id) {
-        const originalUsername = originalUser.username;
+      const createdTime = new Date(repost.created_at).getTime();
+      const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
-        repostCount.set(
-          originalUsername,
-          (repostCount.get(originalUsername) || 0) + 1
-        );
-        repostUserObjects.set(originalUsername, originalUser);
+      if (createdTime >= oneWeekAgo) {
+        if (originalUser && reposter && originalUser.id !== reposter.id) {
+          const originalUsername = originalUser.username;
+
+          repostCount.set(
+            originalUsername,
+            (repostCount.get(originalUsername) || 0) + 1
+          );
+          repostUserObjects.set(originalUsername, originalUser);
+        }
       }
     });
 
@@ -130,13 +134,17 @@ const Leaderboard = () => {
     posts.data.forEach((post) => {
       const user = post.users;
 
-      // Ensure `user` exists and has a valid username
       if (user && user.username) {
-        const username = user.username;
+        const createdTime = new Date(post.created_at).getTime();
+        const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
-        // Count the post for this user
-        userPostCount.set(username, (userPostCount.get(username) || 0) + 1);
-        userObjects.set(username, user);
+        if (createdTime >= oneWeekAgo) {
+          const username = user.username;
+
+          // Count the post for this user
+          userPostCount.set(username, (userPostCount.get(username) || 0) + 1);
+          userObjects.set(username, user);
+        }
       }
     });
 
@@ -155,7 +163,8 @@ const Leaderboard = () => {
   const getMostLikes = async () => {
     const { data, error } = await supabase
       .from("likes")
-      .select("postid, posts(userid, content, users(*))");
+      .select("postid, posts(created_at, userid, content, users(*))")
+      .order("id", { ascending: false });
 
     if (error) {
       console.error("Error fetching likes:", error);
@@ -169,13 +178,17 @@ const Leaderboard = () => {
 
     const userLikeCount = new Map();
     const userObjects = new Map();
-
     data.forEach(({ posts }) => {
       if (posts && posts.users) {
-        const user = posts.users;
-        const userId = user.id;
-        userLikeCount.set(userId, (userLikeCount.get(userId) || 0) + 1);
-        userObjects.set(userId, user);
+        const createdTime = new Date(posts.created_at).getTime();
+        const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+        if (createdTime >= oneWeekAgo) {
+          const user = posts.users;
+          const userId = user.id;
+          userLikeCount.set(userId, (userLikeCount.get(userId) || 0) + 1);
+          userObjects.set(userId, user);
+        }
       }
     });
 
@@ -187,7 +200,7 @@ const Leaderboard = () => {
         ...user,
         likeCount: maxLikes,
       }));
-      console.log(mostLikes)
+    console.log(mostLikes);
     if (!mostLikes.length > 0) {
       return null;
     }
@@ -199,7 +212,8 @@ const Leaderboard = () => {
   const getMostViews = async () => {
     const { data, error } = await supabase
       .from("views")
-      .select("postid, posts(userid, users(*))");
+      .select("postid, posts(created_at, userid, users(*))")
+      .order("id", { ascending: false });
 
     if (error) {
       console.error("Error fetching views:", error);
@@ -216,10 +230,14 @@ const Leaderboard = () => {
 
     data.forEach(({ posts }) => {
       if (posts && posts.users) {
-        const user = posts.users;
-        const userId = user.id;
-        userViewCount.set(userId, (userViewCount.get(userId) || 0) + 1);
-        userObjects.set(userId, user);
+        const createdTime = new Date(posts.created_at).getTime();
+        const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        if (createdTime >= oneWeekAgo) {
+          const user = posts.users;
+          const userId = user.id;
+          userViewCount.set(userId, (userViewCount.get(userId) || 0) + 1);
+          userObjects.set(userId, user);
+        }
       }
     });
 
@@ -269,7 +287,7 @@ const Leaderboard = () => {
       .from("relationships")
       .select(
         "follower_userid, following_userid, users!relationships_following_userid_fkey(*)"
-      );
+      ).order("id", {ascending: false}).limit(10)
 
     if (error) {
       console.error("Error fetching followers:", error);
@@ -330,7 +348,8 @@ const Leaderboard = () => {
   const getMostReferrals = async () => {
     const { data, error } = await supabase
       .from("referrals")
-      .select("referrer, users!referrals_referrer_fkey(*)");
+      .select("referrer, created_at, users!referrals_referrer_fkey(*)")
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching referrals:", error);
@@ -345,10 +364,14 @@ const Leaderboard = () => {
     const referralCount = new Map();
     const userObjects = new Map();
 
-    data.forEach(({ referrer, users }) => {
-      if (referrer && users) {
-        referralCount.set(referrer, (referralCount.get(referrer) || 0) + 1);
-        userObjects.set(referrer, users); // Store full user object
+    data.forEach(({ created_at, referrer, users }) => {
+      const createdTime = new Date(created_at).getTime();
+      const oneWeekAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      if (createdTime >= oneWeekAgo) {
+        if (referrer && users) {
+          referralCount.set(referrer, (referralCount.get(referrer) || 0) + 1);
+          userObjects.set(referrer, users); // Store full user object
+        }
       }
     });
 
@@ -507,9 +530,19 @@ const Leaderboard = () => {
                     <span className="grid grid-cols-2 md:grid-cols-3 w-full gap-2">
                       {likesMvp && (
                         <span
-                          className={`flex flex-col border ${darkMode ? 'bg-[#1E1F24] border-[#292C33]' : 'bg-white border-[#EEEDEF]'}  pb-4 px-3 rounded-lg w-full`}
+                          className={`flex flex-col border ${
+                            darkMode
+                              ? "bg-[#1E1F24] border-[#292C33]"
+                              : "bg-white border-[#EEEDEF]"
+                          }  pb-4 px-3 rounded-lg w-full`}
                         >
-                          <span className={`py-2 ${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} flex flex-row justify-between`}>
+                          <span
+                            className={`py-2 ${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } flex flex-row justify-between`}
+                          >
                             <span className="flex flex-row space-x-1.5">
                               <span className="relative h-12 w-12 flex">
                                 <Image
@@ -517,15 +550,24 @@ const Leaderboard = () => {
                                   alt="user profile"
                                   height={50}
                                   width={50}
-                                  className={`border-2 ${darkMode ? 'border-white' : 'border-black'} rounded-full object-cover`}
+                                  className={`border-2 ${
+                                    darkMode ? "border-white" : "border-black"
+                                  } rounded-full object-cover`}
                                 />
                                 <span className="absolute -mt-1 top-0 right-0 bg-[#292C33] p-1 rounded-full">
-                                  <Badge color={'#EB4463'} className={'w-3.5 h-3.5'}/>
+                                  <Badge
+                                    color={"#EB4463"}
+                                    className={"w-3.5 h-3.5"}
+                                  />
                                 </span>
                               </span>
                               <span className="text-sm flex flex-col">
                                 <span
-                                  className={`${darkMode ? 'text-[#B2B2B2]' : 'text-[#728198]'} font-medium items-center flex flex-row space-x-1`}
+                                  className={`${
+                                    darkMode
+                                      ? "text-[#B2B2B2]"
+                                      : "text-[#728198]"
+                                  } font-medium items-center flex flex-row space-x-1`}
                                 >
                                   <span>Most</span>
                                   <span>likes</span>
@@ -539,21 +581,33 @@ const Leaderboard = () => {
                               {likesMvp.maxLikes}
                             </span>
                           </span>
-                          <span className={`${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} lg:hidden italic font-bold text-xl`}>
-                              {likesMvp.maxLikes} likes
-                            </span>
                           <span
-                            className={`${darkMode ? 'text-white' : 'text-[#728198]'} font-medium py-1 text-sm`}
+                            className={`${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } lg:hidden italic font-bold text-xl`}
+                          >
+                            {likesMvp.maxLikes} likes
+                          </span>
+                          <span
+                            className={`${
+                              darkMode ? "text-white" : "text-[#728198]"
+                            } font-medium py-1 text-sm`}
                           >
                             {"Given to the user whom received the most likes."}
                           </span>
                           <span
                             onClick={() => {
                               fullPageReload(
-                                `/profile/${likesMvp.mostLikes[0].username}`
+                                `/profile/${likesMvp.mostLikes[0].username}`, 'window'
                               );
                             }}
-                            className={`border ${darkMode ? 'text-white border-white text-white' : 'text-black border-[#292C33]'} text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
+                            className={`border ${
+                              darkMode
+                                ? "text-white border-white text-white"
+                                : "text-black border-[#292C33]"
+                            } text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
                           >
                             View profile
                           </span>
@@ -562,26 +616,45 @@ const Leaderboard = () => {
 
                       {postsMvp && (
                         <span
-                        className={`flex flex-col border ${darkMode ? 'bg-[#1E1F24] border-[#292C33]' : 'bg-white border-[#EEEDEF]'}  pb-4 px-3 rounded-lg w-full`}
-                      >
-                        <span className={`py-2 ${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} flex flex-row justify-between`}>
-                          <span className="flex flex-row space-x-1.5">
+                          className={`flex flex-col border ${
+                            darkMode
+                              ? "bg-[#1E1F24] border-[#292C33]"
+                              : "bg-white border-[#EEEDEF]"
+                          }  pb-4 px-3 rounded-lg w-full`}
+                        >
+                          <span
+                            className={`py-2 ${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } flex flex-row justify-between`}
+                          >
+                            <span className="flex flex-row space-x-1.5">
                               <span className="relative h-12 w-12 flex">
                                 <Image
                                   src={postsMvp.mostPosts[0].avatar}
                                   alt="user profile"
                                   height={50}
                                   width={50}
-                                  className={`border-2 ${darkMode ? 'border-white' : 'border-black'} rounded-full object-cover`}
+                                  className={`border-2 ${
+                                    darkMode ? "border-white" : "border-black"
+                                  } rounded-full object-cover`}
                                 />
                                 <span className="absolute -mt-1 top-0 right-0 bg-[#292C33] p-1 rounded-full">
-                                  <Badge color={'#63D7C6'} className={'w-3.5 h-3.5'}/>
+                                  <Badge
+                                    color={"#63D7C6"}
+                                    className={"w-3.5 h-3.5"}
+                                  />
                                 </span>
                               </span>
                               <span className="text-sm flex flex-col">
                                 <span
-                                  className={`${darkMode ? 'text-[#B2B2B2]' : 'text-[#728198]'} font-medium items-center flex flex-row space-x-1`}
-                                  >
+                                  className={`${
+                                    darkMode
+                                      ? "text-[#B2B2B2]"
+                                      : "text-[#728198]"
+                                  } font-medium items-center flex flex-row space-x-1`}
+                                >
                                   <span>Content</span>
                                   <span>King</span>
                                 </span>
@@ -590,18 +663,25 @@ const Leaderboard = () => {
                                 </span>
                               </span>
                             </span>
-                            
-                          
+
                             <span className="hidden lg:flex italic font-bold text-xl">
                               {postsMvp.maxPosts}
                             </span>
                           </span>
-                          <span className={`${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} lg:hidden italic font-bold text-xl`}>
-                              {postsMvp.maxPosts} posts
-                            </span>
                           <span
-                            className={`${darkMode ? 'text-white' : 'text-[#728198]'} font-medium py-1 text-sm`}
-                            >
+                            className={`${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } lg:hidden italic font-bold text-xl`}
+                          >
+                            {postsMvp.maxPosts} posts
+                          </span>
+                          <span
+                            className={`${
+                              darkMode ? "text-white" : "text-[#728198]"
+                            } font-medium py-1 text-sm`}
+                          >
                             {
                               "Given to the user with the highest number of posts."
                             }
@@ -609,10 +689,14 @@ const Leaderboard = () => {
                           <span
                             onClick={() => {
                               fullPageReload(
-                                `/profile/${postsMvp.mostPosts[0].username}`
+                                `/profile/${postsMvp.mostPosts[0].username}`, 'window'
                               );
                             }}
-                            className={`border ${darkMode ? 'text-white border-white text-white' : 'text-black border-[#292C33]'} text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
+                            className={`border ${
+                              darkMode
+                                ? "text-white border-white text-white"
+                                : "text-black border-[#292C33]"
+                            } text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
                           >
                             View profile
                           </span>
@@ -621,26 +705,45 @@ const Leaderboard = () => {
 
                       {viewsMvp && (
                         <span
-                        className={`flex flex-col border ${darkMode ? 'bg-[#1E1F24] border-[#292C33]' : 'bg-white border-[#EEEDEF]'}  pb-4 px-3 rounded-lg w-full`}
-                      >
-                        <span className={`py-2 ${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} flex flex-row justify-between`}>
-                          <span className="flex flex-row space-x-1.5">
+                          className={`flex flex-col border ${
+                            darkMode
+                              ? "bg-[#1E1F24] border-[#292C33]"
+                              : "bg-white border-[#EEEDEF]"
+                          }  pb-4 px-3 rounded-lg w-full`}
+                        >
+                          <span
+                            className={`py-2 ${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } flex flex-row justify-between`}
+                          >
+                            <span className="flex flex-row space-x-1.5">
                               <span className="relative h-12 w-12 flex">
                                 <Image
                                   src={viewsMvp.mostViews[0].avatar}
                                   alt="user profile"
                                   height={50}
                                   width={50}
-                                  className={`border-2 ${darkMode ? 'border-white' : 'border-black'} rounded-full object-cover`}
+                                  className={`border-2 ${
+                                    darkMode ? "border-white" : "border-black"
+                                  } rounded-full object-cover`}
                                 />
                                 <span className="absolute -mt-1 top-0 right-0 bg-[#292C33] p-1 rounded-full">
-                                  <Badge color={'#FFF500'} className={'w-3.5 h-3.5'}/>
+                                  <Badge
+                                    color={"#FFF500"}
+                                    className={"w-3.5 h-3.5"}
+                                  />
                                 </span>
                               </span>
                               <span className="text-sm flex flex-col">
                                 <span
-                                  className={`${darkMode ? 'text-[#B2B2B2]' : 'text-[#728198]'} font-medium items-center flex flex-row space-x-1`}
-                                  >
+                                  className={`${
+                                    darkMode
+                                      ? "text-[#B2B2B2]"
+                                      : "text-[#728198]"
+                                  } font-medium items-center flex flex-row space-x-1`}
+                                >
                                   <span>Eyes</span>
                                   <span>on</span>
                                   <span>Me</span>
@@ -654,21 +757,33 @@ const Leaderboard = () => {
                               {viewsMvp.maxViews}
                             </span>
                           </span>
-                          <span className={`${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} lg:hidden italic font-bold text-xl`}>
-                          {viewsMvp.maxViews} views
-                            </span>
                           <span
-                            className={`${darkMode ? 'text-white' : 'text-[#728198]'} font-medium py-1 text-sm`}
-                            >
+                            className={`${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } lg:hidden italic font-bold text-xl`}
+                          >
+                            {viewsMvp.maxViews} views
+                          </span>
+                          <span
+                            className={`${
+                              darkMode ? "text-white" : "text-[#728198]"
+                            } font-medium py-1 text-sm`}
+                          >
                             {"Given to the user whom received the most views."}
                           </span>
                           <span
                             onClick={() => {
                               fullPageReload(
-                                `/profile/${viewsMvp.mostViews[0].username}`
+                                `/profile/${viewsMvp.mostViews[0].username}`, 'window'
                               );
                             }}
-                            className={`border ${darkMode ? 'text-white border-white text-white' : 'text-black border-[#292C33]'} text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
+                            className={`border ${
+                              darkMode
+                                ? "text-white border-white text-white"
+                                : "text-black border-[#292C33]"
+                            } text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
                           >
                             View profile
                           </span>
@@ -676,26 +791,45 @@ const Leaderboard = () => {
                       )}
                       {followMvp && (
                         <span
-                        className={`flex flex-col border ${darkMode ? 'bg-[#1E1F24] border-[#292C33]' : 'bg-white border-[#EEEDEF]'}  pb-4 px-3 rounded-lg w-full`}
-                      >
-                        <span className={`py-2 ${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} flex flex-row justify-between`}>
-                          <span className="flex flex-row space-x-1.5">
+                          className={`flex flex-col border ${
+                            darkMode
+                              ? "bg-[#1E1F24] border-[#292C33]"
+                              : "bg-white border-[#EEEDEF]"
+                          }  pb-4 px-3 rounded-lg w-full`}
+                        >
+                          <span
+                            className={`py-2 ${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } flex flex-row justify-between`}
+                          >
+                            <span className="flex flex-row space-x-1.5">
                               <span className="relative h-12 w-12 flex">
                                 <Image
                                   src={followMvp.mostFollows[0].avatar}
                                   alt="user profile"
                                   height={50}
                                   width={50}
-                                  className={`border-2 ${darkMode ? 'border-white' : 'border-black'} rounded-full object-cover`}
+                                  className={`border-2 ${
+                                    darkMode ? "border-white" : "border-black"
+                                  } rounded-full object-cover`}
                                 />
                                 <span className="absolute -mt-1 top-0 right-0 bg-[#292C33] p-1 rounded-full">
-                                  <Badge color={'#45A9FF'} className={'w-3.5 h-3.5'}/>
+                                  <Badge
+                                    color={"#45A9FF"}
+                                    className={"w-3.5 h-3.5"}
+                                  />
                                 </span>
                               </span>
                               <span className="text-sm flex flex-col">
                                 <span
-                                  className={`${darkMode ? 'text-[#B2B2B2]' : 'text-[#728198]'} font-medium items-center flex flex-row space-x-1`}
-                                  >
+                                  className={`${
+                                    darkMode
+                                      ? "text-[#B2B2B2]"
+                                      : "text-[#728198]"
+                                  } font-medium items-center flex flex-row space-x-1`}
+                                >
                                   <span>Famous</span>
                                   <span>Hokage</span>
                                 </span>
@@ -708,21 +842,33 @@ const Leaderboard = () => {
                               {followMvp.maxFollows}
                             </span>
                           </span>
-                          <span className={`${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} lg:hidden italic font-bold text-xl`}>
-                          + {followMvp.maxFollows} followers
-                            </span>
                           <span
-                            className={`${darkMode ? 'text-white' : 'text-[#728198]'} font-medium py-1 text-sm`}
-                            >
+                            className={`${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } lg:hidden italic font-bold text-xl`}
+                          >
+                            + {followMvp.maxFollows} followers
+                          </span>
+                          <span
+                            className={`${
+                              darkMode ? "text-white" : "text-[#728198]"
+                            } font-medium py-1 text-sm`}
+                          >
                             {"Given to the user whom had the most followers."}
                           </span>
                           <span
                             onClick={() => {
                               fullPageReload(
-                                `/profile/${followMvp.mostFollows[0].username}`
+                                `/profile/${followMvp.mostFollows[0].username}`, 'window'
                               );
                             }}
-                            className={`border ${darkMode ? 'text-white border-white text-white' : 'text-black border-[#292C33]'} text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
+                            className={`border ${
+                              darkMode
+                                ? "text-white border-white text-white"
+                                : "text-black border-[#292C33]"
+                            } text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
                           >
                             View profile
                           </span>
@@ -730,26 +876,45 @@ const Leaderboard = () => {
                       )}
                       {refMvp && (
                         <span
-                        className={`flex flex-col border ${darkMode ? 'bg-[#1E1F24] border-[#292C33]' : 'bg-white border-[#EEEDEF]'}  pb-4 px-3 rounded-lg w-full`}
-                      >
-                        <span className={`py-2 ${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} flex flex-row justify-between`}>
-                          <span className="flex flex-row space-x-1.5">
+                          className={`flex flex-col border ${
+                            darkMode
+                              ? "bg-[#1E1F24] border-[#292C33]"
+                              : "bg-white border-[#EEEDEF]"
+                          }  pb-4 px-3 rounded-lg w-full`}
+                        >
+                          <span
+                            className={`py-2 ${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } flex flex-row justify-between`}
+                          >
+                            <span className="flex flex-row space-x-1.5">
                               <span className="relative h-12 w-12 flex">
                                 <Image
                                   src={refMvp.mostReferrals[0].avatar}
                                   alt="user profile"
                                   height={50}
                                   width={50}
-                                  className={`border-2 ${darkMode ? 'border-white' : 'border-black'} rounded-full object-cover`}
+                                  className={`border-2 ${
+                                    darkMode ? "border-white" : "border-black"
+                                  } rounded-full object-cover`}
                                 />
                                 <span className="absolute -mt-1 top-0 right-0 bg-[#292C33] p-1 rounded-full">
-                                  <Badge color={'white'} className={'w-3.5 h-3.5'}/>
+                                  <Badge
+                                    color={"white"}
+                                    className={"w-3.5 h-3.5"}
+                                  />
                                 </span>
                               </span>
                               <span className="text-sm flex flex-col">
                                 <span
-                                  className={`${darkMode ? 'text-[#B2B2B2]' : 'text-[#728198]'} font-medium items-center flex flex-row space-x-1`}
-                                  >
+                                  className={`${
+                                    darkMode
+                                      ? "text-[#B2B2B2]"
+                                      : "text-[#728198]"
+                                  } font-medium items-center flex flex-row space-x-1`}
+                                >
                                   <span>Most</span>
                                   <span>Referrals</span>
                                 </span>
@@ -762,21 +927,33 @@ const Leaderboard = () => {
                               {refMvp.maxReferrals}
                             </span>
                           </span>
-                          <span className={`${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} lg:hidden italic font-bold text-xl`}>
-                          {refMvp.maxReferrals} referrals
-                            </span>
                           <span
-                            className={`${darkMode ? 'text-white' : 'text-[#728198]'} font-medium py-1 text-sm`}
-                            >
+                            className={`${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } lg:hidden italic font-bold text-xl`}
+                          >
+                            {refMvp.maxReferrals} referrals
+                          </span>
+                          <span
+                            className={`${
+                              darkMode ? "text-white" : "text-[#728198]"
+                            } font-medium py-1 text-sm`}
+                          >
                             {"Given to the user whom had the most referrals."}
                           </span>
                           <span
                             onClick={() => {
                               fullPageReload(
-                                `/profile/${refMvp.mostReferrals[0].username}`
+                                `/profile/${refMvp.mostReferrals[0].username}`, 'window'
                               );
                             }}
-                            className={`border ${darkMode ? 'text-white border-white text-white' : 'text-black border-[#292C33]'} text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
+                            className={`border ${
+                              darkMode
+                                ? "text-white border-white text-white"
+                                : "text-black border-[#292C33]"
+                            } text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
                           >
                             View profile
                           </span>
@@ -785,26 +962,45 @@ const Leaderboard = () => {
 
                       {repostMvp && (
                         <span
-                        className={`flex flex-col border ${darkMode ? 'bg-[#1E1F24] border-[#292C33]' : 'bg-white border-[#EEEDEF]'}  pb-4 px-3 rounded-lg w-full`}
-                      >
-                        <span className={`py-2 ${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} flex flex-row justify-between`}>
-                          <span className="flex flex-row space-x-1.5">
+                          className={`flex flex-col border ${
+                            darkMode
+                              ? "bg-[#1E1F24] border-[#292C33]"
+                              : "bg-white border-[#EEEDEF]"
+                          }  pb-4 px-3 rounded-lg w-full`}
+                        >
+                          <span
+                            className={`py-2 ${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } flex flex-row justify-between`}
+                          >
+                            <span className="flex flex-row space-x-1.5">
                               <span className="relative h-12 w-12 flex">
                                 <Image
                                   src={repostMvp.mostReposts[0].avatar}
                                   alt="user profile"
                                   height={50}
                                   width={50}
-                                  className={`border-2 ${darkMode ? 'border-white' : 'border-black'} rounded-full object-cover`}
+                                  className={`border-2 ${
+                                    darkMode ? "border-white" : "border-black"
+                                  } rounded-full object-cover`}
                                 />
                                 <span className="absolute -mt-1 top-0 right-0 bg-[#292C33] p-1 rounded-full">
-                                  <Badge color={'#B45DFF'} className={'w-3.5 h-3.5'}/>
+                                  <Badge
+                                    color={"#B45DFF"}
+                                    className={"w-3.5 h-3.5"}
+                                  />
                                 </span>
                               </span>
                               <span className="text-sm flex flex-col">
                                 <span
-                                  className={`${darkMode ? 'text-[#B2B2B2]' : 'text-[#728198]'} font-medium items-center flex flex-row space-x-1`}
-                                  >
+                                  className={`${
+                                    darkMode
+                                      ? "text-[#B2B2B2]"
+                                      : "text-[#728198]"
+                                  } font-medium items-center flex flex-row space-x-1`}
+                                >
                                   <span>Most</span>
                                   <span>Reposts</span>
                                 </span>
@@ -817,12 +1013,20 @@ const Leaderboard = () => {
                               {repostMvp.maxReposts}
                             </span>
                           </span>
-                          <span className={`${darkMode ? 'border-b border-[#292C33]' : 'border-b border-[#D0D3DB]'} lg:hidden italic font-bold text-xl`}>
-                          {repostMvp.maxReposts} reposts
-                            </span>
                           <span
-                            className={`${darkMode ? 'text-white' : 'text-[#728198]'} font-medium py-1 text-sm`}
-                            >
+                            className={`${
+                              darkMode
+                                ? "border-b border-[#292C33]"
+                                : "border-b border-[#D0D3DB]"
+                            } lg:hidden italic font-bold text-xl`}
+                          >
+                            {repostMvp.maxReposts} reposts
+                          </span>
+                          <span
+                            className={`${
+                              darkMode ? "text-white" : "text-[#728198]"
+                            } font-medium py-1 text-sm`}
+                          >
                             {
                               "Given to the user whom received the most reposts."
                             }
@@ -830,10 +1034,14 @@ const Leaderboard = () => {
                           <span
                             onClick={() => {
                               fullPageReload(
-                                `/profile/${repostMvp.mostReposts[0].username}`
+                                `/profile/${repostMvp.mostReposts[0].username}`, 'window'
                               );
                             }}
-                            className={`border ${darkMode ? 'text-white border-white text-white' : 'text-black border-[#292C33]'} text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
+                            className={`border ${
+                              darkMode
+                                ? "text-white border-white text-white"
+                                : "text-black border-[#292C33]"
+                            } text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
                           >
                             View profile
                           </span>
@@ -1277,7 +1485,9 @@ const Leaderboard = () => {
                         </span>
                       </span>
 
-                      <span className={`font-bold py-2.5 px-4 rounded-lg text-xs bg-white bg-opacity-30 backdrop-blur-md flex flex-row w-full justify-between items-center`}>
+                      <span
+                        className={`font-bold py-2.5 px-4 rounded-lg text-xs bg-white bg-opacity-30 backdrop-blur-md flex flex-row w-full justify-between items-center`}
+                      >
                         <span className="flex flex-col justify-center items-center">
                           <span>{parseInt(sortedUsers[2].ki)}</span>
                           <span className="text-slate-500 text-[0.8rem] font-semibold">
@@ -1395,8 +1605,8 @@ const Leaderboard = () => {
             </div>
           </div>
           <div className="hidden lg:block sticky right-2 top-20 heighto">
-          <LargeRightBar />
-        </div>
+            <LargeRightBar />
+          </div>
         </section>
         {sideBarOpened && <SideBar />}
 

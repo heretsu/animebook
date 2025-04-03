@@ -554,14 +554,9 @@ export default function App({ Component, pageProps }) {
               fetchAllReposts().then((reposts) => {
                 fetchAllPosts().then((result1) => {
                   fetchAllPolls().then((pls) => setAllPolls(pls));
-                  fetchCommunities(data.id).then(async (secondResult) => {
+                  fetchCommunities().then(async (secondResult) => {
                     if (secondResult !== undefined && secondResult !== null) {
-                      if (!unreadMessagesLength && unreadMessagesLength !== 0) {
-                        const unreadMsg = await fetchUnreadChat(data.id);
-                        if (unreadMsg) {
-                          setUnreadMessagesLength(unreadMsg.length);
-                        }
-                      }
+                      
 
                       setCommunities(
                         [...secondResult.data].sort(

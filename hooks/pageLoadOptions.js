@@ -9,9 +9,8 @@ export default function PageLoadOptions(){
         else if (target === "_blank"){
             window.open(page, "_blank");
         } else{
-            // window.location.href = page
-            console.log(page)
-            router.push(page)
+            window.location.href = page
+            // router.push(page)
         }
     }
     return {fullPageReload}

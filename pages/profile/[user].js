@@ -394,6 +394,9 @@ export default function User({ user }) {
     setVisibleCount(maxVisible);
   }, [postValues]);
 
+  const [postsLoaded, setPostsLoaded] = useState(false)
+  const [done, setDone] = useState(false)
+
   useEffect(() => {
     setRoutedUser(user);
     if (!loadedState) {
@@ -465,48 +468,53 @@ export default function User({ user }) {
       });
     }
 
-    fetchAllPosts().then((result1) => {
-      fetchAllReposts().then((reposts) => {
-        fetchAllPolls().then((pls) =>  setAllPolls(pls));
-        const userPostsAndReposts = result1.data.map((post) => {
-          const matchingRepost = reposts.find(
-            (repost) => repost.postid === post.id
-          );
-
-          if (
-            matchingRepost &&
-            matchingRepost.users &&
-            matchingRepost.users.username.trim().toLowerCase() ===
-              user.trim().toLowerCase()
-          ) {
-            return {
-              ...post,
-              repostAuthor: matchingRepost.users,
-              repostQuote: matchingRepost.quote,
-              repostCreatedAt: matchingRepost.created_at,
-            };
-          }
-
-          return post;
+    if (!postsLoaded){
+      setPostsLoaded(true)
+      fetchAllPosts().then((result1) => {
+        fetchAllReposts().then((reposts) => {
+          fetchAllPolls().then((pls) =>  setAllPolls(pls));
+          const userPostsAndReposts = result1.data.map((post) => {
+            const matchingRepost = reposts.find(
+              (repost) => repost.postid === post.id
+            );
+  
+            if (
+              matchingRepost &&
+              matchingRepost.users &&
+              matchingRepost.users.username.trim().toLowerCase() ===
+                user.trim().toLowerCase()
+            ) {
+              return {
+                ...post,
+                repostAuthor: matchingRepost.users,
+                repostQuote: matchingRepost.quote,
+                repostCreatedAt: matchingRepost.created_at,
+              };
+            }
+  
+            return post;
+          });
+  
+          const sortedPosts = userPostsAndReposts.sort((a, b) => {
+            const dateA = new Date(
+              a.repostQuote ? a.repostCreatedAt : a.created_at
+            );
+            const dateB = new Date(
+              b.repostQuote ? b.repostCreatedAt : b.created_at
+            );
+            return dateB - dateA;
+          });
+          requestAnimationFrame(() => {
+            userSpecificPosts(sortedPosts);
+            setOriginalPostValues(sortedPosts);
+            setDone(true)
+          });
+          //   userSpecificPosts(userPostsAndReposts);
+          // setOriginalPostValues(userPostsAndReposts);
         });
-
-        const sortedPosts = userPostsAndReposts.sort((a, b) => {
-          const dateA = new Date(
-            a.repostQuote ? a.repostCreatedAt : a.created_at
-          );
-          const dateB = new Date(
-            b.repostQuote ? b.repostCreatedAt : b.created_at
-          );
-          return dateB - dateA;
-        });
-        requestAnimationFrame(() => {
-          userSpecificPosts(sortedPosts);
-          setOriginalPostValues(sortedPosts);
-        });
-        //   userSpecificPosts(userPostsAndReposts);
-        // setOriginalPostValues(userPostsAndReposts);
       });
-    });
+    }
+    
 
     // fetchAllPosts().then((result) => {
     //   if (result.data !== null && result.data !== undefined) {
@@ -533,7 +541,7 @@ export default function User({ user }) {
     return () => {
       router.events.off("routeChangeStart", handleRouteChange);
     };
-  }, [loadedState, userNumId, userBasicInfo, valuesLoaded]);
+  }, [done, postsLoaded, loadedState, userNumId, userBasicInfo, valuesLoaded]);
 
   return (
     <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
@@ -1848,7 +1856,7 @@ export default function User({ user }) {
                     <Posts />
                   ) : (
                     <span className="w-full text-gray-600 text-center">
-                      {"Nanimonai! No posts found"}
+                      {!done ? 'Loading posts...' : "Nanimonai! No posts found"}
                     </span>
                   )}
                 </>
