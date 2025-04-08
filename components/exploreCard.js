@@ -7,6 +7,7 @@ import ReactPlayer from "react-player";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import animationData from "@/assets/kianimation.json";
 import dynamic from "next/dynamic";
+import { AvatarWithBorder } from "./AvatarProps";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export const BinSvg = ({ pixels }) => {
@@ -226,12 +227,9 @@ export default function ExploreCard({
             className="w-fit hover:underline pb-2 flex flex-row justify-start items-center space-x-1"
           >
             <span className="relative h-8 w-8 flex">
-              <Image
-                src={users.avatar}
-                alt="user profile"
-                height={35}
-                width={35}
-                className="rounded-full border border-white"
+              <AvatarWithBorder 
+              userInfo={users}
+              size={35}
               />
             </span>
             <span className="font-semibold text-center">

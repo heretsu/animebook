@@ -608,7 +608,6 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
                   height={600}
                   width={600}
                   onPlay={() => handlePlay(id)}
-                  controls
                 ></video>
                 {(!playVideo || activeVideo !== id) && (
                   <svg

@@ -26,6 +26,12 @@ import dynamic from "next/dynamic";
 import UserContainer from "@/components/userContainer";
 import SubYuki from "@/components/subYuki";
 import ExploreBox from "@/utils/explorebox";
+import free from "@/assets/chibis/free.jpg";
+import { BiggerUserWithBadge } from "@/components/userWithBadge";
+import customBorder from "@/assets/customborder.png";
+import customBorder2 from "@/assets/customborder2.png";
+
+
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export const getServerSideProps = async (context) => {
@@ -37,19 +43,46 @@ export const getServerSideProps = async (context) => {
   };
 };
 
+export function AvatarWB({ border, userInfo, size }) {
+  return (
+    <div className={`relative w-[${size}px] h-[${size}px]`}>
+      {/* The border ring */}
+      {border === 1 ? <Image src={customBorder} alt="custom border" fill className="object-contain" /> : border === 2 ? <Image src={customBorder2} alt="custom border" fill className="object-contain" /> : '' }
+      {/* The user avatar */}
+      <Image
+        src={userInfo.avatar}
+        alt="user avatar"
+        width={size}
+        height={size}
+        className="object-cover rounded-full p-2"
+      />
+    </div>
+  );
+}
 export default function User({ user }) {
   const { getUserFromId } = DappLibrary();
   const { connectToWallet, disconnectWallet } = ConnectionData();
   const { getUsdPrice } = PriceFeedStation();
   const router = useRouter();
-  const { fetchAllUsers, fetchAllPolls, fetchAllPosts, fetchAllReposts, fetchUserMangas } =
-    DbUsers();
+  const {
+    fetchAllUsers,
+    fetchAllPolls,
+    fetchAllPosts,
+    fetchAllReposts,
+    fetchUserMangas,
+  } = DbUsers();
   const { fetchFollowing, fetchFollows } = Relationships();
   const {
     userWatchList,
     setUserWatchList,
     currentUserWatchlist,
     setCurrentUserWatchlist,
+    userChibis,
+    setUserChibis,
+    currentUserChibis,
+
+    setCurrentUserChibis,
+
     clickFollower,
     setClickFollower,
     clickFollowing,
@@ -86,7 +119,13 @@ export default function User({ user }) {
     mediasClicked,
     setMediasClicked,
     allSubscriptions,
-    setAllPolls
+    setAllPolls,
+    likesMvp,
+    postsMvp,
+    viewsMvp,
+    refMvp,
+    followMvp,
+    repostMvp,
   } = useContext(UserContext);
 
   const [alreadyFollowed, setAlreadyFollowed] = useState(false);
@@ -99,7 +138,7 @@ export default function User({ user }) {
   const [imgSrc, setImgSrc] = useState("");
   const [previewType, setPreviewType] = useState("");
   const [openPreview, setOpenPreview] = useState(false);
-  const [contentToDisplay, setContentToDisplay] = useState(null)
+  const [contentToDisplay, setContentToDisplay] = useState(null);
   const [ePosts, setEPosts] = useState(null);
   const [currentPost, setCurrentPost] = useState(null);
 
@@ -252,6 +291,25 @@ export default function User({ user }) {
       });
   };
 
+  const fetchAllChibis = (userid) => {
+    supabase
+      .from("chibis")
+      .select("id, created_at, collectionid, users(id, avatar, username)")
+      .order("created_at", { ascending: false })
+      .then((res) => {
+        if (res.data !== undefined && res.data !== null) {
+          setUserChibis(res.data);
+          if (userid) {
+            setCurrentUserChibis(
+              res.data.filter((c) => {
+                return c.users.id === userid;
+              })
+            );
+          }
+        }
+      });
+  };
+
   const subscribeToPublisher = async () => {
     if (userData === undefined || userData === null) {
       PageLoadOptions().fullPageReload("/signin");
@@ -394,8 +452,8 @@ export default function User({ user }) {
     setVisibleCount(maxVisible);
   }, [postValues]);
 
-  const [postsLoaded, setPostsLoaded] = useState(false)
-  const [done, setDone] = useState(false)
+  const [postsLoaded, setPostsLoaded] = useState(false);
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     setRoutedUser(user);
@@ -413,7 +471,7 @@ export default function User({ user }) {
             setUserNotFound(true);
             return;
           }
-
+          fetchAllChibis(currentUserExtraInfo.id);
           fetchAllAnimes(currentUserExtraInfo.id);
           setItsMe(currentUserExtraInfo.id === userNumId);
           if (currentUserExtraInfo.id === userNumId) {
@@ -468,16 +526,16 @@ export default function User({ user }) {
       });
     }
 
-    if (!postsLoaded){
-      setPostsLoaded(true)
+    if (!postsLoaded) {
+      setPostsLoaded(true);
       fetchAllPosts().then((result1) => {
         fetchAllReposts().then((reposts) => {
-          fetchAllPolls().then((pls) =>  setAllPolls(pls));
+          fetchAllPolls().then((pls) => setAllPolls(pls));
           const userPostsAndReposts = result1.data.map((post) => {
             const matchingRepost = reposts.find(
               (repost) => repost.postid === post.id
             );
-  
+
             if (
               matchingRepost &&
               matchingRepost.users &&
@@ -491,10 +549,10 @@ export default function User({ user }) {
                 repostCreatedAt: matchingRepost.created_at,
               };
             }
-  
+
             return post;
           });
-  
+
           const sortedPosts = userPostsAndReposts.sort((a, b) => {
             const dateA = new Date(
               a.repostQuote ? a.repostCreatedAt : a.created_at
@@ -507,14 +565,13 @@ export default function User({ user }) {
           requestAnimationFrame(() => {
             userSpecificPosts(sortedPosts);
             setOriginalPostValues(sortedPosts);
-            setDone(true)
+            setDone(true);
           });
           //   userSpecificPosts(userPostsAndReposts);
           // setOriginalPostValues(userPostsAndReposts);
         });
       });
     }
-    
 
     // fetchAllPosts().then((result) => {
     //   if (result.data !== null && result.data !== undefined) {
@@ -706,18 +763,33 @@ export default function User({ user }) {
                             }}
                             className="-mt-10 pb-2 relative h-18 w-18 flex-shink-0 flex"
                           >
-                            <Image
-                              src={imgSrc}
-                              alt="user"
-                              width={80}
-                              height={80}
-                              className="border-2 border-black flex flex-shrink-0 h-[90px] w-[90px] rounded-full"
-                              onError={() =>
-                                setImgSrc(
-                                  "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
-                                )
-                              }
-                            />
+                            {likesMvp &&
+                            likesMvp.mostLikes[0].id === userBasicInfo.id ? (
+                              <BiggerUserWithBadge
+                                avatar={likesMvp.mostLikes[0].avatar}
+                                size={80}
+                                mvpType={"likes"}
+                              />
+                            ) : userBasicInfo.borderid ? (
+                              <AvatarWB
+                                border={userBasicInfo.borderid}
+                                userInfo={userBasicInfo}
+                                size={80}
+                              />
+                            ) : (
+                              <Image
+                                src={imgSrc}
+                                alt="user"
+                                width={80}
+                                height={80}
+                                className="border-2 border-black flex flex-shrink-0 h-[90px] w-[90px] rounded-full"
+                                onError={() =>
+                                  setImgSrc(
+                                    "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                                  )
+                                }
+                              />
+                            )}
                           </span>
                           <span className="font-semibold text-[0.92rem] pr-2">
                             {userBasicInfo.username}
@@ -1450,10 +1522,11 @@ export default function User({ user }) {
                                 );
 
                                 return (
-                                  <span onClick={()=>{
-                                    setContentToDisplay(pst.media);
-                                    setOpenPreview(true)
-                                  }}
+                                  <span
+                                    onClick={() => {
+                                      setContentToDisplay(pst.media);
+                                      setOpenPreview(true);
+                                    }}
                                     key={pst.id}
                                     className="relative overflow-hidden rounded-lg"
                                   >
@@ -1528,6 +1601,26 @@ export default function User({ user }) {
                               ))}
                             </span>
                           </span>
+                        ) : mediasClicked === "chibis" ? (
+                          <span className="w-full flex justify-center pt-2">
+                            <span className="w-full grid grid-cols-2 gap-2 py-2 px-1">
+                              {currentUserChibis.slice(0, 1).map((cb) => (
+                                <span
+                                  key={cb.id}
+                                  className="relative flex flex-col items-center w-28 rounded-lg"
+                                  onClick={() => {
+                                    setMediasClicked("animes");
+                                  }}
+                                >
+                                  <Image
+                                    src={free}
+                                    alt="chibi"
+                                    className="rounded-lg w-28 h-28 object-cover"
+                                  />
+                                </span>
+                              ))}
+                            </span>
+                          </span>
                         ) : (
                           ""
                         )}
@@ -1572,41 +1665,45 @@ export default function User({ user }) {
                               </span>
                             );
                           })}
-                          
-                          {postValues?.length > visibleCount && (
-  <span
-    onClick={() => setMediasClicked("posts")}
-    className="cursor-pointer relative flex h-20 w-[20%] flex-grow rounded items-center justify-center text-white font-bold text-lg overflow-hidden"
-  >
-    {/* Blurred Background Handling Image, Video, or Fallback */}
-    {(() => {
-      const nextMedia = getNextMedia(postValues, visibleCount - 1);
-      const isVideo = nextMedia && /\.(mp4|mov|3gp)$/i.test(nextMedia);
 
-      return nextMedia ? (
-        isVideo ? (
-          <div className="absolute inset-0 bg-gray-500 blur-md"></div>
-        ) : (
-          <Image
-            src={nextMedia}
-            alt="blurred background"
-            width={80}
-            height={80}
-            className="absolute inset-0 w-full h-full object-cover blur-md brightness-75"
-          />
-        )
-      ) : (
-        <div className="absolute inset-0 bg-gray-500"></div>
-      );
-    })()}
+                        {postValues?.length > visibleCount && (
+                          <span
+                            onClick={() => setMediasClicked("posts")}
+                            className="cursor-pointer relative flex h-20 w-[20%] flex-grow rounded items-center justify-center text-white font-bold text-lg overflow-hidden"
+                          >
+                            {/* Blurred Background Handling Image, Video, or Fallback */}
+                            {(() => {
+                              const nextMedia = getNextMedia(
+                                postValues,
+                                visibleCount - 1
+                              );
+                              const isVideo =
+                                nextMedia &&
+                                /\.(mp4|mov|3gp)$/i.test(nextMedia);
 
-    {/* Number Overlay */}
-    <span className="relative z-10">
-      +{postValues.length - (visibleCount - 1)}
-    </span>
-  </span>
-)}
+                              return nextMedia ? (
+                                isVideo ? (
+                                  <div className="absolute inset-0 bg-gray-500 blur-md"></div>
+                                ) : (
+                                  <Image
+                                    src={nextMedia}
+                                    alt="blurred background"
+                                    width={80}
+                                    height={80}
+                                    className="absolute inset-0 w-full h-full object-cover blur-md brightness-75"
+                                  />
+                                )
+                              ) : (
+                                <div className="absolute inset-0 bg-gray-500"></div>
+                              );
+                            })()}
 
+                            {/* Number Overlay */}
+                            <span className="relative z-10">
+                              +{postValues.length - (visibleCount - 1)}
+                            </span>
+                          </span>
+                        )}
                       </div>
                     </>
                   )}
@@ -1856,7 +1953,7 @@ export default function User({ user }) {
                     <Posts />
                   ) : (
                     <span className="w-full text-gray-600 text-center">
-                      {!done ? 'Loading posts...' : "Nanimonai! No posts found"}
+                      {!done ? "Loading posts..." : "Nanimonai! No posts found"}
                     </span>
                   )}
                 </>
@@ -2077,41 +2174,44 @@ export default function User({ user }) {
         </>
       )}
 
-{openPreview && contentToDisplay ? (
+      {openPreview && contentToDisplay ? (
         <>
           <PopupModal
             success={"11"}
             avatar={userBasicInfo.avatar}
             cover={contentToDisplay}
-            previewType={'cover'}
+            previewType={"cover"}
           />
 
           <div
             onClick={() => {
               setOpenPreview(false);
-              setContentToDisplay(null)
+              setContentToDisplay(null);
             }}
             id="dark-overlay"
             className="bg-black"
           ></div>
         </>
-      ) : openPreview ? (<>
-        <PopupModal
-          success={"11"}
-          avatar={userBasicInfo.avatar}
-          cover={userBasicInfo.cover}
-          previewType={previewType}
-        />
+      ) : openPreview ? (
+        <>
+          <PopupModal
+            success={"11"}
+            avatar={userBasicInfo.avatar}
+            cover={userBasicInfo.cover}
+            previewType={previewType}
+          />
 
-        <div
-          onClick={() => {
-            setOpenPreview(false);
-          }}
-          id="dark-overlay"
-          className="bg-black"
-        ></div>
-      </>) : ''}
-
+          <div
+            onClick={() => {
+              setOpenPreview(false);
+            }}
+            id="dark-overlay"
+            className="bg-black"
+          ></div>
+        </>
+      ) : (
+        ""
+      )}
     </main>
   );
 }

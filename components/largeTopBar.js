@@ -8,6 +8,9 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import animeBcc from "@/assets/animeBcc.png";
 import DarkModeToggle from "./darkModeToggle";
 import newLogo from "../assets/newLogo.png";
+import { AvatarWithBorder } from "./AvatarProps";
+import supabase from "@/hooks/authenticateUser";
+import ConnectionData from "@/lib/connectionData";
 
 export const TopBarObjects = () => {
   const { fullPageReload } = PageLoadOptions();
@@ -361,8 +364,8 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
 
         <span className="flex flex-row justify-center items-center space-x-3">
           <span
-            onClick={()=>{
-              fullPageReload("/inbox", "window")
+            onClick={() => {
+              fullPageReload("/inbox", "window");
             }}
             className={`p-2 flex justify-center items-center rounded-full border ${
               darkMode
@@ -387,15 +390,17 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
             >
               <path d="M924.3 338.4a447.57 447.57 0 0 0-96.1-143.3 443.09 443.09 0 0 0-143-96.3A443.91 443.91 0 0 0 512 64h-2c-60.5.3-119 12.3-174.1 35.9a444.08 444.08 0 0 0-141.7 96.5 445 445 0 0 0-95 142.8A449.89 449.89 0 0 0 65 514.1c.3 69.4 16.9 138.3 47.9 199.9v152c0 25.4 20.6 46 45.9 46h151.8a447.72 447.72 0 0 0 199.5 48h2.1c59.8 0 117.7-11.6 172.3-34.3A443.2 443.2 0 0 0 827 830.5c41.2-40.9 73.6-88.7 96.3-142 23.5-55.2 35.5-113.9 35.8-174.5.2-60.9-11.6-120-34.8-175.6zM312.4 560c-26.4 0-47.9-21.5-47.9-48s21.5-48 47.9-48 47.9 21.5 47.9 48-21.4 48-47.9 48zm199.6 0c-26.4 0-47.9-21.5-47.9-48s21.5-48 47.9-48 47.9 21.5 47.9 48-21.5 48-47.9 48zm199.6 0c-26.4 0-47.9-21.5-47.9-48s21.5-48 47.9-48 47.9 21.5 47.9 48-21.5 48-47.9 48z" />
             </svg>
-            {unreadMessagesLength !== null && unreadMessagesLength !== undefined && unreadMessagesLength > 0 && (
-              <span className="absolute ml-5 mt-7 bg-[#EB4463] rounded-full h-5 w-5 flex items-center justify-center text-white text-sm">
-                {unreadMessagesLength}
-              </span>
-            )}
+            {unreadMessagesLength !== null &&
+              unreadMessagesLength !== undefined &&
+              unreadMessagesLength > 0 && (
+                <span className="absolute ml-5 mt-7 bg-[#EB4463] rounded-full h-5 w-5 flex items-center justify-center text-white text-sm">
+                  {unreadMessagesLength}
+                </span>
+              )}
           </span>
           <span
-            onClick={()=>{
-              fullPageReload("/notifications", "window")
+            onClick={() => {
+              fullPageReload("/notifications", "window");
             }}
             className={`flex justify-center items-center p-2 rounded-full border ${
               darkMode
@@ -430,15 +435,17 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
                 />
               </g>
             </svg>
-            {unreadCount !== null && unreadCount !== undefined && unreadCount > 0 && (
-              <span className="absolute ml-5 mt-7 bg-[#EB4463] rounded-full h-5 w-5 flex items-center justify-center text-white text-sm">
-                {unreadCount}
-              </span>
-            )}
+            {unreadCount !== null &&
+              unreadCount !== undefined &&
+              unreadCount > 0 && (
+                <span className="absolute ml-5 mt-7 bg-[#EB4463] rounded-full h-5 w-5 flex items-center justify-center text-white text-sm">
+                  {unreadCount}
+                </span>
+              )}
           </span>
           <span
-            onClick={()=>{
-              fullPageReload("/search", "window")
+            onClick={() => {
+              fullPageReload("/search", "window");
             }}
             className={`justify-center items-center p-2 rounded-full border ${
               darkMode
@@ -617,6 +624,20 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
 };
 
 const LargeTopBar = ({ relationship }) => {
+  const { disconnectWallet } = ConnectionData();
+
+  const logOut = async () => {
+    try {
+      try {
+        disconnectWallet();
+      } catch (e) {}
+      await supabase.auth.signOut();
+      router.push("/signin");
+    } catch (error) {
+      throw "a problem occurred";
+    }
+  };
+
   const router = useRouter();
   const {
     followingPosts,
@@ -634,6 +655,7 @@ const LargeTopBar = ({ relationship }) => {
     setUnreadMessagesLength,
     unreadCount,
   } = TopBarObjects();
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <div
       className={`${
@@ -1324,8 +1346,8 @@ const LargeTopBar = ({ relationship }) => {
       <span className="h-12 w-1/4 cursor-pointer flex flex-row justify-end items-center space-x-20">
         <span className="flex flex-row space-x-2">
           <span
-            onClick={()=>{
-              fullPageReload("/inbox", "window")
+            onClick={() => {
+              fullPageReload("/inbox", "window");
             }}
             className={`p-1.5 rounded-full border ${
               darkMode
@@ -1350,15 +1372,17 @@ const LargeTopBar = ({ relationship }) => {
             >
               <path d="M924.3 338.4a447.57 447.57 0 0 0-96.1-143.3 443.09 443.09 0 0 0-143-96.3A443.91 443.91 0 0 0 512 64h-2c-60.5.3-119 12.3-174.1 35.9a444.08 444.08 0 0 0-141.7 96.5 445 445 0 0 0-95 142.8A449.89 449.89 0 0 0 65 514.1c.3 69.4 16.9 138.3 47.9 199.9v152c0 25.4 20.6 46 45.9 46h151.8a447.72 447.72 0 0 0 199.5 48h2.1c59.8 0 117.7-11.6 172.3-34.3A443.2 443.2 0 0 0 827 830.5c41.2-40.9 73.6-88.7 96.3-142 23.5-55.2 35.5-113.9 35.8-174.5.2-60.9-11.6-120-34.8-175.6zM312.4 560c-26.4 0-47.9-21.5-47.9-48s21.5-48 47.9-48 47.9 21.5 47.9 48-21.4 48-47.9 48zm199.6 0c-26.4 0-47.9-21.5-47.9-48s21.5-48 47.9-48 47.9 21.5 47.9 48-21.5 48-47.9 48zm199.6 0c-26.4 0-47.9-21.5-47.9-48s21.5-48 47.9-48 47.9 21.5 47.9 48-21.5 48-47.9 48z" />
             </svg>
-            {unreadMessagesLength !== null && unreadMessagesLength !== undefined && unreadMessagesLength > 0 && (
-              <span className="absolute ml-2 -mt-1 bg-[#EB4463] rounded-full h-5 w-5 flex items-center justify-center text-white text-sm">
-                {unreadMessagesLength}
-              </span>
-            )}
+            {unreadMessagesLength !== null &&
+              unreadMessagesLength !== undefined &&
+              unreadMessagesLength > 0 && (
+                <span className="absolute ml-2 -mt-1 bg-[#EB4463] rounded-full h-5 w-5 flex items-center justify-center text-white text-sm">
+                  {unreadMessagesLength}
+                </span>
+              )}
           </span>
           <span
-            onClick={()=>{
-              fullPageReload("/notifications", "window")
+            onClick={() => {
+              fullPageReload("/notifications", "window");
             }}
             className={`p-1.5 rounded-full border ${
               darkMode
@@ -1393,11 +1417,13 @@ const LargeTopBar = ({ relationship }) => {
                 />
               </g>
             </svg>
-            {unreadCount !== null && unreadCount !== undefined && unreadCount > 0 && (
-              <span className="absolute ml-2 -mt-1 bg-[#EB4463] rounded-full h-5 w-5 flex items-center justify-center text-white text-sm">
-                {unreadCount}
-              </span>
-            )}
+            {unreadCount !== null &&
+              unreadCount !== undefined &&
+              unreadCount > 0 && (
+                <span className="absolute ml-2 -mt-1 bg-[#EB4463] rounded-full h-5 w-5 flex items-center justify-center text-white text-sm">
+                  {unreadCount}
+                </span>
+              )}
           </span>
         </span>
         <span className="flex flex-row justify-end items-center space-x-1">
@@ -1429,19 +1455,67 @@ const LargeTopBar = ({ relationship }) => {
             )
           )}
           {userData && (
-            <span
-              onClick={() => {
-                fullPageReload(`/profile/${userData.username}`, "window");
-              }}
-              className="relative flex flex-shrink-0"
-            >
-              <Image
-                src={userData.avatar}
-                alt="user myprofile"
-                height={40}
-                width={40}
-                className="rounded-full"
-              />
+            <span className="relative flex items-center focus:outline-none flex-shrink-0">
+              <AvatarWithBorder userInfo={userData} size={40} />
+              <span
+                onClick={() => setIsOpen(!isOpen)}
+                id="highZ"
+                className="absolute right-0 bottom-0 mt-1.5 rounded-full flex items-center justify-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="19"
+                  height="19"
+                  viewBox="0 0 19 19"
+                >
+                  <g
+                    id="Gruppe_3343"
+                    data-name="Gruppe 3343"
+                    transform="translate(-1790 -61)"
+                  >
+                    <circle
+                      id="Ellipse_273"
+                      data-name="Ellipse 273"
+                      cx="9.5"
+                      cy="9.5"
+                      r="9.5"
+                      transform="translate(1790 61)"
+                      fill="#e4e7e9"
+                    />
+                    <g id="down-arrow" transform="translate(1793.359 -32.952)">
+                      <g
+                        id="Gruppe_3303"
+                        data-name="Gruppe 3303"
+                        transform="translate(0 100.698)"
+                      >
+                        <path
+                          id="Pfad_4756"
+                          data-name="Pfad 4756"
+                          d="M12.085,101.3l-.4-.405a.673.673,0,0,0-.95,0l-4.589,4.589-4.594-4.594a.674.674,0,0,0-.95,0l-.4.4a.672.672,0,0,0,0,.95l5.47,5.49a.687.687,0,0,0,.476.215h0a.687.687,0,0,0,.475-.215l5.465-5.475a.682.682,0,0,0,0-.957Z"
+                          transform="translate(0 -100.698)"
+                          fill="#2a2c32"
+                        />
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+              </span>
+
+              {isOpen && (
+                <div className={`mt-16 py-1 absolute right-0 border ${
+                  darkMode ? "text-white bg-[#1E1F24] border-gray-500" : "text-black border-gray-300 bg-[#FFFFFF]"
+                } cursor-pointer rounded-lg shadow-md text-sm`}>
+                  <span
+                    onClick={() => {
+                      setIsOpen(false);
+                      logOut();
+                    }}
+                    className="w-full pl-2 pr-4 text-left"
+                  >
+                    Logout
+                  </span>
+                </div>
+              )}
             </span>
           )}
         </span>

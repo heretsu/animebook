@@ -15,6 +15,8 @@ import PopupModal from "./popupModal";
 import UnfollowButton from "./unfollowButton";
 import dynamic from "next/dynamic";
 import ShareSystem from "./shareSystem";
+import UserWithBadge from "./userWithBadge";
+import { AvatarWithBorder } from "./AvatarProps";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 function PollOption({
@@ -117,6 +119,12 @@ export default function PostCard({
     parentId: globalParentId,
     setNewListOfComments,
     allPolls,
+    likesMvp,
+    postsMvp,
+    viewsMvp,
+    refMvp,
+    followMvp,
+    repostMvp,
   } = useContext(UserContext);
   const [comments, setComments] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -811,20 +819,21 @@ export default function PostCard({
                 }}
                 className="cursor-pointer flex flex-row justify-start items-center space-x-0"
               >
-                <span className="relative h-8 w-8 flex">
-                  <Image
-                    src={imgSrc}
-                    alt="user profile"
-                    width={35}
-                    height={35}
-                    className="rounded-full object-cover"
-                    onError={() =>
-                      setImgSrc(
-                        "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
-                      )
-                    }
+                {likesMvp && likesMvp.mostLikes[0].id === repostAuthor.id ? (
+                  <UserWithBadge
+                    avatar={likesMvp.mostLikes[0].avatar}
+                    size={35}
+                    mvpType={"likes"}
                   />
-                </span>
+                ) : (
+                  <span className="relative h-8 w-8 flex">
+                    
+                    <AvatarWithBorder 
+              userInfo={repostAuthor}
+              size={35}
+              />
+                  </span>
+                )}
 
                 <span className="flex flex-col">
                   <span className="flex flex-row items-center">
@@ -867,22 +876,18 @@ export default function PostCard({
                 isExpanded ? "scale-110 w-full" : "scale-100"
               }`}
             >
-              {!isExpanded && (
-                <span className="relative h-9 w-9 flex">
-                  <Image
-                    src={imgSrcOrigin}
-                    alt="user profile"
-                    width={35}
-                    height={35}
-                    className="rounded-full object-cover"
-                    onError={() =>
-                      setImgSrcOrigin(
-                        "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
-                      )
-                    }
+              {!isExpanded &&
+                (likesMvp && likesMvp.mostLikes[0].id === users.id ? (
+                  <UserWithBadge
+                    avatar={likesMvp.mostLikes[0].avatar}
+                    size={35}
+                    mvpType={"likes"}
                   />
-                </span>
-              )}
+                ) : (
+                  <span className="relative h-9 w-9 flex">
+                    <AvatarWithBorder userInfo={users} size={35} />
+                  </span>
+                ))}
 
               <span className={`flex flex-col ${isExpanded && "w-full"}`}>
                 {!isExpanded && (
@@ -1308,7 +1313,11 @@ export default function PostCard({
                         </span>
                       );
                     })}
-                  {pollVotes && pollVotes.length && <span className="text-sm">{`${pollVotes.length} ${pollVotes.length === 1 ? 'vote' : 'votes'}`}</span>}
+                  {pollVotes && pollVotes.length && (
+                    <span className="text-sm">{`${pollVotes.length} ${
+                      pollVotes.length === 1 ? "vote" : "votes"
+                    }`}</span>
+                  )}
                 </span>
               ))}
 
@@ -1366,7 +1375,6 @@ export default function PostCard({
                     height={600}
                     width={600}
                     onPlay={() => handlePlay(id)}
-                    controls
 
                     // onProgress={(e) => {
                     //   loadVideoSnippet(e);
@@ -1379,7 +1387,6 @@ export default function PostCard({
                   ref={videoRef}
                   height={600}
                   width={600}
-                  controls
                   
                   // onProgress={(e) => {
                   //   loadVideoSnippet(e);
@@ -1731,13 +1738,7 @@ export default function PostCard({
                     // }}
                     className="relative flex flex-shrink-0"
                   >
-                    <Image
-                      src={userData.avatar}
-                      alt="user myprofile"
-                      height={25}
-                      width={25}
-                      className="rounded-full"
-                    />
+                    <AvatarWithBorder userInfo={userData} size={25} />
                   </span>
                 )}
                 <span
@@ -1896,13 +1897,7 @@ export default function PostCard({
                   <span className="flex flex-row items-center justify-between w-full">
                     <span className="flex flex-row items-center">
                       <span className="relative flex h-6 w-6 flex-shrink-0">
-                        <Image
-                          src={userData.avatar}
-                          alt="user myprofile"
-                          height={35}
-                          width={35}
-                          className="rounded-full"
-                        />
+                        <AvatarWithBorder userInfo={userData} size={35} />
                       </span>
                       <span className="pl-2 text-[0.8rem] flex flex-col">
                         <span className="flex flex-row space-x-1">

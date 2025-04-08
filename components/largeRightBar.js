@@ -7,6 +7,7 @@ import Relationships from "@/hooks/relationships";
 import { useRouter } from "next/router";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import DappLibrary from "@/lib/dappLibrary";
+import free from "@/assets/chibis/free.jpg";
 
 const LargeRightBar = () => {
   const { getUserFromUsername } = DappLibrary();
@@ -29,6 +30,8 @@ const LargeRightBar = () => {
     setMediasClicked,
     currentUserWatchlist,
     setCurrentUserWatchlist,
+    currentUserChibis,
+    setCurrentUserChibis,
     clickFollower,
     setClickFollower,
     clickFollowing,
@@ -813,6 +816,42 @@ filteredPosts.forEach((post) => {
                 </span>
               </span>
             )}
+             {router.pathname === "/profile/[user]" &&
+          routedUserData &&
+          currentUserChibis &&
+          currentUserChibis.length > 0 && (
+            <span
+              className={`${
+                darkMode
+                  ? "bg-[#1e1f24] border-[#292C33] text-white"
+                  : "bg-white border-[#EEEDEF] text-black"
+              } flex flex-col rounded border py-2.5`}
+            >
+              <span className="font-semibold text-sm pb-1 px-3.5">
+                Highlighted Chibis
+              </span>
+              <span className="overflow-hidden px-3.5 relative w-full flex flex-row justify-start gap-1">
+                {currentUserChibis.slice(0, 1).map((cb) => (
+                  <span
+                    key={cb.id}
+                    className="relative flex flex-col items-center w-16 rounded-lg"
+                    onClick={()=>{setMediasClicked('animes')}}
+                  >
+                    <Image
+                      src={free}
+                      alt="chibi"
+                      className="rounded-lg w-16 h-16 object-cover"
+                    />
+
+                    
+                  </span>
+                ))}
+                
+                
+              </span>
+            </span>
+          )}
+
         {router.pathname === "/profile/[user]" &&
           routedUserData &&
           currentUserWatchlist &&

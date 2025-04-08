@@ -20,6 +20,7 @@ import ExploreActions from "@/components/exploreActions";
 import CommentItem from "@/components/commentItem";
 import PopupModal from "@/components/popupModal";
 import ShareSystem from "@/components/shareSystem";
+import { AvatarWithBorder } from "@/components/AvatarProps";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
@@ -785,7 +786,7 @@ export default function Explore() {
               muted={isMuted}
             />
 
-            <div className="right-2 absolute top-2 max:h-[75vh] cursor-pointer text-white font-bold flex flex-col justify-between space-y-8 items-center">
+            <div className="bottom-28 right-2 absolute top-2 max:h-[75vh] cursor-pointer text-white font-bold flex flex-col justify-between space-y-8 items-center">
               <svg
                 id="shadowthis"
                 xmlns="http://www.w3.org/2000/svg"
@@ -835,15 +836,14 @@ export default function Explore() {
                         `/profile/${(post.post.users.username, "window")}`
                       );
                     }}
-                    className="relative h-12 w-12 flex"
+                    className="relative h-10 w-10 flex"
                   >
-                    <Image
-                      src={post.post.users.avatar}
-                      alt="user profile"
-                      height={55}
-                      width={55}
-                      className="border border-white rounded-full"
-                    />
+                    <AvatarWithBorder
+                                userInfo={post.post.users}
+                                size={40}
+                              />
+
+                    
                   </span>
                 </span>
 
@@ -857,8 +857,8 @@ export default function Explore() {
                   id="shadowthis"
                   onClick={toggleMute}
                   fill={isMuted ? "gray" : "white"}
-                  width="30px"
-                  height="30px"
+                  width="24px"
+                  height="24px"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
@@ -879,7 +879,7 @@ export default function Explore() {
                 {post.post.users.username}
               </span>
               <span
-                className="mb-16 text-sm font-bold break-words overflow-wrap break-word"
+                className="mb-0 text-sm font-bold break-words overflow-wrap break-word"
                 id="textkit"
               >
                 <CommentConfig text={post.post.content} tags={true} />
@@ -1216,21 +1216,20 @@ export default function Explore() {
                           onClick={() => {
                             fullPageReload(
                               `/profile/${
-                                (currentPost.post.users.username, "window")
-                              }`
+                                (currentPost.post.users.username)
+                              }`, "window"
                             );
                           }}
                           // onClick={() => setIsExpanded(!isExpanded)}
                           className={`cursor-pointer flex flex-row justify-start items-center space-x-0 transition-transform duration-500 scale-100`}
                         >
                           <span className="relative h-9 w-9 flex">
-                            <Image
-                              src={currentPost.post.users.avatar}
-                              alt="user profile"
-                              height={35}
-                              width={35}
-                              className="rounded-full"
-                            />
+                          <AvatarWithBorder
+                                userInfo={currentPost.post.users}
+                                size={35}
+                              />
+
+                            
                           </span>
 
                           <span
@@ -1570,13 +1569,12 @@ export default function Explore() {
                               // }}
                               className="relative flex flex-shrink-0"
                             >
-                              <Image
-                                src={userData.avatar}
-                                alt="user myprofile"
-                                height={40}
-                                width={40}
-                                className="rounded-full"
+                               <AvatarWithBorder
+                                userInfo={userData}
+                                size={40}
                               />
+
+                             
                             </span>
                           )}
                           <span

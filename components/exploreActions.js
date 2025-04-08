@@ -171,8 +171,8 @@ export default function ExploreActions({id, myProfileId, ownerDetails}){
         className="cursor-pointer"
         fill={liked ? "#EB4463" : "white"}
         xmlns="http://www.w3.org/2000/svg"
-        width="35"
-        height="35"
+        width="28"
+        height="28"
         viewBox="0 0 18.365 16.178"
       >
         <path
@@ -189,8 +189,8 @@ export default function ExploreActions({id, myProfileId, ownerDetails}){
       <svg onClick={()=>{setCommentValues(comments); setOpenComments(true); setPostOwnerDetails(ownerDetails)}}
         id="shadowthis"
         xmlns="http://www.w3.org/2000/svg"
-        width="30"
-        height="30"
+        width="23"
+        height="23"
         viewBox="0 0 16.18 16.178"
       >
         <path
@@ -207,8 +207,8 @@ export default function ExploreActions({id, myProfileId, ownerDetails}){
       onClick={addBookmark}
         id="shadowthis"
         xmlns="http://www.w3.org/2000/svg"
-        width="28"
-        height="28"
+        width="22"
+        height="22"
         viewBox="0 0 14.508 16.179"
       >
         <path
@@ -225,8 +225,8 @@ export default function ExploreActions({id, myProfileId, ownerDetails}){
       <svg
         id="shadowthis"
         xmlns="http://www.w3.org/2000/svg"
-        width="30"
-        height="30"
+        width="24"
+        height="24"
         viewBox="0 0 16.176 16.178"
       >
         <g

@@ -12,8 +12,10 @@ import Relationships from "@/hooks/relationships";
 import TOS, { Policy } from "@/components/agreements";
 import TutorialBox from "@/components/tutorialBox";
 import PreventZoom from "@/lib/preventZoom";
+import useMvps from "@/lib/mvps";
 
 export default function App({ Component, pageProps }) {
+  const { likesMvp, postsMvp, viewsMvp, refMvp, followMvp, repostMvp } = useMvps();
   const [videoPlayingId, setVideoPlayingId] = useState(null);
   const [clickFollower, setClickFollower] = useState(false);
   const [clickFollowing, setClickFollowing] = useState(false);
@@ -94,6 +96,8 @@ export default function App({ Component, pageProps }) {
   const [userWatchList, setUserWatchList] = useState(null);
   const [currentUserWatchlist, setCurrentUserWatchlist] = useState(null);
 
+  const [userChibis, setUserChibis] = useState(null)
+  const [currentUserChibis, setCurrentUserChibis] = useState(null)
   const [communities, setCommunities] = useState(null);
   const { fetchFollowing, fetchFollows } = Relationships();
 
@@ -503,6 +507,7 @@ export default function App({ Component, pageProps }) {
 
   const [allowUnloggedView, setAllowUnloggedView] = useState(false);
   useEffect(() => {
+
     if (darkMode) {
       document.body.style.backgroundColor = "#17181C";
       document.documentElement.classList.add("dark");
@@ -624,6 +629,8 @@ export default function App({ Component, pageProps }) {
           setUserWatchList,
           currentUserWatchlist,
           setCurrentUserWatchlist,
+          userChibis, setUserChibis,
+          currentUserChibis, setCurrentUserChibis,
           mediasClicked,
           setMediasClicked,
           clickFollower,
@@ -749,6 +756,7 @@ export default function App({ Component, pageProps }) {
           unreadCount,
           setUnreadCount,
           commentRef,
+          likesMvp, postsMvp, viewsMvp, refMvp, followMvp, repostMvp
         }}
       >
         <PreventZoom />
