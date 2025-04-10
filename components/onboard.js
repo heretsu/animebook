@@ -111,7 +111,7 @@ export default function Onboard({ allUsers, me }) {
           username: username.trim(),
           avatar: imageUrl
             ? imageUrl
-            : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+            : "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
           address: addr ? addr : null,
           ki: 0,
         };
@@ -193,7 +193,7 @@ export default function Onboard({ allUsers, me }) {
                     <span className="relative h-18 w-full m-auto flex justify-center items-center">
                       <Image
                         src={
-                          "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                          "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
                         }
                         alt="your profile picture goes here. click"
                         width={70}

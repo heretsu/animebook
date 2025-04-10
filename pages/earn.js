@@ -68,7 +68,7 @@ export const ShopPurchase = ({
 
   const purchaseChibi = () => {
     setLoading(true);
-    if (cartDetail.type === "chibi") {
+    if (cartDetail.purchaseType === "chibi") {
       supabase
         .from("chibis")
         .insert({
@@ -202,6 +202,7 @@ export const ShopPurchase = ({
                           !isNaN(e.target.value) ? e.target.value : usdValue
                         );
                       }}
+                      disabled
                       value={usdValue}
                       className={`w-full text-normal ${
                         darkMode
@@ -385,6 +386,7 @@ export const ShopPurchase = ({
                           !isNaN(e.target.value) ? e.target.value : usdValue
                         );
                       }}
+                      disabled
                       value={usdValue}
                       className={`w-full text-normal ${
                         darkMode

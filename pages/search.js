@@ -345,7 +345,7 @@ const Search = () => {
                             tag[1]
                           } ${tag[1] > 1 ? "posts" : "post"}`}</span>
                         </span>
-                        {hashtagPhotos && <span className="relative h-12 w-12 flex">
+                        {hashtagPhotos && hashtagPhotos[tag[0]]&& hashtagPhotos[tag[0]][hashtagPhotos[tag[0]]] && <span className="relative h-12 w-12 flex">
                           <Image
                             src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 1]}
                             alt="t"

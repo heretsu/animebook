@@ -785,7 +785,7 @@ export default function User({ user }) {
                                 className="border-2 border-black flex flex-shrink-0 h-[90px] w-[90px] rounded-full"
                                 onError={() =>
                                   setImgSrc(
-                                    "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                                    "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
                                   )
                                 }
                               />
@@ -907,7 +907,7 @@ export default function User({ user }) {
                           className="border-2 border-black h-[90px] w-[90px] flex flex-shrink-0 rounded-full"
                           onError={() =>
                             setImgSrc(
-                              "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                              "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
                             )
                           }
                         />
@@ -1629,11 +1629,10 @@ export default function User({ user }) {
                         ref={containerRef}
                         className="hidden lg:flex w-full flex-row items-center space-x-0.5 overflow-hidden"
                       >
-                        {postValues
+                        {postValues.filter((p)=>!p.repostAuthor)
                           ?.slice(0, visibleCount - 1)
                           .map((pst, index) => {
                             if (!pst?.media) return null;
-
                             const isVideo = /\.(mp4|mov|3gp)$/i.test(pst.media);
 
                             return (
@@ -2175,7 +2174,10 @@ export default function User({ user }) {
       )}
 
       {openPreview && contentToDisplay ? (
-        <>
+        <span onClick={()=>{
+          setOpenPreview(false);
+              setContentToDisplay(null);
+        }}>
           <PopupModal
             success={"11"}
             avatar={userBasicInfo.avatar}
@@ -2191,9 +2193,12 @@ export default function User({ user }) {
             id="dark-overlay"
             className="bg-black"
           ></div>
-        </>
+        </span>
       ) : openPreview ? (
-        <>
+        <span onClick={()=>{
+          setOpenPreview(false);
+        }}>
+        
           <PopupModal
             success={"11"}
             avatar={userBasicInfo.avatar}
@@ -2208,7 +2213,7 @@ export default function User({ user }) {
             id="dark-overlay"
             className="bg-black"
           ></div>
-        </>
+        </span>
       ) : (
         ""
       )}

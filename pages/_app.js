@@ -217,7 +217,7 @@ export default function App({ Component, pageProps }) {
               username: user.user_metadata.preferred_username,
               avatar: user.user_metadata.picture
                 ? user.user_metadata.picture
-                : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+                : "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
               ki: 0,
             };
             const response = await supabase.from("users").insert([newUser]);
@@ -272,7 +272,7 @@ export default function App({ Component, pageProps }) {
                 preferred_username: res.data[0].username,
                 picture: user.user_metadata.picture
                   ? user.user_metadata.picture
-                  : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+                  : "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
                 ...res.data[0],
               });
 
@@ -362,7 +362,7 @@ export default function App({ Component, pageProps }) {
             preferred_username: data.username,
             picture: user.user_metadata.picture
               ? user.user_metadata.picture
-              : "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+              : "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
             ...data,
           });
 

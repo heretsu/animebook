@@ -981,7 +981,7 @@ export default function PostCard({
                                   className="rounded-full object-cover"
                                   onError={() =>
                                     setImgSrcOrigin(
-                                      "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                                      "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
                                     )
                                   }
                                 />

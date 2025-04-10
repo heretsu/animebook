@@ -189,7 +189,7 @@ export default function CommunityCommentItem({
                   className="rounded-full object"
                   onError={() =>
                     setImgSrc(
-                      "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                      "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
                     )
                   }
                 />
