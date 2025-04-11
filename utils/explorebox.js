@@ -436,7 +436,6 @@ export default function ExploreBox({
   style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
 >
   <CommentConfig text={currentPost.content} tags={true} />
-  <CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} /><CommentConfig text={currentPost.content} tags={true} />
 </span>
 
                       )}

@@ -456,7 +456,7 @@ const EditProfileContainer = () => {
                       className="rounded-full"
                       onError={() =>
                         setImgSrc(
-                          "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                          "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
                         )
                       }
                     />

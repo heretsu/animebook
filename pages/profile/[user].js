@@ -601,7 +601,7 @@ export default function User({ user }) {
   }, [done, postsLoaded, loadedState, userNumId, userBasicInfo, valuesLoaded]);
 
   return (
-    <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
+    <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"} overflow-hidden`}>
       <div className="hidden lg:block block z-40 sticky top-0">
         <LargeTopBar relationship={true} />
       </div>
@@ -785,7 +785,7 @@ export default function User({ user }) {
                                 className="border-2 border-black flex flex-shrink-0 h-[90px] w-[90px] rounded-full"
                                 onError={() =>
                                   setImgSrc(
-                                    "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                                    "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
                                   )
                                 }
                               />
@@ -891,7 +891,7 @@ export default function User({ user }) {
                   </span>
 
                   <span className="flex lg:hidden border border-black p-2 text-xs md:text-sm absolute inset-0 flex-col justify-between text-white bg-gray-500 bg-opacity-30 backdrop-blur-md">
-                    <span className="flex flex-row space-x-8">
+                    <span className="flex flex-row space-x-4">
                       <span
                         onClick={() => {
                           setPreviewType("dpimage");
@@ -907,12 +907,12 @@ export default function User({ user }) {
                           className="border-2 border-black h-[90px] w-[90px] flex flex-shrink-0 rounded-full"
                           onError={() =>
                             setImgSrc(
-                              "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                              "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
                             )
                           }
                         />
                       </span>
-                      <span className="w-full text-white text-[0.85rem] flex flex-row justify-end space-x-8 items-center">
+                      <span className="w-full text-white text-[0.85rem] grid grid-cols-2 sm:flex sm:flex-row justify-end sm:space-x-8 items-center">
                         <span className="font-medium flex flex-col justify-center items-center">
                           <span className="font-bold">{postValues.length}</span>
                           <span>{"Posts"}</span>
@@ -1625,7 +1625,7 @@ export default function User({ user }) {
                           ""
                         )}
                       </span>
-                      <div
+                      {postValues.some((p)=>p.media) && <div
                         ref={containerRef}
                         className="hidden lg:flex w-full flex-row items-center space-x-0.5 overflow-hidden"
                       >
@@ -1703,7 +1703,7 @@ export default function User({ user }) {
                             </span>
                           </span>
                         )}
-                      </div>
+                      </div>}
                     </>
                   )}
                   {/* <span className="text-white w-full h-fit flex flex-row items-center space-x-1 font-semibold">
@@ -1949,7 +1949,9 @@ export default function User({ user }) {
                       </span>
                     )
                   ) : userPostValues && userPostValues.length > 0 ? (
-                    <Posts />
+                    <span className="hidden lg:block">
+                    <Posts / > 
+                    </span>
                   ) : (
                     <span className="w-full text-gray-600 text-center">
                       {!done ? "Loading posts..." : "Nanimonai! No posts found"}

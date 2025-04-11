@@ -401,7 +401,7 @@ const Leaderboard = () => {
   const handleImageError = (id) => {
     setImgSrcs((prev) => ({
       ...prev,
-      [id]: "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+      [id]: "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
     }));
   };
 
@@ -412,7 +412,7 @@ const Leaderboard = () => {
           ...acc,
           [user.id]:
             user.avatar ||
-            "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
+            "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png",
         }),
         {}
       );

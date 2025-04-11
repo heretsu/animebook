@@ -383,7 +383,7 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
                 className="border border-black rounded-full object"
                 onError={() =>
                   setImgSrc(
-                    "https://auth.animebook.io/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
+                    "https://onlyjelrixpmpmwmoqzw.supabase.co/storage/v1/object/public/mediastore/animebook/noProfileImage.png"
                   )
                 }
               />

@@ -158,7 +158,10 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
         media: gifLink,
         content: content.trim() !== "" ? content.trim() : "",
       });
+    
       setContent("");
+      const textarea = textareaRef.current
+      textarea.style.height = "2rem";
       setGifSelected(false);
       setSelectedMedia(null);
       setMediaFile(null);
@@ -205,6 +208,9 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
             });
             // fullPageReload("/home");
             setContent("");
+            const textarea = textareaRef.current
+            textarea.style.height = "2rem";
+      
             setGifSelected(false);
             setSelectedMedia(null);
             setMediaFile(null);
@@ -224,6 +230,9 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
           });
           fullPageReload(`/communities/${community}`, 'window');
           setContent("");
+          const textarea = textareaRef.current
+          textarea.style.height = "2rem";
+    
           setGifSelected(false);
           setSelectedMedia(null);
           setMediaFile(null);
@@ -237,6 +246,9 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
           });
           // fullPageReload("/home");
           setContent("");
+          const textarea = textareaRef.current
+          textarea.style.height = "2rem";
+    
           setGifSelected(false);
           setSelectedMedia(null);
           setMediaFile(null);

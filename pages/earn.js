@@ -21,6 +21,8 @@ import SOLSVG from "@/assets/sol";
 import ETHSVG from "@/assets/eth";
 import Spinner from "@/components/spinner";
 import luffyLogo from "../assets/luffyLogo.png";
+import yellowchibi from "../assets/chibis/yellowchibi.png";
+import fireborder from "../assets/fireborder.png";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
@@ -40,27 +42,30 @@ export const ShopPurchase = ({
   const purchaseBorder = async () => {
     setLoading(true);
     if (cartDetail.purchaseType === "border") {
-     console.log(parseFloat(userData.ki), userData.ki, parseFloat(cartDetail.kiprice))
+      
       if (parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice)) {
         const newKi = parseFloat(userData.ki) - parseFloat(cartDetail.kiprice);
-        supabase.from("users").update({
-          ki: newKi,
-          borderid: cartDetail.collectionid,
-        }).eq("useruuid", userData.useruuid).then((res) => {
-          if (res.error) {
+        supabase
+          .from("users")
+          .update({
+            ki: newKi,
+            borderid: cartDetail.collectionid,
+          })
+          .eq("useruuid", userData.useruuid)
+          .then((res) => {
+            if (res.error) {
+              setLoading(false);
+              console.log(res.error);
+              return;
+            }
+            setSuccess(true);
             setLoading(false);
-            console.log(res.error)
-            return;
-          }
-          setSuccess(true);
-          setLoading(false);
-        })
-        .catch((error) => {
-          setLoading(false);
-          console.log("cypher e: ", error);
-        });
+          })
+          .catch((error) => {
+            setLoading(false);
+            console.log("cypher e: ", error);
+          });
       }
-     
     }
 
     setLoading(false);
@@ -213,7 +218,35 @@ export const ShopPurchase = ({
                     />
                   </span>
 
-                  {currency === "luffy" ? (
+                  {currency === "ki" ? (
+                    <span className="space-x-1 w-fit p-2 h-full rounded-r-lg bg-zinc-700 flex flex-row items-center">
+                      <span className="-mx-4 h-8 w-12">
+                        <Lottie animationData={animationData} />
+                      </span>
+
+                      <span className="-ml-4 text-white text-xl font-semibold text-sm">
+                        KI
+                      </span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        id="up-arrow"
+                        width="7.582"
+                        height="8.821"
+                        viewBox="0 0 8.582 9.821"
+                        className="ml-2"
+                      >
+                        <g id="Gruppe_3153" data-name="Gruppe 3153">
+                          <path
+                            id="Pfad_1769"
+                            data-name="Pfad 1769"
+                            d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
+                            transform="translate(-32.307 0)"
+                            fill="#f9f9f9"
+                          />
+                        </g>
+                      </svg>
+                    </span>
+                  ) : currency === "luffy" ? (
                     <span className="space-x-1 w-fit p-2 h-full rounded-r-lg bg-zinc-700 flex flex-row items-center">
                       <span className="w-10">
                         <Image
@@ -227,6 +260,24 @@ export const ShopPurchase = ({
                       <span className="text-white text-xl font-semibold text-sm">
                         LUFFY
                       </span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        id="up-arrow"
+                        width="7.582"
+                        height="8.821"
+                        viewBox="0 0 8.582 9.821"
+                        className="ml-2"
+                      >
+                        <g id="Gruppe_3153" data-name="Gruppe 3153">
+                          <path
+                            id="Pfad_1769"
+                            data-name="Pfad 1769"
+                            d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
+                            transform="translate(-32.307 0)"
+                            fill="#f9f9f9"
+                          />
+                        </g>
+                      </svg>
                     </span>
                   ) : currency === "eth" ? (
                     <span className="space-x-1 p-2 h-full rounded-r-lg bg-zinc-700 border-black flex flex-row items-center">
@@ -234,6 +285,24 @@ export const ShopPurchase = ({
                       <span className="text-white text-xl font-semibold text-sm">
                         ETH
                       </span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        id="up-arrow"
+                        width="7.582"
+                        height="8.821"
+                        viewBox="0 0 8.582 9.821"
+                        className="ml-2"
+                      >
+                        <g id="Gruppe_3153" data-name="Gruppe 3153">
+                          <path
+                            id="Pfad_1769"
+                            data-name="Pfad 1769"
+                            d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
+                            transform="translate(-32.307 0)"
+                            fill="#f9f9f9"
+                          />
+                        </g>
+                      </svg>
                     </span>
                   ) : currency === "sol" ? (
                     <span className="space-x-1 p-2 h-full rounded-r-lg bg-zinc-700 border-black flex flex-row items-center">
@@ -241,6 +310,24 @@ export const ShopPurchase = ({
                       <span className="text-white text-xl font-semibold text-sm">
                         SOL
                       </span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        id="up-arrow"
+                        width="7.582"
+                        height="8.821"
+                        viewBox="0 0 8.582 9.821"
+                        className="ml-2"
+                      >
+                        <g id="Gruppe_3153" data-name="Gruppe 3153">
+                          <path
+                            id="Pfad_1769"
+                            data-name="Pfad 1769"
+                            d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
+                            transform="translate(-32.307 0)"
+                            fill="#f9f9f9"
+                          />
+                        </g>
+                      </svg>
                     </span>
                   ) : (
                     <span className="space-x-1 w-fit p-2 h-full rounded-r-lg bg-zinc-700 flex flex-row items-center">
@@ -250,8 +337,33 @@ export const ShopPurchase = ({
                       <span className="text-white text-l font-bold text-sm">
                         SAITAMA
                       </span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        id="up-arrow"
+                        width="7.582"
+                        height="8.821"
+                        viewBox="0 0 8.582 9.821"
+                        className="ml-2"
+                      >
+                        <g id="Gruppe_3153" data-name="Gruppe 3153">
+                          <path
+                            id="Pfad_1769"
+                            data-name="Pfad 1769"
+                            d="M40.829,5.667,36.736,9.761a.2.2,0,0,1-.29,0l-4.08-4.094a.2.2,0,0,1,.145-.349h2.25V.2a.2.2,0,0,1,.2-.2h3.273a.2.2,0,0,1,.2.2V5.318h2.241a.2.2,0,0,1,.144.349Z"
+                            transform="translate(-32.307 0)"
+                            fill="#f9f9f9"
+                          />
+                        </g>
+                      </svg>
                     </span>
                   )}
+                </span>
+                <span className="flex flex-row items-center">
+                  <span className="pl-2 text-sm font-semibold">KI:</span>
+                  <span className="-ml-1 h-6 w-8">
+                    <Lottie animationData={animationData} />
+                  </span>
+                  <span className="flex items-center -ml-1.5 text-xs">{cartDetail.kiprice}</span>
                 </span>
                 {loading ? (
                   <span className="w-full flex justify-center">
@@ -264,7 +376,9 @@ export const ShopPurchase = ({
                     }}
                     className="text-lg w-full text-white text-center cursor-pointer font-semibold bg-[#EB4463] p-2 py-2 rounded-lg"
                   >
-                    {parseFloat(cartDetail.price) === 0 ? "CLAIM NOW" : "BUY NOW"}
+                    {parseFloat(cartDetail.price) === 0
+                      ? "CLAIM NOW"
+                      : "BUY NOW"}
                   </span>
                 )}
                 <span className="pt-2 flex flex-row justify-center w-fit mx-auto rounded-lg space-x-1">
@@ -314,9 +428,10 @@ export const ShopPurchase = ({
               <span
                 id="scrollbar-remove"
                 className="w-full lg:w-[280px] h-full my-auto max-h-[90vh] overflow-y-scroll min-h-[1vh] flex flex-col text-base justify-start text-start"
-              ><span className="w-full text-center text-sm pb-2 font-semibold">
-              {cartDetail.name}
-            </span>
+              >
+                <span className="w-full text-center text-sm pb-2 font-semibold">
+                  {cartDetail.name}
+                </span>
                 <span className="w-full text-center text-lg font-semibold">
                   {" "}
                   {"You have this border"}
@@ -437,6 +552,13 @@ export const ShopPurchase = ({
                     </span>
                   )}
                 </span>
+                <span className="flex flex-row items-center">
+                  <span className="pl-2 text-sm font-semibold">KI:</span>
+                  <span className="-ml-1 h-6 w-8">
+                    <Lottie animationData={animationData} />
+                  </span>
+                  <span className="flex items-center -ml-1.5 text-xs">{cartDetail.kiprice}</span>
+                </span>
                 {loading ? (
                   <span className="w-full flex justify-center">
                     <Spinner spinnerSize={"medium"} />
@@ -448,7 +570,9 @@ export const ShopPurchase = ({
                     }}
                     className="text-lg w-full text-white text-center cursor-pointer font-semibold bg-[#EB4463] p-2 py-2 rounded-lg"
                   >
-                    {parseFloat(cartDetail.price) === 0 ? "CLAIM NOW" : "BUY NOW"}
+                    {parseFloat(cartDetail.price) === 0
+                      ? "CLAIM NOW"
+                      : "BUY NOW"}
                   </span>
                 )}
                 <span className="pt-2 flex flex-row justify-center w-fit mx-auto rounded-lg space-x-1">
@@ -915,6 +1039,7 @@ const Earn = () => {
                         image: free,
                         name: "Chibi #1",
                         price: "0.00",
+                        kiprice: "0",
                         collectionid: 1,
                         purchaseType: "chibi",
                       });
@@ -948,6 +1073,55 @@ const Earn = () => {
                       </span>
                       <span className="border border-black bg-[#292C33] rounded py-0.5 w-[48%] text-center">
                         {"$0.00"}
+                      </span>
+                    </span>
+                  </span>
+
+                  <span
+                    className={`cursor-pointer flex flex-col p-4 border rounded-xl ${
+                      darkMode
+                        ? "border-[#292C33]"
+                        : "bg-[#FFFFFF] border-[#EEEDEF]"
+                    }`}
+                    onClick={() => {
+                      setShopImageItem({
+                        image: yellowchibi,
+                        name: "Chibi #2",
+                        price: "5",
+                        kiprice: "500",
+                        collectionid: 2,
+                        purchaseType: "chibi",
+                      });
+                    }}
+                  >
+                    <span className="pb-1.5 flex flex-row justify-between items-center">
+                      <span className="text-sm font-semibold">{`Chibi #2`}</span>
+                      <span
+                        className={`px-2 bg-[#0000001A] border ${
+                          darkMode ? "border-[#292C33]" : "border-black"
+                        } rounded-lg text-xs`}
+                      >
+                        Limited
+                      </span>
+                    </span>
+                    <span
+                      className={`mx-auto flex w-fit items-center justify-center rounded-lg`}
+                    >
+                      <span className={`relative w-[140px] h-[140px]`}>
+                        <Image
+                          src={yellowchibi}
+                          alt="custom border"
+                          fill
+                          className="border border-black object-cover rounded-lg"
+                        />
+                      </span>
+                    </span>
+                    <span className="text-sm pt-2 text-white w-full flex flex-row justify-between">
+                      <span className="border border-black bg-[#EB4463] rounded py-0.5 w-[48%] text-center">
+                        500
+                      </span>
+                      <span className="border border-black bg-[#292C33] rounded py-0.5 w-[48%] text-center">
+                        {"$5"}
                       </span>
                     </span>
                   </span>
@@ -1019,7 +1193,8 @@ const Earn = () => {
                         size={120}
                       />
                     </span>
-                    <span onClick={() => {
+                    <span
+                      onClick={() => {
                         setShopImageItem({
                           image: customBorder2,
                           name: `Border "River"`,
@@ -1028,7 +1203,52 @@ const Earn = () => {
                           collectionid: 2,
                           purchaseType: "border",
                         });
-                      }} className="cursor-pointer text-sm pt-2 text-white w-full flex flex-row justify-between">
+                      }}
+                      className="cursor-pointer text-sm pt-2 text-white w-full flex flex-row justify-between"
+                    >
+                      <span className="border border-black bg-[#EB4463] rounded py-0.5 w-[48%] text-center">
+                        100 Ki
+                      </span>
+                      <span className="border border-black bg-[#292C33] rounded py-0.5 w-[48%] text-center">
+                        {"$1.98"}
+                      </span>
+                    </span>
+                  </span>
+
+                  <span
+                    className={`flex flex-col p-4 border rounded-xl ${
+                      darkMode
+                        ? "border-[#292C33]"
+                        : "bg-[#FFFFFF] border-[#EEEDEF]"
+                    }`}
+                  >
+                    <span className="text-sm font-semibold">{`Border "Fire"`}</span>
+
+                    <span
+                      className={`p-1 ${
+                        darkMode ? "bg" : "bg-[#0000001A]"
+                      } flex items-center justify-center border border-black rounded-lg`}
+                      onClick={() => {}}
+                    >
+                      <AvatarDesign
+                        border={fireborder}
+                        userData={userData}
+                        size={120}
+                      />
+                    </span>
+                    <span
+                      onClick={() => {
+                        setShopImageItem({
+                          image: fireborder,
+                          name: `Border "Fire"`,
+                          price: "1.98",
+                          kiprice: "100",
+                          collectionid: 3,
+                          purchaseType: "border",
+                        });
+                      }}
+                      className="cursor-pointer text-sm pt-2 text-white w-full flex flex-row justify-between"
+                    >
                       <span className="border border-black bg-[#EB4463] rounded py-0.5 w-[48%] text-center">
                         100 Ki
                       </span>
