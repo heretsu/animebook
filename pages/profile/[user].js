@@ -601,7 +601,7 @@ export default function User({ user }) {
   }, [done, postsLoaded, loadedState, userNumId, userBasicInfo, valuesLoaded]);
 
   return (
-    <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"} overflow-hidden`}>
+    <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
       <div className="hidden lg:block block z-40 sticky top-0">
         <LargeTopBar relationship={true} />
       </div>

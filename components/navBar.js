@@ -11,9 +11,11 @@ import Telegram from "./telegram";
 import DarkModeToggle from "./darkModeToggle";
 import Link from "next/link";
 import DbUsers from "@/hooks/dbUsers";
+import { useTranslation } from "react-i18next";
 
 const NavBarDependencies = () => {
   const { fetchAllUsers, fetchAllPosts } = DbUsers();
+  const { t } = useTranslation();
 
   const {
     allUsers,
@@ -323,6 +325,7 @@ const NavBarDependencies = () => {
   ]);
 
   return {
+    t,
     formatGroupName,
     communities,
     imgSrcs,
@@ -368,6 +371,7 @@ export const MobileNavBar = () => {
     currentRoute,
     router,
     darkMode,
+    t
   } = NavBarDependencies();
 
   return (
@@ -425,7 +429,7 @@ export const MobileNavBar = () => {
                 : "text-[#292C33]"
             }`}
           >
-            Home
+            {t("Home")}
           </span>
         </span>
 
@@ -470,7 +474,7 @@ export const MobileNavBar = () => {
                 : "text-[#292C33]"
             }`}
           >
-            Explore
+             {t("Explore")}
           </span>
         </span>
         {/* </span> */}
@@ -514,7 +518,7 @@ export const MobileNavBar = () => {
                 : "text-[#292C33]"
             }`}
           >
-            Post
+            {t("Post")}
           </span>
           {/* </span> */}
         </span>
@@ -824,7 +828,7 @@ export const MobileNavBar = () => {
                 : "text-black"
             }`}
           >
-            Earn
+            {t("Earn")}
           </span>
           {/* </span> */}
         </span>
@@ -836,6 +840,7 @@ export const MobileNavBar = () => {
 const NavBar = () => {
   const { fullPageReload } = PageLoadOptions();
   const {
+    t,
     formatGroupName,
     communities,
     imgSrcs,
@@ -969,7 +974,7 @@ const NavBar = () => {
                       darkMode ? "text-white" : "text-black"
                     } p-2 flex flex-row items-center cursor-pointer hover:bg-[#EA334E] hover:text-white font-medium`}
                   >
-                    {`${openSuggestions.foundUsers.length} users found`}
+                    {`${openSuggestions.foundUsers.length} ${t('users')} ${t('found')}`}
                   </span>
                 </span>
               )}
@@ -986,7 +991,7 @@ const NavBar = () => {
                           : "border-gray-200 bg-gray-100 text-slate-400"
                       } py-0.5 px-1.5 rounded-2xl`}
                     >
-                      {"clear"}
+                      {t("clear")}
                     </span>
                   </span>
 
@@ -1071,7 +1076,7 @@ const NavBar = () => {
               </g>
             </svg>
 
-            <span>Home</span>
+            <span>{t('Home')}</span>
             {/* </div> */}
           </span>
           <span>
@@ -1115,7 +1120,7 @@ const NavBar = () => {
                 </g>
               </svg>
 
-              <span>Explore</span>
+              <span>{t('Explore')}</span>
               {/* </div> */}
             </span>
           </span>
@@ -1156,7 +1161,7 @@ const NavBar = () => {
               />
             </svg>
 
-            <span>Search</span>
+            <span>{t('Search')}</span>
             {/* </div> */}
           </span>
           <span
@@ -1531,7 +1536,7 @@ const NavBar = () => {
                 </g>
               </g>
             </svg>
-            <span>Leaderboard</span>
+            <span>{t('Leaderboard')}</span>
             {/* </div> */}
           </span>
 
@@ -1570,7 +1575,7 @@ const NavBar = () => {
               </g>
             </svg>
 
-            <span>{"Earn & Shop"}</span>
+            <span>{t("Earn & Shop")}</span>
             {/* </div> */}
           </span>
 
@@ -1628,7 +1633,7 @@ const NavBar = () => {
               </g>
             </svg>
 
-            <span>Settings</span>
+            <span>{t('Settings')}</span>
           </span>
         </div>
         {communities &&
@@ -1645,7 +1650,7 @@ const NavBar = () => {
                   darkMode ? "border-[#32353C]" : "border-[#D0D3DB]"
                 }`}
               >
-                <span className="pb-2 text-sm font-light">My Communities</span>
+                <span className="pb-2 text-sm font-light">{t('My Communities')}</span>
                 {communities
                   .filter((myCommunity) => myCommunity.isAMember)
                   .slice(0, 3)
@@ -1698,7 +1703,7 @@ const NavBar = () => {
                   darkMode ? "border-[#32353C]" : "border-[#D0D3DB]"
                 } font-light text-[0.7rem] underline`}
               >
-                View all communities
+                {t('View all communities')}
               </span>
             </div>
           )}
@@ -1710,7 +1715,7 @@ const NavBar = () => {
             }}
             className="rounded cursor-pointer w-full bg-[#EA334E] py-2 text-center text-white"
           >
-            POST SOMETHING
+            {t('POST SOMETHING')}
           </span>
         </div>
       </div>

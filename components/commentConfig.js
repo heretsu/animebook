@@ -3,12 +3,14 @@ import { UserContext } from "@/lib/userContext";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import HyperlinkCard from "./hyperlinkCard";
 import { useRouter } from "next/router";
+import { useTranslation } from "react-i18next";
 
 const CommentConfig = ({ username, text}) => {
   const { fullPageReload } = PageLoadOptions();
   const router = useRouter();
   const [seeMore, setSeeMore] = useState(false);
   const maxWords = 20;
+  const { t } = useTranslation();
 
   const renderWord = (word, index) => {
     if (word.startsWith("#")) {
@@ -38,7 +40,7 @@ const CommentConfig = ({ username, text}) => {
         </div>
       );
     } else {
-      return <span key={index} className="leading-tight whitespace-pre-wrap">{word}</span>;
+      return <span key={index} className="leading-tight whitespace-pre-wrap">{t(word.toLowerCase())}</span>;
     }
   };
 

@@ -8,8 +8,11 @@ import PageLoadOptions from "@/hooks/pageLoadOptions";
 import GifPicker from "./gifPicker";
 import DbUsers from "@/hooks/dbUsers";
 import PollCreator from "./pollCreator";
+import { useTranslation } from "react-i18next";
 
 const SmallPostContainer = ({setNewPost, communityId, community }) => {
+  const { t } = useTranslation();
+
   const { fullPageReload } = PageLoadOptions();
   const {
     userNumId,
@@ -326,7 +329,7 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
               }
             }}
             ref={textareaRef}
-            placeholder={`What's on your mind?`}
+            placeholder={`${t("What's on your mind")}?`}
             className={`text-sm resize-none w-full bg-transparent ${
               darkMode ? "placeholder:text-gray-400 text-white" : "text-black"
             } h-8 placeholder:text-xs border-none focus:outline-none focus:ring-0`}

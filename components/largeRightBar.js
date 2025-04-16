@@ -704,7 +704,7 @@ filteredPosts.forEach((post) => {
                 return (
                   <div
                     key={tag}
-                    className={`py-1.5 text-xs flex flex-row justify-between`}
+                    className={`cursor-pointer py-1.5 text-xs flex flex-row justify-between`}
                   >
                     <span
                       onClick={() => {

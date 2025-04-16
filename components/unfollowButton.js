@@ -10,6 +10,7 @@ const UnfollowButton = ({
                 setAlreadyFollowed,
   followerUserId,
   followingUserId,
+  size
   
 }) => {
   const {
@@ -42,7 +43,7 @@ const UnfollowButton = ({
   return (
     <span
       onClick={unfollowUser}
-      className={`cursor-pointer relative h-fit w-fit border border-gray-200 rounded-md text-xs font-medium text-white bg-gray-700 p-1`}
+      className={`cursor-pointer relative h-fit w-20 text-center rounded-md text-white bg-gray-700 py-1`}
     >
         Unfollow
       </span>

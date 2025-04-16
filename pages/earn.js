@@ -42,7 +42,6 @@ export const ShopPurchase = ({
   const purchaseBorder = async () => {
     setLoading(true);
     if (cartDetail.purchaseType === "border") {
-      
       if (parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice)) {
         const newKi = parseFloat(userData.ki) - parseFloat(cartDetail.kiprice);
         supabase
@@ -71,27 +70,36 @@ export const ShopPurchase = ({
     setLoading(false);
   };
 
-  const purchaseChibi = () => {
+  const purchaseChibi = async () => {
     setLoading(true);
     if (cartDetail.purchaseType === "chibi") {
-      supabase
-        .from("chibis")
-        .insert({
-          userid: userData.id,
-          collectionid: cartDetail.collectionid,
-        })
-        .then((res) => {
-          if (res.error) {
+      if (parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice)) {
+        const newKi = parseFloat(userData.ki) - parseFloat(cartDetail.kiprice);
+        await supabase
+          .from("users")
+          .update({
+            ki: newKi,
+          })
+
+        supabase
+          .from("chibis")
+          .insert({
+            userid: userData.id,
+            collectionid: cartDetail.collectionid,
+          })
+          .then((res) => {
+            if (res.error) {
+              setLoading(false);
+              return;
+            }
+            setSuccess(true);
             setLoading(false);
-            return;
-          }
-          setSuccess(true);
-          setLoading(false);
-        })
-        .catch((error) => {
-          setLoading(false);
-          console.log("cypher e: ", error);
-        });
+          })
+          .catch((error) => {
+            setLoading(false);
+            console.log("cypher e: ", error);
+          });
+      }
     }
 
     setLoading(false);
@@ -363,7 +371,9 @@ export const ShopPurchase = ({
                   <span className="-ml-1 h-6 w-8">
                     <Lottie animationData={animationData} />
                   </span>
-                  <span className="flex items-center -ml-1.5 text-xs">{cartDetail.kiprice}</span>
+                  <span className="flex items-center -ml-1.5 text-xs">
+                    {cartDetail.kiprice}
+                  </span>
                 </span>
                 {loading ? (
                   <span className="w-full flex justify-center">
@@ -374,11 +384,11 @@ export const ShopPurchase = ({
                     onClick={() => {
                       purchaseChibi();
                     }}
-                    className="text-lg w-full text-white text-center cursor-pointer font-semibold bg-[#EB4463] p-2 py-2 rounded-lg"
+                    className={`${parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice) ? 'bg-[#EB4463] cursor-pointer' : 'bg-gray-400 cursor-not-allowed'} text-lg w-full text-white text-center font-semibold p-2 py-2 rounded-lg`}
                   >
                     {parseFloat(cartDetail.price) === 0
                       ? "CLAIM NOW"
-                      : "BUY NOW"}
+                      : "BUY NOW" }
                   </span>
                 )}
                 <span className="pt-2 flex flex-row justify-center w-fit mx-auto rounded-lg space-x-1">
@@ -557,7 +567,9 @@ export const ShopPurchase = ({
                   <span className="-ml-1 h-6 w-8">
                     <Lottie animationData={animationData} />
                   </span>
-                  <span className="flex items-center -ml-1.5 text-xs">{cartDetail.kiprice}</span>
+                  <span className="flex items-center -ml-1.5 text-xs">
+                    {cartDetail.kiprice}
+                  </span>
                 </span>
                 {loading ? (
                   <span className="w-full flex justify-center">
@@ -568,7 +580,7 @@ export const ShopPurchase = ({
                     onClick={() => {
                       purchaseBorder();
                     }}
-                    className="text-lg w-full text-white text-center cursor-pointer font-semibold bg-[#EB4463] p-2 py-2 rounded-lg"
+                    className={`${parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice) ? 'bg-[#EB4463] cursor-pointer' : 'bg-gray-400 cursor-not-allowed'} text-lg w-full text-white text-center cursor-pointer font-semibold bg-[#EB4463] p-2 py-2 rounded-lg`}
                   >
                     {parseFloat(cartDetail.price) === 0
                       ? "CLAIM NOW"
@@ -1156,7 +1168,7 @@ const Earn = () => {
                         setShopImageItem({
                           image: customBorder,
                           name: `Border "Animebook"`,
-                          price: "0.99",
+                          price: "0.5",
                           kiprice: "50",
                           collectionid: 1,
                           purchaseType: "border",
@@ -1168,7 +1180,7 @@ const Earn = () => {
                         50 Ki
                       </span>
                       <span className="border border-black bg-[#292C33] rounded py-0.5 w-[48%] text-center">
-                        {"$0.99"}
+                        {"$0.5"}
                       </span>
                     </span>
                   </span>
@@ -1198,7 +1210,7 @@ const Earn = () => {
                         setShopImageItem({
                           image: customBorder2,
                           name: `Border "River"`,
-                          price: "1.98",
+                          price: "1",
                           kiprice: "100",
                           collectionid: 2,
                           purchaseType: "border",
@@ -1210,7 +1222,7 @@ const Earn = () => {
                         100 Ki
                       </span>
                       <span className="border border-black bg-[#292C33] rounded py-0.5 w-[48%] text-center">
-                        {"$1.98"}
+                        {"$1"}
                       </span>
                     </span>
                   </span>
@@ -1241,7 +1253,7 @@ const Earn = () => {
                         setShopImageItem({
                           image: fireborder,
                           name: `Border "Fire"`,
-                          price: "1.98",
+                          price: "1",
                           kiprice: "100",
                           collectionid: 3,
                           purchaseType: "border",
@@ -1253,7 +1265,7 @@ const Earn = () => {
                         100 Ki
                       </span>
                       <span className="border border-black bg-[#292C33] rounded py-0.5 w-[48%] text-center">
-                        {"$1.98"}
+                        {"$1"}
                       </span>
                     </span>
                   </span>

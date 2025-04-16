@@ -35,6 +35,7 @@ const Settings = () => {
     <section className="mb-5 flex flex-row lg:space-x-2 w-full">
         <NavBar />
         <div className="w-full px-2 space-y-8 pl-2 lg:pl-[16rem] lg:pr-[18rem] xl:pl-[18rem] xl:pr-[20rem] mt-4 flex flex-col">
+
         <EditProfileContainer />
         <span
         onClick={() => {logOut()}}

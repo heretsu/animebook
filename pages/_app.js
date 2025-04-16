@@ -13,8 +13,10 @@ import TOS, { Policy } from "@/components/agreements";
 import TutorialBox from "@/components/tutorialBox";
 import PreventZoom from "@/lib/preventZoom";
 import useMvps from "@/lib/mvps";
+import '@/lib/i18n';
+import { appWithTranslation } from 'next-i18next';
 
-export default function App({ Component, pageProps }) {
+function App({ Component, pageProps }) {
   const { likesMvp, postsMvp, viewsMvp, refMvp, followMvp, repostMvp } = useMvps();
   const [videoPlayingId, setVideoPlayingId] = useState(null);
   const [clickFollower, setClickFollower] = useState(false);
@@ -906,3 +908,5 @@ export default function App({ Component, pageProps }) {
     )
   );
 }
+
+export default appWithTranslation(App);

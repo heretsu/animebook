@@ -10,6 +10,49 @@ import ConnectionData from "@/lib/connectionData";
 import { ethers } from "ethers";
 import { formatUnits } from "@ethersproject/units";
 import ErcTwentyToken from "@/lib/static/ErcTwentyToken.json";
+import { UseTranslation, useTranslation } from "next-i18next";
+
+export const LanguageSwitcher = ({ darkMode }) => {
+  const { i18n } = useTranslation();
+
+  const handleChange = (e) => {
+    i18n.changeLanguage(e.target.value);
+  };
+
+  return (
+    <span className="relative w-full">
+      <select
+        onChange={handleChange}
+        value={i18n.language}
+        className={`${
+          darkMode ? "bg-[#27292F]" : "bg-gray-200"
+        } mt-1 p-2 pr-8 text-sm text-start cursor-pointer rounded-lg w-full border-none focus:outline-none focus:ring-0 appearance-none`}
+      >
+        <option value="en">English</option>
+        <option value="ja">Japanese</option>
+        {/* <option value="gm">German</option> */}
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+      </select>
+      <span className="pointer-events-none absolute inset-y-0 right-0 flex justify-center items-center px-2">
+        <svg
+          width="20px"
+          height="20px"
+          viewBox="0 0 48 48"
+          xmlns="http://www.w3.org/2000/svg"
+          fill={darkMode ? 'white' : 'black'}
+        >
+          <path d="M0 0h48v48H0z" fill="none" />
+          <g id="Shopicon">
+            <g>
+              <polygon points="24,29.171 9.414,14.585 6.586,17.413 24,34.827 41.414,17.413 38.586,14.585  " />
+            </g>
+          </g>
+        </svg>
+      </span>
+    </span>
+  );
+};
 
 const {
   Keypair,
@@ -38,6 +81,7 @@ export const BinSvg = ({ pixels }) => {
   );
 };
 const EditProfileContainer = () => {
+  const { t } = useTranslation();
   const ercABI = ErcTwentyToken.abi;
   const { connectToWallet } = ConnectionData();
   const { fullPageReload } = PageLoadOptions();
@@ -507,14 +551,12 @@ const EditProfileContainer = () => {
               />
             </span>
 
-
-
             <span className="flex flex-col text-start text-xs sm:text-sm font-medium w-full space-x-1">
               <span className="flex flex-row items-center">
                 <span>ETH Wallet</span>
 
                 <span className="text-xs ml-2 bg-[#EB4463] text-white py-0.5 px-1 rounded h-fit">
-                {"Balance: "} {luffyBalance ? luffyBalance : 0} Luffy{" "}
+                  {"Balance: "} {luffyBalance ? luffyBalance : 0} Luffy{" "}
                   {ethBalance ? ethBalance : 0} Eth
                 </span>
 
@@ -544,15 +586,15 @@ const EditProfileContainer = () => {
                   darkMode ? "bg-[#27292F]" : "bg-gray-200"
                 } flex flex-row justify-between mt-1 pl-4 items-center text-sm text-start rounded-lg resize-none w-full`}
               >
-              <input
-                // value=""
-                disabled
-                value={newAddress ? newAddress : userData.address}
-                className={`${
-                  darkMode ? "bg-[#27292F]" : "bg-gray-200"
-                } mt-1 px-4 text-sm text-start cursor-not-allowed rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
-              />
-              <span
+                <input
+                  // value=""
+                  disabled
+                  value={newAddress ? newAddress : userData.address}
+                  className={`${
+                    darkMode ? "bg-[#27292F]" : "bg-gray-200"
+                  } mt-1 px-4 text-sm text-start cursor-not-allowed rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
+                />
+                <span
                   onClick={() => {
                     // connectToWallet()
                     // open()
@@ -560,9 +602,10 @@ const EditProfileContainer = () => {
                   }}
                   className="flex flex-row space-x-1 cursor-pointer bg-black text-white px-3 py-2 h-full rounded-r-lg"
                 >
-                  <span>Change</span><span>Wallet</span>
+                  <span>Change</span>
+                  <span>Wallet</span>
                 </span>
-                </span>
+              </span>
             </span>
 
             <span className="flex flex-col text-start text-xs sm:text-sm font-medium w-full space-x-1">
@@ -600,15 +643,15 @@ const EditProfileContainer = () => {
                   darkMode ? "bg-[#27292F]" : "bg-gray-200"
                 } flex flex-row justify-between mt-1 pl-4 items-center text-sm text-start rounded-lg resize-none w-full`}
               >
-              <input
-                // value=""
-                disabled
-                value={userData.solAddress}
-                className={`${
-                  darkMode ? "bg-[#27292F]" : "bg-gray-200"
-                } mt-1 px-4 text-sm text-start cursor-not-allowed rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
-              />
-              <span
+                <input
+                  // value=""
+                  disabled
+                  value={userData.solAddress}
+                  className={`${
+                    darkMode ? "bg-[#27292F]" : "bg-gray-200"
+                  } mt-1 px-4 text-sm text-start cursor-not-allowed rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
+                />
+                <span
                   onClick={() => {
                     // connectToWallet()
                     // open()
@@ -616,9 +659,15 @@ const EditProfileContainer = () => {
                   }}
                   className="flex flex-row space-x-1 cursor-pointer bg-black text-white px-3 py-2 h-full rounded-r-lg"
                 >
-                  <span>Change</span><span>Wallet</span>
+                  <span>Change</span>
+                  <span>Wallet</span>
                 </span>
-                </span>
+              </span>
+            </span>
+
+            <span className="space-y-1 flex flex-col">
+              <span className="text-start font-medium w-full">Language</span>
+              <LanguageSwitcher darkMode={darkMode} />
             </span>
 
             <span className="text-start text-xs sm:text-sm w-full flex flex-col">
@@ -630,7 +679,10 @@ const EditProfileContainer = () => {
                 {"Add Animes you have watched and rate them"}
               </span>
 
-              <span id="scrollbar-remove" className="relative flex flex-row space-x-1 overflow-x-scroll">
+              <span
+                id="scrollbar-remove"
+                className="relative flex flex-row space-x-1 overflow-x-scroll"
+              >
                 <span
                   onClick={() => {
                     setOpenWatchList(true);
@@ -806,38 +858,38 @@ const EditProfileContainer = () => {
                         Popular animes
                       </h3>
                       <div className="flex justify-center w-full">
-                      <div className="w-fit grid grid-cols-3 md:grid-cols-8 gap-3">
-                        {animes.slice(0, 16).map((anime) => (
-                          <div
-                            key={anime.mal_id}
-                            className={`relative cursor-pointer w-24 rounded-lg overflow-hidden shadow-md ${
-                              selectedAnimes.includes(anime)
-                                ? "border-2 border-[#EB4463]"
-                                : ""
-                            }`}
-                            onClick={() => handleSelectAnime(anime)}
-                          >
-                            <span className="flex">
-                              <img
-                                src={anime.images.jpg.image_url}
-                                alt={anime.title || "anime"}
-                                width={50}
-                                height={50}
-                                className="w-full h-24 object-cover"
-                              />
-                            </span>
+                        <div className="w-fit grid grid-cols-3 md:grid-cols-8 gap-3">
+                          {animes.slice(0, 16).map((anime) => (
                             <div
-                              className={`absolute bottom-0 w-full p-1 text-center text-xs font-medium text-white ${
+                              key={anime.mal_id}
+                              className={`relative cursor-pointer w-24 rounded-lg overflow-hidden shadow-md ${
                                 selectedAnimes.includes(anime)
-                                  ? "bg-[#EB4463]"
-                                  : "bg-black/60"
+                                  ? "border-2 border-[#EB4463]"
+                                  : ""
                               }`}
+                              onClick={() => handleSelectAnime(anime)}
                             >
-                              {anime.title}
+                              <span className="flex">
+                                <img
+                                  src={anime.images.jpg.image_url}
+                                  alt={anime.title || "anime"}
+                                  width={50}
+                                  height={50}
+                                  className="w-full h-24 object-cover"
+                                />
+                              </span>
+                              <div
+                                className={`absolute bottom-0 w-full p-1 text-center text-xs font-medium text-white ${
+                                  selectedAnimes.includes(anime)
+                                    ? "bg-[#EB4463]"
+                                    : "bg-black/60"
+                                }`}
+                              >
+                                {anime.title}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
 

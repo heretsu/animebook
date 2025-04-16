@@ -61,7 +61,8 @@ export default function NotifCard({ note, myProfileId, typeOfNotif, darkMode }) 
         <UnfollowButton followerUserId={myProfileId}
         followingUserId={note.userid}
         alreadyFollowed={alreadyFollowed}
-        setAlreadyFollowed={setAlreadyFollowed}/>
+        setAlreadyFollowed={setAlreadyFollowed}  size={"19"}/>
+       
       ) : (
         <PlusIcon
           alreadyFollowed={alreadyFollowed}

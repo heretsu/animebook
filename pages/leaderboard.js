@@ -42,7 +42,7 @@ const Leaderboard = () => {
       );
     const creatorsMap = {};
 
-    data.forEach(({ creator, subscriber }) => {
+    data?.forEach(({ creator, subscriber }) => {
       if (!creatorsMap[creator.id]) {
         creatorsMap[creator.id] = {
           ...creator,
@@ -607,7 +607,7 @@ const Leaderboard = () => {
                               darkMode
                                 ? "text-white border-white text-white"
                                 : "text-black border-[#292C33]"
-                            } text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
+                            } cursor-pointer text-sm text-center w-full p-1 rounded-lg cursor-pointer`}
                           >
                             View profile
                           </span>
@@ -1115,7 +1115,7 @@ const Leaderboard = () => {
                               `/profile/${creatorsArray[0].username}`
                             );
                           }}
-                          className="cursor-default text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
+                          className="cursor-pointer text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
                         >
                           View profile
                         </span>
@@ -1179,7 +1179,7 @@ const Leaderboard = () => {
                                 `/profile/${creatorsArray[1].username}`
                               );
                             }}
-                            className="cursor-default text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
+                            className="cursor-pointer text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
                           >
                             View profile
                           </span>
@@ -1244,7 +1244,7 @@ const Leaderboard = () => {
                                 `/profile/${creatorsArray[2].username}`
                               );
                             }}
-                            className="cursor-default text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
+                            className="cursor-pointer text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
                           >
                             View profile
                           </span>
@@ -1399,7 +1399,7 @@ const Leaderboard = () => {
                         onClick={() => {
                           fullPageReload(`/profile/${sortedUsers[0].username}`);
                         }}
-                        className="cursor-default text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
+                        className="cursor-pointer text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
                       >
                         View profile
                       </span>
@@ -1454,7 +1454,7 @@ const Leaderboard = () => {
                         onClick={() => {
                           fullPageReload(`/profile/${sortedUsers[1].username}`);
                         }}
-                        className="cursor-default text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
+                        className="cursor-pointer text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
                       >
                         View profile
                       </span>
@@ -1511,7 +1511,7 @@ const Leaderboard = () => {
                         onClick={() => {
                           fullPageReload(`/profile/${sortedUsers[2].username}`);
                         }}
-                        className="cursor-default text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
+                        className="cursor-pointer text-white text-sm font-medium text-center py-2 w-full bg-black rounded-lg"
                       >
                         View profile
                       </span>
