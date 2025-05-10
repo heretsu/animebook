@@ -1,6 +1,13 @@
 import "@/styles/globals.css";
 import { UserContext } from "@/lib/userContext";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import { SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
+import "@solana/wallet-adapter-react-ui/styles.css";
 import supabase from "@/hooks/authenticateUser";
 import { useRouter } from "next/router";
 import PopupModal from "@/components/popupModal";
@@ -13,11 +20,19 @@ import TOS, { Policy } from "@/components/agreements";
 import TutorialBox from "@/components/tutorialBox";
 import PreventZoom from "@/lib/preventZoom";
 import useMvps from "@/lib/mvps";
-import '@/lib/i18n';
-import { appWithTranslation } from 'next-i18next';
+import "@/lib/i18n";
+import { appWithTranslation } from "next-i18next";
 
 function App({ Component, pageProps }) {
-  const { likesMvp, postsMvp, viewsMvp, refMvp, followMvp, repostMvp } = useMvps();
+  const endpoint = useMemo(
+    () =>
+      "https://late-late-pool.solana-mainnet.quiknode.pro/579d55908141321be30e2edf612880f024e8bf9f/",
+    []
+  );
+  const wallets = useMemo(() => [new SolflareWalletAdapter()], []);
+
+  const { likesMvp, postsMvp, viewsMvp, refMvp, followMvp, repostMvp } =
+    useMvps();
   const [videoPlayingId, setVideoPlayingId] = useState(null);
   const [clickFollower, setClickFollower] = useState(false);
   const [clickFollowing, setClickFollowing] = useState(false);
@@ -98,8 +113,9 @@ function App({ Component, pageProps }) {
   const [userWatchList, setUserWatchList] = useState(null);
   const [currentUserWatchlist, setCurrentUserWatchlist] = useState(null);
 
-  const [userChibis, setUserChibis] = useState(null)
-  const [currentUserChibis, setCurrentUserChibis] = useState(null)
+  const [userChibis, setUserChibis] = useState(null);
+  const [currentUserChibis, setCurrentUserChibis] = useState(null);
+  const [currentUserBorders, setCurrentUserBorders] = useState(null);
   const [communities, setCommunities] = useState(null);
   const { fetchFollowing, fetchFollows } = Relationships();
 
@@ -509,7 +525,6 @@ function App({ Component, pageProps }) {
 
   const [allowUnloggedView, setAllowUnloggedView] = useState(false);
   useEffect(() => {
-
     if (darkMode) {
       document.body.style.backgroundColor = "#17181C";
       document.documentElement.classList.add("dark");
@@ -563,8 +578,6 @@ function App({ Component, pageProps }) {
                   fetchAllPolls().then((pls) => setAllPolls(pls));
                   fetchCommunities().then(async (secondResult) => {
                     if (secondResult !== undefined && secondResult !== null) {
-                      
-
                       setCommunities(
                         [...secondResult.data].sort(
                           (a, b) => b.membersLength - a.membersLength
@@ -621,172 +634,263 @@ function App({ Component, pageProps }) {
       router.pathname === "/signin" ||
       allowUnloggedView ||
       onboarding) && (
-      <UserContext.Provider
-        value={{
-          allPolls,
-          setAllPolls,
-          allCommunityPolls,
-          setAllCommunityPolls,
-          userWatchList,
-          setUserWatchList,
-          currentUserWatchlist,
-          setCurrentUserWatchlist,
-          userChibis, setUserChibis,
-          currentUserChibis, setCurrentUserChibis,
-          mediasClicked,
-          setMediasClicked,
-          clickFollower,
-          setClickFollower,
-          clickFollowing,
-          setClickFollowing,
-          allSubscriptions,
-          setAllSubscriptions,
-          fetchCommunities,
-          newListOfComments,
-          setNewListOfComments,
-          videoRef,
-          activeVideo,
-          videoPlayingId,
-          handlePlay,
-          setVideoPlayingId,
-          unreadMessagesLength,
-          setUnreadMessagesLength,
-          darkMode,
-          setDarkMode,
-          allUsers,
-          youMayKnow,
-          setYouMayKnow,
-          newPeople,
-          setNewPeople,
-          address,
-          userData,
-          setUserData,
-          subscribed,
-          profileOpen,
-          setProfileOpen,
-          openStories,
-          setOpenStories,
-          selectedMediaFile,
-          setSelectedMediaFile,
-          selectedMedia,
-          setSelectedMedia,
-          userNumId,
-          postJustMade,
-          setPostJustMade,
-          isImage,
-          setIsImage,
-          originalPostValues,
-          setOriginalPostValues,
-          postValues,
-          setPostValues,
-          storyValues,
-          setStoryValues,
-          commentValues,
-          setCommentValues,
-          openComments,
-          setOpenComments,
-          postOwnerDetails,
-          setPostOwnerDetails,
-          currentStory,
-          setCurrentStory,
-          storiesFilter,
-          setStoriesFilter,
-          imagesFilter,
-          setImagesFilter,
-          videosFilter,
-          setVideosFilter,
-          tagsFilter,
-          setTagsFilter,
-          searchFilter,
-          setSearchFilter,
-          commentMsg,
-          setCommentMsg,
-          parentId,
-          setParentId,
-          hashtagList,
-          setHashtagList,
-          originalExplorePosts,
-          setOriginalExplorePosts,
-          explorePosts,
-          setExplorePosts,
-          chosenTag,
-          setChosenTag,
-          followingPosts,
-          setFollowingPosts,
-          storyViews,
-          setStoryViews,
-          followerObject,
-          setFollowerObject,
-          followingObject,
-          setFollowingObject,
-          myProfileRoute,
-          setMyProfileRoute,
-          inputRef,
-          communityInputRef,
-          address,
-          setAddress,
-          userPostValues,
-          setUserPostValues,
-          deletePost,
-          setDeletePost,
-          playVideo,
-          setPlayVideo,
-          openManga,
-          setOpenManga,
-          mgComic,
-          setMgComic,
-          openPurchaseModal,
-          setOpenPurchaseModal,
-          allUserObject,
-          setAllUserObject,
-          NotSignedIn,
-          setNotSignedIn,
-          routedUser,
-          setRoutedUser,
-          communities,
-          setCommunities,
-          myRelationships,
-          setMyRelationships,
-          sideBarOpened,
-          setSideBarOpened,
-          notifyUserObject,
-          setNotifyUserObject,
-          openPremium,
-          setOpenPremium,
-          currentCommunity,
-          setCurrentCommunity,
-          unreadCount,
-          setUnreadCount,
-          commentRef,
-          likesMvp, postsMvp, viewsMvp, refMvp, followMvp, repostMvp
-        }}
-      >
-        <PreventZoom />
-        <span
-          id="baiFont"
-          className={`relative w-full max-w-[20px] mx-auto bg-black text-sm sm:text-base`}
-        >
-          {[
-            "/notifications",
-            "/create",
-            "/publishmanga",
-            "/settings",
-            "/earn",
-            "/reports",
-            "/leaderboard",
-            "/subscriptionplan",
-            "/inbox",
-            "/[message]",
-            "/privacy-policy",
-          ].includes(router.pathname) ? (
-            authLoading ? (
-              <div className="pt-8">
-                <PopupModal success={"4"} messageTopic={""} moreInfo={""} />
-                <div id="overlay"></div>
-              </div>
-            ) : subscribed ? (
-              userData ? (
-                agreementMade ? (
+      <ConnectionProvider endpoint={endpoint}>
+        <WalletProvider wallets={wallets} autoConnect>
+          <WalletModalProvider>
+            <UserContext.Provider
+              value={{
+                allPolls,
+                setAllPolls,
+                allCommunityPolls,
+                setAllCommunityPolls,
+                userWatchList,
+                setUserWatchList,
+                currentUserWatchlist,
+                setCurrentUserWatchlist,
+                userChibis,
+                setUserChibis,
+                currentUserChibis,
+                setCurrentUserChibis,
+                currentUserBorders,
+                setCurrentUserBorders,
+                mediasClicked,
+                setMediasClicked,
+                clickFollower,
+                setClickFollower,
+                clickFollowing,
+                setClickFollowing,
+                allSubscriptions,
+                setAllSubscriptions,
+                fetchCommunities,
+                newListOfComments,
+                setNewListOfComments,
+                videoRef,
+                activeVideo,
+                videoPlayingId,
+                handlePlay,
+                setVideoPlayingId,
+                unreadMessagesLength,
+                setUnreadMessagesLength,
+                darkMode,
+                setDarkMode,
+                allUsers,
+                youMayKnow,
+                setYouMayKnow,
+                newPeople,
+                setNewPeople,
+                address,
+                userData,
+                setUserData,
+                subscribed,
+                profileOpen,
+                setProfileOpen,
+                openStories,
+                setOpenStories,
+                selectedMediaFile,
+                setSelectedMediaFile,
+                selectedMedia,
+                setSelectedMedia,
+                userNumId,
+                postJustMade,
+                setPostJustMade,
+                isImage,
+                setIsImage,
+                originalPostValues,
+                setOriginalPostValues,
+                postValues,
+                setPostValues,
+                storyValues,
+                setStoryValues,
+                commentValues,
+                setCommentValues,
+                openComments,
+                setOpenComments,
+                postOwnerDetails,
+                setPostOwnerDetails,
+                currentStory,
+                setCurrentStory,
+                storiesFilter,
+                setStoriesFilter,
+                imagesFilter,
+                setImagesFilter,
+                videosFilter,
+                setVideosFilter,
+                tagsFilter,
+                setTagsFilter,
+                searchFilter,
+                setSearchFilter,
+                commentMsg,
+                setCommentMsg,
+                parentId,
+                setParentId,
+                hashtagList,
+                setHashtagList,
+                originalExplorePosts,
+                setOriginalExplorePosts,
+                explorePosts,
+                setExplorePosts,
+                chosenTag,
+                setChosenTag,
+                followingPosts,
+                setFollowingPosts,
+                storyViews,
+                setStoryViews,
+                followerObject,
+                setFollowerObject,
+                followingObject,
+                setFollowingObject,
+                myProfileRoute,
+                setMyProfileRoute,
+                inputRef,
+                communityInputRef,
+                address,
+                setAddress,
+                userPostValues,
+                setUserPostValues,
+                deletePost,
+                setDeletePost,
+                playVideo,
+                setPlayVideo,
+                openManga,
+                setOpenManga,
+                mgComic,
+                setMgComic,
+                openPurchaseModal,
+                setOpenPurchaseModal,
+                allUserObject,
+                setAllUserObject,
+                NotSignedIn,
+                setNotSignedIn,
+                routedUser,
+                setRoutedUser,
+                communities,
+                setCommunities,
+                myRelationships,
+                setMyRelationships,
+                sideBarOpened,
+                setSideBarOpened,
+                notifyUserObject,
+                setNotifyUserObject,
+                openPremium,
+                setOpenPremium,
+                currentCommunity,
+                setCurrentCommunity,
+                unreadCount,
+                setUnreadCount,
+                commentRef,
+                likesMvp,
+                postsMvp,
+                viewsMvp,
+                refMvp,
+                followMvp,
+                repostMvp,
+              }}
+            >
+              <PreventZoom />
+              <span
+                id="baiFont"
+                className={`relative w-full max-w-[20px] mx-auto bg-black text-sm sm:text-base`}
+              >
+                {[
+                  "/notifications",
+                  "/create",
+                  "/publishmanga",
+                  "/settings",
+                  "/earn",
+                  "/reports",
+                  "/leaderboard",
+                  "/subscriptionplan",
+                  "/inbox",
+                  "/[message]",
+                  "/privacy-policy",
+                ].includes(router.pathname) ? (
+                  authLoading ? (
+                    <div className="pt-8">
+                      <PopupModal
+                        success={"4"}
+                        messageTopic={""}
+                        moreInfo={""}
+                      />
+                      <div id="overlay"></div>
+                    </div>
+                  ) : subscribed ? (
+                    userData ? (
+                      agreementMade ? (
+                        graduate ? (
+                          <Component {...pageProps} />
+                        ) : (
+                          <>
+                            <div id="tutorial" className="bg-transparent">
+                              <TutorialBox
+                                graduateTutorial={graduateTutorial}
+                                setGraduate={setGraduate}
+                              />
+                            </div>
+
+                            <Component {...pageProps} />
+
+                            <div
+                              id="tutorial-overlay"
+                              className="bg-black backdrop-blur-md"
+                            ></div>
+                          </>
+                        )
+                      ) : (
+                        userData &&
+                        !userData.agreedpolicies && (
+                          <span
+                            className={`${
+                              darkMode && "text-white"
+                            } flex flex-col space-y-2 py-2`}
+                          >
+                            <span className="font-medium flex flex-col text-center justify-center items-center">
+                              <p>{"By signing in to Animebook,"}</p>
+                              <p>
+                                {
+                                  "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
+                                }
+                              </p>
+                            </span>
+                            <span
+                              onClick={() => {
+                                agreeToTerms();
+                              }}
+                              className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg"
+                            >
+                              I Agree
+                            </span>
+                            <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
+                              <TOS darkMode={darkMode} />
+                              <Policy darkMode={darkMode} />
+                            </span>
+                          </span>
+                        )
+                      )
+                    ) : (
+                      <div className="pt-8">
+                        <DappLogo size={"default"} />
+                        <PopupModal
+                          success={"3"}
+                          messageTopic={""}
+                          moreInfo={""}
+                        />
+                        <div id="overlay"></div>
+                      </div>
+                    )
+                  ) : (
+                    <div className="pt-8">
+                      <DappLogo size={"default"} />
+                      <PopupModal
+                        success={"3"}
+                        messageTopic={""}
+                        moreInfo={""}
+                      />
+                      <div id="overlay"></div>
+                    </div>
+                  )
+                ) : onboarding ? (
+                  <Onboard allUsers={allUsers} me={oauthDetails} />
+                ) : userData && agreementMade ? (
                   graduate ? (
                     <Component {...pageProps} />
                   ) : (
@@ -806,105 +910,41 @@ function App({ Component, pageProps }) {
                       ></div>
                     </>
                   )
-                ) : (
-                  userData &&
-                  !userData.agreedpolicies && (
-                    <span
-                      className={`${
-                        darkMode && "text-white"
-                      } flex flex-col space-y-2 py-2`}
-                    >
-                      <span className="font-medium flex flex-col text-center justify-center items-center">
-                        <p>{"By signing in to Animebook,"}</p>
-                        <p>
-                          {
-                            "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
-                          }
-                        </p>
-                      </span>
-                      <span
-                        onClick={() => {
-                          agreeToTerms();
-                        }}
-                        className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg"
-                      >
-                        I Agree
-                      </span>
-                      <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
-                        <TOS darkMode={darkMode} />
-                        <Policy darkMode={darkMode} />
-                      </span>
+                ) : userData && !userData.agreedpolicies ? (
+                  <span
+                    className={`${
+                      darkMode && "text-white"
+                    } flex flex-col space-y-2 py-2`}
+                  >
+                    <span className="font-medium flex flex-col text-center justify-center items-center">
+                      <p>{"By signing in to Animebook,"}</p>
+                      <p>
+                        {
+                          "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
+                        }
+                      </p>
                     </span>
-                  )
-                )
-              ) : (
-                <div className="pt-8">
-                  <DappLogo size={"default"} />
-                  <PopupModal success={"3"} messageTopic={""} moreInfo={""} />
-                  <div id="overlay"></div>
-                </div>
-              )
-            ) : (
-              <div className="pt-8">
-                <DappLogo size={"default"} />
-                <PopupModal success={"3"} messageTopic={""} moreInfo={""} />
-                <div id="overlay"></div>
-              </div>
-            )
-          ) : onboarding ? (
-            <Onboard allUsers={allUsers} me={oauthDetails} />
-          ) : userData && agreementMade ? (
-            graduate ? (
-              <Component {...pageProps} />
-            ) : (
-              <>
-                <div id="tutorial" className="bg-transparent">
-                  <TutorialBox
-                    graduateTutorial={graduateTutorial}
-                    setGraduate={setGraduate}
-                  />
-                </div>
-
-                <Component {...pageProps} />
-
-                <div
-                  id="tutorial-overlay"
-                  className="bg-black backdrop-blur-md"
-                ></div>
-              </>
-            )
-          ) : userData && !userData.agreedpolicies ? (
-            <span
-              className={`${
-                darkMode && "text-white"
-              } flex flex-col space-y-2 py-2`}
-            >
-              <span className="font-medium flex flex-col text-center justify-center items-center">
-                <p>{"By signing in to Animebook,"}</p>
-                <p>
-                  {
-                    "You acknowledge that you have read and agree to our Terms of Service and Privacy Policy below:"
-                  }
-                </p>
+                    <span
+                      onClick={() => {
+                        agreeToTerms();
+                      }}
+                      className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg"
+                    >
+                      I Agree
+                    </span>
+                    <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
+                      <TOS darkMode={darkMode} />
+                      <Policy darkMode={darkMode} />
+                    </span>
+                  </span>
+                ) : (
+                  <Component {...pageProps} />
+                )}
               </span>
-              <span
-                onClick={() => {
-                  agreeToTerms();
-                }}
-                className="cursor-pointer mx-auto font-medium bg-pastelGreen text-white py-1 px-3 rounded-lg"
-              >
-                I Agree
-              </span>
-              <span class="h-[80vh] overflow-y-auto block py-2 px-4 border-2 border-slate-300 rounded-lg">
-                <TOS darkMode={darkMode} />
-                <Policy darkMode={darkMode} />
-              </span>
-            </span>
-          ) : (
-            <Component {...pageProps} />
-          )}
-        </span>
-      </UserContext.Provider>
+            </UserContext.Provider>
+          </WalletModalProvider>
+        </WalletProvider>
+      </ConnectionProvider>
     )
   );
 }

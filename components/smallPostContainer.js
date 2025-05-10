@@ -477,7 +477,7 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
               }}
               className={`hidden lg:block rounded w-fit mx-auto hover:shadow cursor-pointer ml-4 px-7 py-1.5 bg-[#EB4463] text-sm font-medium text-center text-white`}
             >
-              Post
+              {t('Post')}
             </span>
             <span
               onClick={() => {

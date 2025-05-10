@@ -5,7 +5,7 @@ import HyperlinkCard from "./hyperlinkCard";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 
-const CommentConfig = ({ username, text}) => {
+const CommentConfig = ({ translateVersion, setTranslateVersion, username, text}) => {
   const { fullPageReload } = PageLoadOptions();
   const router = useRouter();
   const [seeMore, setSeeMore] = useState(false);
@@ -40,7 +40,7 @@ const CommentConfig = ({ username, text}) => {
         </div>
       );
     } else {
-      return <span key={index} className="leading-tight whitespace-pre-wrap">{t(word.toLowerCase())}</span>;
+      return <span key={index} className="leading-tight whitespace-pre-wrap">{translateVersion ? t(word.toLowerCase()) : word}</span>;
     }
   };
 
@@ -74,6 +74,14 @@ const CommentConfig = ({ username, text}) => {
           {seeMore ? "See Less" : "...See More"}
         </span>
       )}
+      {
+        translateVersion &&  <span
+        onClick={() => setTranslateVersion(false)}
+        className="block cursor-pointer font-semibold pl-0.5"
+      >
+        See original
+      </span>
+      }
     </span>
   );
 };

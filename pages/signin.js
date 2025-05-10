@@ -327,7 +327,7 @@ const Signin = () => {
       localStorage.setItem("referralCode", ref);
     }
     if (navigator.userAgent.includes("MetaMaskMobile")) {
-      connectToWallet();
+      // connectToWallet();
     }
   }, [router.query]);
 

@@ -10,7 +10,33 @@ import ConnectionData from "@/lib/connectionData";
 import { ethers } from "ethers";
 import { formatUnits } from "@ethersproject/units";
 import ErcTwentyToken from "@/lib/static/ErcTwentyToken.json";
-import { UseTranslation, useTranslation } from "next-i18next";
+import free from "@/assets/chibis/free.jpg";
+import yellowchibi from "@/assets/chibis/yellowchibi.png";
+import customBorder from "@/assets/customborder.png";
+import customBorder2 from "@/assets/customborder2.png";
+import fireborder from "@/assets/fireborder.png";
+
+import { useTranslation } from "next-i18next";
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+
+
+export function AvatarDesign({ border, userData, size }) {
+  return (
+    <div className={`relative w-[${size}px] h-[${size}px]`}>
+      {/* The border ring */}
+      <Image src={border} alt="custom border" fill className="object-contain" />
+      {/* The user avatar */}
+      <Image
+        src={userData.avatar}
+        alt="user avatar"
+        width={size}
+        height={size}
+        className="object-cover rounded-full p-2"
+      />
+    </div>
+  );
+}
 
 export const LanguageSwitcher = ({ darkMode }) => {
   const { i18n } = useTranslation();
@@ -30,7 +56,7 @@ export const LanguageSwitcher = ({ darkMode }) => {
       >
         <option value="en">English</option>
         <option value="ja">Japanese</option>
-        {/* <option value="gm">German</option> */}
+        {/* <option value="de">German</option> */}
         <option value="es">Español</option>
         <option value="fr">Français</option>
       </select>
@@ -40,7 +66,7 @@ export const LanguageSwitcher = ({ darkMode }) => {
           height="20px"
           viewBox="0 0 48 48"
           xmlns="http://www.w3.org/2000/svg"
-          fill={darkMode ? 'white' : 'black'}
+          fill={darkMode ? "white" : "black"}
         >
           <path d="M0 0h48v48H0z" fill="none" />
           <g id="Shopicon">
@@ -81,12 +107,24 @@ export const BinSvg = ({ pixels }) => {
   );
 };
 const EditProfileContainer = () => {
+  const { setVisible } = useWalletModal();
+  const { publicKey } = useWallet();
+
   const { t } = useTranslation();
   const ercABI = ErcTwentyToken.abi;
   const { connectToWallet } = ConnectionData();
   const { fullPageReload } = PageLoadOptions();
-  const { userNumId, setPostJustMade, address, userData, darkMode } =
-    useContext(UserContext);
+  const {
+    userNumId,
+    setPostJustMade,
+    address,
+    userData,
+    darkMode,
+    currentUserChibis,
+    setCurrentUserChibis,
+    currentUserBorders,
+    setCurrentUserBorders,
+  } = useContext(UserContext);
   const router = useRouter();
   const [bio, setBio] = useState("");
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -95,6 +133,7 @@ const EditProfileContainer = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [newAddress, setNewAddress] = useState(null);
+  const [newSolAddr, setNewSolAddr] = useState(null)
   const [changesLoading, setChangesLoading] = useState(false);
   const [solBalance, setSolBalance] = useState(null);
   const [ethBalance, setEthBalance] = useState(null);
@@ -103,6 +142,7 @@ const EditProfileContainer = () => {
   const [sl, setSl] = useState("");
   const [myAnimeWatchList, setMyAnimeWatchList] = useState(null);
   const [reentry, setReentry] = useState(true);
+  const [selectedBorder, setSelectedBorder] = useState(null);
 
   const saveAnimes = () => {
     if (!reentry) {
@@ -201,6 +241,15 @@ const EditProfileContainer = () => {
     let coverUrl = null;
     let avatarUrl = null;
 
+    if (selectedBorder !== null && selectedBorder !== undefined) {
+      await supabase
+        .from("users")
+        .update({
+          borderid: selectedBorder,
+        })
+        .eq("useruuid", userData.useruuid);
+    }
+
     if (coverFile !== null) {
       for (const file of coverFile) {
         coverUrl = await uploadToBucket(file, "cover/");
@@ -217,7 +266,8 @@ const EditProfileContainer = () => {
       coverUrl === null &&
       avatarUrl === null &&
       bio === "" &&
-      newAddress === null
+      newAddress === null && newSolAddr === null &&
+      selectedBorder === null 
     ) {
       setErrorMsg("You made no changes");
       setChangesLoading(false);
@@ -232,6 +282,8 @@ const EditProfileContainer = () => {
         avatar: avatarUrl ? avatarUrl : userData.avatar,
         bio: bio !== "" ? bio : userData.bio,
         address: newAddress ? newAddress : userData.address,
+        solAddress: newSolAddr ? newSolAddr : userData.solAddress,
+        solupdated: newSolAddr !== null && newSolAddr !== undefined && newSolAddr !== "" ? true : null
       })
       .eq("useruuid", userData.useruuid);
 
@@ -359,19 +411,174 @@ const EditProfileContainer = () => {
   const [allAnimes, setAllAnimes] = useState([]);
   const [rateSelectedAnimes, setRateSelectedAnimes] = useState(false);
 
+  const fetchAllChibis = (userid) => {
+    supabase
+      .from("chibis")
+      .select("id, created_at, collectionid, users(id, avatar, username)")
+      .order("created_at", { ascending: false })
+      .then((res) => {
+        if (res.data !== undefined && res.data !== null) {
+          if (userid) {
+            setCurrentUserChibis(
+              res.data.filter((c) => {
+                return c.users.id === userid;
+              })
+            );
+          }
+        }
+      });
+  };
+
+  const fetchAllBorders = (userid) => {
+    supabase
+      .from("borders")
+      .select("id, created_at, collectionid, users(id, avatar, username)")
+      .order("created_at", { ascending: false })
+      .then((res) => {
+        if (res.data !== undefined && res.data !== null) {
+          if (userid) {
+            setCurrentUserBorders(
+              res.data.filter((c) => {
+                return c.users.id === userid;
+              })
+            );
+          }
+        }
+      });
+  };
+
   useEffect(() => {
-    async function fetchAnimes() {
-      try {
-        const response = await fetch("https://api.jikan.moe/v4/top/anime");
-        const data = await response.json();
-        setAllAnimes(data.data);
-        setAnimes(data.data); // Get only 12 animes
-      } catch (error) {
-        console.error("Error fetching animes:", error);
+    if (userData) {
+      fetchAllChibis(userData.id);
+      fetchAllBorders(userData.id);
+    }
+    if (publicKey){
+      setNewSolAddr(publicKey.toBase58())
+    }
+    async function fetchAllAnimes() {
+  const allAnimes = [];
+  let currentPage = 1;
+  const perPage = 50;
+  let hasNextPage = true;
+
+  const query = `
+    query ($page: Int, $perPage: Int) {
+      Page(page: $page, perPage: $perPage) {
+        pageInfo {
+          total
+          currentPage
+          lastPage
+          hasNextPage
+        }
+        media(type: ANIME, sort: TRENDING_DESC) {
+          id
+          title {
+            romaji
+            english
+          }
+          coverImage {
+            large
+          }
+          description
+        }
       }
     }
+  `;
+
+  while (hasNextPage) {
+    try {
+      const response = await fetch("https://graphql.anilist.co", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query,
+          variables: { page: currentPage, perPage },
+        }),
+      });
+
+      const result = await response.json();
+      const media = result.data.Page.media;
+      const pageInfo = result.data.Page.pageInfo;
+
+      allAnimes.push(...media);
+      hasNextPage = pageInfo.hasNextPage;
+      currentPage++;
+    } catch (error) {
+      console.error("Error fetching animes:", error);
+      break;
+    }
+  }
+
+  setAllAnimes(allAnimes);
+  setAnimes(allAnimes); // optional if you're filtering later
+}
+async function fetchAnimes() {
+  const allAnimes = [];
+  let currentPage = 1;
+  const perPage = 50;
+  let hasNextPage = true;
+
+  const query = `
+    query ($page: Int, $perPage: Int) {
+      Page(page: $page, perPage: $perPage) {
+        pageInfo {
+          hasNextPage
+        }
+        media(type: ANIME, sort: TRENDING_DESC) {
+          id
+          title {
+            romaji
+            english
+          }
+          coverImage {
+            large
+          }
+        }
+      }
+    }
+  `;
+
+  while (hasNextPage) {
+    try {
+      const response = await fetch("https://graphql.anilist.co", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query,
+          variables: { page: currentPage, perPage },
+        }),
+      });
+
+      const result = await response.json();
+      const media = result.data.Page.media;
+      const pageInfo = result.data.Page.pageInfo;
+
+      // Map AniList format to Jikan-like format
+      const transformed = media.map((anime) => ({
+        mal_id: anime.id, // Anilist ID used as mal_id
+        title: anime.title.english || anime.title.romaji,
+        images: {
+          jpg: {
+            image_url: anime.coverImage.large,
+          },
+        },
+      }));
+
+      allAnimes.push(...transformed);
+      hasNextPage = pageInfo.hasNextPage;
+      currentPage++;
+    } catch (error) {
+      console.error("Error fetching animes:", error);
+      break;
+    }
+  }
+
+  setAllAnimes(allAnimes);
+  setAnimes(allAnimes);
+}
+
     fetchAnimes();
-  }, []);
+  }, [userData, publicKey]);
 
   // Toggle anime selection
   const handleSelectAnime = (anime) => {
@@ -646,16 +853,14 @@ const EditProfileContainer = () => {
                 <input
                   // value=""
                   disabled
-                  value={userData.solAddress}
+                  value={newSolAddr ? newSolAddr : userData.solAddress}
                   className={`${
                     darkMode ? "bg-[#27292F]" : "bg-gray-200"
                   } mt-1 px-4 text-sm text-start cursor-not-allowed rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
                 />
                 <span
                   onClick={() => {
-                    // connectToWallet()
-                    // open()
-                    updateAddress();
+                    setVisible(true)
                   }}
                   className="flex flex-row space-x-1 cursor-pointer bg-black text-white px-3 py-2 h-full rounded-r-lg"
                 >
@@ -668,6 +873,102 @@ const EditProfileContainer = () => {
             <span className="space-y-1 flex flex-col">
               <span className="text-start font-medium w-full">Language</span>
               <LanguageSwitcher darkMode={darkMode} />
+            </span>
+
+            <span className="text-start text-xs sm:text-sm w-full flex flex-col">
+              <span className="flex flex-row font-medium">
+                <span>Your Chibis</span>
+              </span>
+              {currentUserChibis ? (
+                <span
+                  id="scrollbar-remove"
+                  className="relative flex flex-row space-x-1 overflow-x-scroll"
+                >
+                  {currentUserChibis.map((cb) => (
+                    <span
+                      key={cb.id}
+                      className="relative flex flex-col items-center w-16 rounded-lg"
+                      onClick={() => {
+                        setMediasClicked("animes");
+                      }}
+                    >
+                      <Image
+                        src={cb.collectionid === 2 ? yellowchibi : free}
+                        alt="chibi"
+                        className="rounded-lg w-16 h-16 object-cover"
+                      />
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                <span className="w-full text-center">
+                  {"Go to Earn & Shop and get a free chibi"}
+                </span>
+              )}
+            </span>
+            <span className="text-start text-xs sm:text-sm w-full flex flex-col">
+              <span className="flex flex-row font-medium">
+                <span>Your Borders</span>
+              </span>
+              {currentUserBorders ? (
+                <span
+                  id="scrollbar-remove"
+                  className="relative flex flex-row space-x-1 overflow-x-scroll"
+                >
+                  {currentUserBorders.map((cb) => (
+                    <span
+                      key={cb.id}
+                      onClick={() => {
+                        setSelectedBorder(cb.collectionid);
+                      }}
+                    >
+                      <AvatarDesign
+                        border={
+                          cb.collectionid === 3
+                            ? fireborder
+                            : cb.collectionid === 2
+                            ? customBorder2
+                            : customBorder
+                        }
+                        userData={userData}
+                        size={80}
+                      />
+                      <span className="w-full flex flex-row pr-2 justify-end">
+                        <span
+                          className={`border ${
+                            selectedBorder === cb.collectionid ||
+                            (cb.collectionid === userData.borderid &&
+                              selectedBorder === null)
+                              ? "bg-[#EB4463]"
+                              : darkMode
+                              ? "bg-[#27292F] border-gray-300"
+                              : "bg-[#F9F9F9] border-[#D0D3DB]"
+                          } cursor-pointer h-4 w-4 flex items-center rounded`}
+                        >
+                          {(selectedBorder === cb.collectionid ||
+                            (cb.collectionid === userData.borderid &&
+                              selectedBorder === null)) && (
+                            <svg
+                              fill="white"
+                              width="20px"
+                              height="20px"
+                              viewBox="0 0 24 24"
+                              baseProfile="tiny"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M16.972 6.251c-.967-.538-2.185-.188-2.72.777l-3.713 6.682-2.125-2.125c-.781-.781-2.047-.781-2.828 0-.781.781-.781 2.047 0 2.828l4 4c.378.379.888.587 1.414.587l.277-.02c.621-.087 1.166-.46 1.471-1.009l5-9c.537-.966.189-2.183-.776-2.72z" />
+                            </svg>
+                          )}
+                        </span>
+                      </span>
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                <span className="w-full text-center">
+                  {"Go to Earn & Shop and get a border"}
+                </span>
+              )}
             </span>
 
             <span className="text-start text-xs sm:text-sm w-full flex flex-col">
@@ -949,9 +1250,9 @@ const EditProfileContainer = () => {
               >
                 <span className="font-bold">Exporting Private Key</span>
                 <p className="pb-4 text-xs font-medium text-gray-700">
-                  Keep your private key secure. Do not share it with anyone.
+                  This key unlocks your original Animebook Sol wallet. Keep it secure. Do not share it with anyone.
                   Exposing your private key may result in the loss of your
-                  assets
+                  assets.
                 </p>
                 <span className="flex flex-row justify-center items-center text-sm text-gray-700 font-medium px-2 py-1 rounded-lg border border-slate-300 bg-slate-100">
                   <svg

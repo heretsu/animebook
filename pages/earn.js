@@ -28,6 +28,7 @@ const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export const ShopPurchase = ({
   currentUserChibis,
+  currentUserBorders,
   userData,
   darkMode,
   cartDetail,
@@ -45,20 +46,36 @@ export const ShopPurchase = ({
       if (parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice)) {
         const newKi = parseFloat(userData.ki) - parseFloat(cartDetail.kiprice);
         supabase
-          .from("users")
-          .update({
-            ki: newKi,
-            borderid: cartDetail.collectionid,
+          .from("borders")
+          .insert({
+            userid: userData.id,
+            collectionid: cartDetail.collectionid,
           })
-          .eq("useruuid", userData.useruuid)
-          .then((res) => {
-            if (res.error) {
+          .then((response) => {
+            if (response.error) {
               setLoading(false);
-              console.log(res.error);
               return;
             }
-            setSuccess(true);
-            setLoading(false);
+            supabase
+              .from("users")
+              .update({
+                ki: newKi,
+                borderid: cartDetail.collectionid,
+              })
+              .eq("useruuid", userData.useruuid)
+              .then((res) => {
+                if (res.error) {
+                  setLoading(false);
+                  console.log(res.error);
+                  return;
+                }
+                setSuccess(true);
+                setLoading(false);
+              })
+              .catch((error) => {
+                setLoading(false);
+                console.log("cypher e: ", error);
+              });
           })
           .catch((error) => {
             setLoading(false);
@@ -75,11 +92,15 @@ export const ShopPurchase = ({
     if (cartDetail.purchaseType === "chibi") {
       if (parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice)) {
         const newKi = parseFloat(userData.ki) - parseFloat(cartDetail.kiprice);
-        await supabase
-          .from("users")
-          .update({
-            ki: newKi,
-          })
+        const {data, error} = await supabase.from("users").update({
+          ki: newKi,
+        }).eq("useruuid", userData.useruuid)
+        ;
+        if (error){
+          console.log(error)
+          setLoading(false)
+          return
+        }
 
         supabase
           .from("chibis")
@@ -384,11 +405,15 @@ export const ShopPurchase = ({
                     onClick={() => {
                       purchaseChibi();
                     }}
-                    className={`${parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice) ? 'bg-[#EB4463] cursor-pointer' : 'bg-gray-400 cursor-not-allowed'} text-lg w-full text-white text-center font-semibold p-2 py-2 rounded-lg`}
+                    className={`${
+                      parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice)
+                        ? "bg-[#EB4463] cursor-pointer"
+                        : "bg-gray-400 cursor-not-allowed"
+                    } text-lg w-full text-white text-center font-semibold p-2 py-2 rounded-lg`}
                   >
                     {parseFloat(cartDetail.price) === 0
                       ? "CLAIM NOW"
-                      : "BUY NOW" }
+                      : "BUY NOW"}
                   </span>
                 )}
                 <span className="pt-2 flex flex-row justify-center w-fit mx-auto rounded-lg space-x-1">
@@ -434,7 +459,12 @@ export const ShopPurchase = ({
             ))}
 
           {cartDetail.purchaseType === "border" &&
-            (userData.borderid === cartDetail.collectionid ? (
+            (!!(
+              currentUserBorders &&
+              currentUserBorders.some(
+                (item) => item.collectionid === cartDetail.collectionid
+              )
+            ) ? (
               <span
                 id="scrollbar-remove"
                 className="w-full lg:w-[280px] h-full my-auto max-h-[90vh] overflow-y-scroll min-h-[1vh] flex flex-col text-base justify-start text-start"
@@ -580,7 +610,11 @@ export const ShopPurchase = ({
                     onClick={() => {
                       purchaseBorder();
                     }}
-                    className={`${parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice) ? 'bg-[#EB4463] cursor-pointer' : 'bg-gray-400 cursor-not-allowed'} text-lg w-full text-white text-center cursor-pointer font-semibold bg-[#EB4463] p-2 py-2 rounded-lg`}
+                    className={`${
+                      parseFloat(userData.ki) >= parseFloat(cartDetail.kiprice)
+                        ? "bg-[#EB4463] cursor-pointer"
+                        : "bg-gray-400 cursor-not-allowed"
+                    } text-lg w-full text-white text-center cursor-pointer font-semibold bg-[#EB4463] p-2 py-2 rounded-lg`}
                   >
                     {parseFloat(cartDetail.price) === 0
                       ? "CLAIM NOW"
@@ -668,6 +702,8 @@ const Earn = () => {
     setUserChibis,
     currentUserChibis,
     setCurrentUserChibis,
+    currentUserBorders,
+    setCurrentUserBorders
   } = useContext(UserContext);
   const [chosenShop, setChosenShop] = useState("all");
   const [shopImageItem, setShopImageItem] = useState(null);
@@ -705,6 +741,24 @@ const Earn = () => {
       });
   };
 
+  const fetchAllBorders = (userid) => {
+    supabase
+      .from("borders")
+      .select("id, created_at, collectionid, users(id, avatar, username)")
+      .order("created_at", { ascending: false })
+      .then((res) => {
+        if (res.data !== undefined && res.data !== null) {
+          if (userid) {
+            setCurrentUserBorders(
+              res.data.filter((c) => {
+                return c.users.id === userid;
+              })
+            );
+          }
+        }
+      });
+  };
+
   const handleCopy = () => {
     const referralCode = `animebook.io/signin?ref=${userData.username.toLowerCase()}-san`;
     // Save to clipboard
@@ -731,6 +785,7 @@ const Earn = () => {
     if (userData) {
       fetchReferrals();
       fetchAllChibis(userData.id);
+      fetchAllBorders(userData.id)
       const currentTime = new Date();
       const pastTime = new Date(userData.lastkiclaim);
       const timeDifference = currentTime - pastTime;
@@ -1312,6 +1367,7 @@ const Earn = () => {
             cartDetail={shopImageItem}
             setShopImageItem={setShopImageItem}
             currentUserChibis={currentUserChibis}
+            currentUserBorders={currentUserBorders}
           />
         )}
 

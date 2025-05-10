@@ -175,9 +175,9 @@ const Posts = () => {
               <span className="text-gray-600">Nanimonai! No posts found</span>
             ) : (
               <span className="h-screen">
-                <Lottie
+                {/* <Lottie
                   animationData={darkMode ? darkloadscreen : loadscreen}
-                />
+                /> */}
               </span>
             )}
           </div>
