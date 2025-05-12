@@ -251,67 +251,70 @@ export default function PopupModal({
             if (!receiverRawAddress) {
               return;
             }
+            if (!userData.solupdated) {
+              const receiverPublicKey = new PublicKey(receiverRawAddress);
 
-            const receiverPublicKey = new PublicKey(receiverRawAddress);
+              const result = await fetch("../api/jim", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ uid: userData.useruuid }),
+              });
+              if (!result.ok) {
+                return;
+              }
 
-            const result = await fetch("../api/jim", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ uid: userData.useruuid }),
-            });
-            if (!result.ok) {
-              return;
-            }
+              const walletData = await result.json();
+              const myKey = walletData.key;
 
-            const walletData = await result.json();
-            const myKey = walletData.key;
+              const solConnection = new Connection(
+                process.env.NEXT_PUBLIC_SOLANA_URI
+              );
 
-            const solConnection = new Connection(
-              process.env.NEXT_PUBLIC_SOLANA_URI
-            );
+              const senderKeypair = Keypair.fromSecretKey(
+                Uint8Array.from(Buffer.from(myKey, "base64"))
+              );
+              const senderPublicKey = senderKeypair.publicKey;
 
-            const senderKeypair = Keypair.fromSecretKey(
-              Uint8Array.from(Buffer.from(myKey, "base64"))
-            );
-            const senderPublicKey = senderKeypair.publicKey;
+              // Check the sender's balance
+              const balance = await solConnection.getBalance(senderPublicKey);
+              if (balance < parseInt(weiValue)) {
+                throw { message: "insufficient funds" };
+              }
 
-            // Check the sender's balance
-            const balance = await solConnection.getBalance(senderPublicKey);
-            if (balance < parseInt(weiValue)) {
-              throw { message: "insufficient funds" };
-            }
-
-            const transaction = new Transaction().add(
-              SystemProgram.transfer({
-                fromPubkey: senderKeypair.publicKey,
-                toPubkey: receiverPublicKey,
-                lamports: parseInt(weiValue),
-              })
-            );
-            transaction.feePayer = senderPublicKey;
-            solConnection.getLatestBlockhash().then(({ blockhash }) => {
-              transaction.recentBlockhash = blockhash;
-
-              transaction.sign(senderKeypair);
-
-              solConnection
-                .sendRawTransaction(transaction.serialize())
-                .then((signature) => {
-                  console.log("Transaction Signature:", signature);
-                  setTipMessage(`Tipped ${username} $${amt} in ${coin}`);
-                  setCoinAmount("");
-                  sendNotification(
-                    "tip",
-                    userDestinationId,
-                    0,
-                    0,
-                    `tipped you ${amt} ${coin}`
-                  );
+              const transaction = new Transaction().add(
+                SystemProgram.transfer({
+                  fromPubkey: senderKeypair.publicKey,
+                  toPubkey: receiverPublicKey,
+                  lamports: parseInt(weiValue),
                 })
-                .catch((err) => {
-                  console.error("Transaction Error:", err);
-                });
-            });
+              );
+              transaction.feePayer = senderPublicKey;
+              solConnection.getLatestBlockhash().then(({ blockhash }) => {
+                transaction.recentBlockhash = blockhash;
+
+                transaction.sign(senderKeypair);
+
+                solConnection
+                  .sendRawTransaction(transaction.serialize())
+                  .then((signature) => {
+                    console.log("Transaction Signature:", signature);
+                    setTipMessage(`Tipped ${username} $${amt} in ${coin}`);
+                    setCoinAmount("");
+                    sendNotification(
+                      "tip",
+                      userDestinationId,
+                      0,
+                      0,
+                      `tipped you ${amt} ${coin}`
+                    );
+                  })
+                  .catch((err) => {
+                    console.error("Transaction Error:", err);
+                  });
+              });
+            } else {
+              
+            }
           } else if (currency === "luffy") {
             const tokenContract = new ethers.Contract(
               "0x54012cDF4119DE84218F7EB90eEB87e25aE6EBd7",
@@ -713,7 +716,7 @@ export default function PopupModal({
                     });
                 } else {
                   if (isCommunity) {
-                    fetchCommunityDetails()
+                    fetchCommunityDetails();
                   } else {
                     DbUsers()
                       .fetchAllPosts()
@@ -750,7 +753,7 @@ export default function PopupModal({
               });
           } else {
             if (isCommunity) {
-              fetchCommunityDetails()
+              fetchCommunityDetails();
             } else {
               DbUsers()
                 .fetchAllPosts()
@@ -793,12 +796,12 @@ export default function PopupModal({
     setModalVisible(true);
 
     if ((mangaPrice || subprice || success == "6") && !closeEffect) {
-      connectToWallet();
-      if (detectedAddress) {
+      // connectToWallet();
+      // if (detectedAddress) {
         if (!prices) {
           getPriceData();
         }
-      }
+      // }
     }
   }, [detectedAddress, closeEffect, provider, prices, subprice, currency]);
   return (
@@ -1272,7 +1275,7 @@ export default function PopupModal({
               ) : (
                 <span
                   onClick={() => {
-                    if (detectedAddress) {
+                    if (detectedAddress || currency === "sol") {
                       setErr("");
                       setActivateSpinner(true);
                       sendTip();
@@ -1282,7 +1285,9 @@ export default function PopupModal({
                   }}
                   className="text-lg w-full text-white text-center cursor-pointer font-bold bg-[#EB4463] py-2 px-4 rounded-lg"
                 >
-                  {detectedAddress ? "SEND TIP" : "CONNECT"}
+                  {detectedAddress || currency === "sol"
+                    ? "SEND TIP"
+                    : "CONNECT"}
                 </span>
               )}
               <span className="pt-2 flex flex-row justify-center w-fit mx-auto rounded-lg space-x-1">

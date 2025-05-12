@@ -17,6 +17,8 @@ import dynamic from "next/dynamic";
 import ShareSystem from "./shareSystem";
 import UserWithBadge from "./userWithBadge";
 import { AvatarWithBorder } from "./AvatarProps";
+import { useTranslation } from "react-i18next";
+
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 function PollOption({
@@ -93,6 +95,9 @@ export default function PostCard({
   allPosts,
 }) {
   // const videoRef = useRef(null);
+  const { t } = useTranslation();
+
+  const [translateVersion, setTranslateVersion] = useState(false)
   const commentRef = useRef(null);
   const [myTextComment, setMyTextComment] = useState("");
   const router = useRouter();
@@ -827,11 +832,7 @@ export default function PostCard({
                   />
                 ) : (
                   <span className="relative h-8 w-8 flex">
-                    
-                    <AvatarWithBorder 
-              userInfo={repostAuthor}
-              size={35}
-              />
+                    <AvatarWithBorder userInfo={repostAuthor} size={35} />
                   </span>
                 )}
 
@@ -884,7 +885,7 @@ export default function PostCard({
                     mvpType={"likes"}
                   />
                 ) : (
-                  <span className="relative h-9 w-9 flex">
+                  <span className="relative h-12 w-12 flex">
                     <AvatarWithBorder userInfo={users} size={35} />
                   </span>
                 ))}
@@ -1125,6 +1126,60 @@ export default function PostCard({
                     }`}
                   >
                     <ul className={`space-y-1`}>
+                      <li
+                        onClick={() => {
+                          setTranslateVersion(true)
+                          setOpen(false)
+                        }}
+                        className={`border-b ${
+                          darkMode ? "border-gray-900" : "border-gray-100"
+                        } px-4 py-2 flex items-center space-x-2 hover:bg-gray-100 cursor-pointer`}
+                      >
+                        <svg
+                          width="15px"
+                          height="15px"
+                          viewBox="0 0 64 64"
+                          xmlns="http://www.w3.org/2000/svg"
+                          stroke="#5f6877"
+                          strokeWidth={5}
+                          fill="none"
+                        >
+                          <path
+                            d="M34.53,14.59s-1.6,18.21-24,32.78"
+                            strokeLinecap="round"
+                          />
+                          <line
+                            x1={7.35}
+                            y1={14.59}
+                            x2={41.46}
+                            y2={14.59}
+                            strokeLinecap="round"
+                          />
+                          <line
+                            x1={24.4}
+                            y1={9.08}
+                            x2={24.4}
+                            y2={14.59}
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M16.76,22.05S25.2,36.8,32,41.33"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M33.55,54.92l10.74-25a.89.89,0,0,1,1.63,0l10.73,25"
+                            strokeLinecap="round"
+                          />
+                          <line
+                            x1={37.25}
+                            y1={46.3}
+                            x2={52.96}
+                            y2={46.3}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span>{t('Translate')}</span>
+                      </li>
                       {userData && users.id === myProfileId && (
                         <li
                           onClick={() => {
@@ -1173,7 +1228,7 @@ export default function PostCard({
                               </g>
                             </g>
                           </svg>
-                          <span>Delete</span>
+                          <span>{t('Delete')}</span>
                         </li>
                       )}
 
@@ -1203,7 +1258,7 @@ export default function PostCard({
                               fill="#5f6877"
                             />
                           </svg>
-                          <span>Report</span>
+                          <span>{t('Report')}</span>
                         </li>
                       )}
                     </ul>
@@ -1261,7 +1316,7 @@ export default function PostCard({
                 ispoll && "font-semibold"
               } text-sm leading-tight break-words whitespace-pre-wrap`}
             >
-              <CommentConfig text={content} tags={true} />
+              <CommentConfig translateVersion={translateVersion} setTranslateVersion={setTranslateVersion} text={content} tags={true} />
             </span>
           )}
           {ispoll &&
@@ -1271,7 +1326,7 @@ export default function PostCard({
               .map((poll) => (
                 <span key={poll.id} className="flex flex-col">
                   <span className="pb-2 text-sm leading-tight break-words whitespace-pre-wrap">
-                    <CommentConfig text={poll.question} tags={true} />
+                    <CommentConfig translateVersion={translateVersion} setTranslateVersion={setTranslateVersion} text={poll.question} tags={true} />
                   </span>
                   {poll.options.length > 0 &&
                     poll.options.map((opts, index) => {
@@ -1738,7 +1793,7 @@ export default function PostCard({
                     // }}
                     className="relative flex flex-shrink-0"
                   >
-                    <AvatarWithBorder userInfo={userData} size={25} />
+                    <AvatarWithBorder userInfo={userData} size={30} />
                   </span>
                 )}
                 <span

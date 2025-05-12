@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import DappLibrary from "@/lib/dappLibrary";
 import free from "@/assets/chibis/free.jpg";
+import yellowchibi from "@/assets/chibis/yellowchibi.png";
 
 const LargeRightBar = () => {
   const { getUserFromUsername } = DappLibrary();
@@ -831,19 +832,17 @@ filteredPosts.forEach((post) => {
                 Highlighted Chibis
               </span>
               <span className="overflow-hidden px-3.5 relative w-full flex flex-row justify-start gap-1">
-                {currentUserChibis.slice(0, 1).map((cb) => (
+                {currentUserChibis.map((cb) => (
                   <span
                     key={cb.id}
                     className="relative flex flex-col items-center w-16 rounded-lg"
                     onClick={()=>{setMediasClicked('animes')}}
                   >
                     <Image
-                      src={free}
+                      src={cb.collectionid === 2 ? yellowchibi : free }
                       alt="chibi"
                       className="rounded-lg w-16 h-16 object-cover"
                     />
-
-                    
                   </span>
                 ))}
                 

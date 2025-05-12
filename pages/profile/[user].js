@@ -30,6 +30,7 @@ import free from "@/assets/chibis/free.jpg";
 import { BiggerUserWithBadge } from "@/components/userWithBadge";
 import customBorder from "@/assets/customborder.png";
 import customBorder2 from "@/assets/customborder2.png";
+import { AvatarWithBorder } from "@/components/AvatarProps";
 
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
@@ -43,22 +44,7 @@ export const getServerSideProps = async (context) => {
   };
 };
 
-export function AvatarWB({ border, userInfo, size }) {
-  return (
-    <div className={`relative w-[${size}px] h-[${size}px]`}>
-      {/* The border ring */}
-      {border === 1 ? <Image src={customBorder} alt="custom border" fill className="object-contain" /> : border === 2 ? <Image src={customBorder2} alt="custom border" fill className="object-contain" /> : '' }
-      {/* The user avatar */}
-      <Image
-        src={userInfo.avatar}
-        alt="user avatar"
-        width={size}
-        height={size}
-        className="object-cover rounded-full p-2"
-      />
-    </div>
-  );
-}
+
 export default function User({ user }) {
   const { getUserFromId } = DappLibrary();
   const { connectToWallet, disconnectWallet } = ConnectionData();
@@ -771,7 +757,7 @@ export default function User({ user }) {
                                 mvpType={"likes"}
                               />
                             ) : userBasicInfo.borderid ? (
-                              <AvatarWB
+                              <AvatarWithBorder
                                 border={userBasicInfo.borderid}
                                 userInfo={userBasicInfo}
                                 size={80}
