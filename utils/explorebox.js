@@ -343,6 +343,7 @@ export default function ExploreBox({
                       width={500}
                       loop
                       autoPlay={playVideo}
+                      controls
                     ></video>
                   ) : (
                     <Image

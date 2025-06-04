@@ -113,7 +113,7 @@ const Posts = () => {
             ) : searchFilter ? (
               "Search not found. ない!"
             ) : followingPosts ? (
-              <div className="flex flex-col px-8">
+              <div className={`${darkMode ? 'text-white' : ''} flex flex-col px-8`}>
                 <span className="font-medium text-sm">
                   {"You don't follow anyone with a post"}
                 </span>

@@ -150,6 +150,7 @@ export default function Comments({ comments }) {
                         height={600}
                         width={600}
                         loop
+                        controls
                       ></video>
                       {!playVideo && (
                         <svg

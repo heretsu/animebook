@@ -161,6 +161,7 @@ export default function Postid({ comments }) {
                         height={600}
                         width={600}
                         loop
+                        controls
                       ></video>
                       {!playVideo && (
                         <svg

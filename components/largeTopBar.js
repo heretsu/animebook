@@ -180,7 +180,7 @@ export const TopBarObjects = () => {
           i--;
         }
       }
-      setPostValues(followingPostsArray);
+      setPostValues(followingPostsArray && followingPostsArray.length !== 0 ? followingPostsArray : []);
     });
   };
 

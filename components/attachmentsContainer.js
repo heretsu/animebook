@@ -7,6 +7,7 @@ import Spinner from "./spinner";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import { MessageContext } from "@/lib/messageContext";
 import GifPicker from "./gifPicker";
+import StickerPicker from "./stickerPacker";
 
 const AttachmentsContainer = ({ receiverid }) => {
   const { fullPageReload } = PageLoadOptions();
@@ -24,7 +25,7 @@ const AttachmentsContainer = ({ receiverid }) => {
     fetchChat,
     setChatsObject,
   } = useContext(MessageContext);
-const textareaRef = useRef(null)
+  const textareaRef = useRef(null);
   const router = useRouter();
   const [content, setContent] = useState("");
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -35,6 +36,8 @@ const textareaRef = useRef(null)
   const [searchMode, setSearchMode] = useState(false);
   const [openSearchNav, setOpenSearchNav] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  const [showPacks, setShowPacks] = useState(false);
+
   const mediaChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -156,6 +159,23 @@ const textareaRef = useRef(null)
     }
   };
 
+  const sendSelectedSticker = async (stickerUrl) => {
+    if (userData === undefined || userData === null) {
+      fullPageReload("/signin");
+      return;
+    }
+   await  supabase
+    .from("conversations")
+    .insert({
+      senderid: userNumId,
+      message: '',
+      receiverid: receiverid,
+      isread: false,
+      attachments: [stickerUrl],
+    })
+    setShowPacks(false)
+  }
+
   const handleSearch = () => {
     if (content !== "" && chatsObject && chatsObject.length > 0) {
       const indices = chatsObject.reduce((acc, chat, index) => {
@@ -258,64 +278,94 @@ const textareaRef = useRef(null)
                 darkMode ? "bg-[#27292F]" : "bg-white"
               } w-full flex flex-row justify-between rounded-[2rem] py-2 pr-2 lg:ml-2 mr-2`}
             >
-              <textarea
-                value={content}
-                onChange={(e) => {
-                  const textarea = textareaRef.current;
-                  if (textarea) {
-                    textarea.style.height = "2rem";
-                    textarea.style.height = `${textarea.scrollHeight}px`;
-                  }
-                  setContent(e.target.value);
-                  
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey && !searchMode) {
-                    e.preventDefault()
-                    sendMessage()
-                  } else if(e.key === "Enter" && e.shiftKey){
-                    e.preventDefault()
-                    setContent((prev) => prev + '\n')
-                  }
-                }}
-                ref={textareaRef}
-                maxLength={1900}
-                placeholder={
-                  searchMode
-                    ? "Search for messages in chat..."
-                    : "Type something"
-                }
-                className={`resize-none ${
-                  searchMode ? "h-8" : "h-8"
-                } bg-transparent w-full mx-2 text-xs font-semibold border-none focus:outline-none focus:ring-0`}
-              />
-
-              {selectedMedia ? (
-                <label onClick={mediaChange} htmlFor="input-post-file">
-                  {isImage ? (
-                    <Image
-                      src={selectedMedia}
-                      alt="Invalid post media. Click to change"
-                      height={30}
-                      width={30}
-                      className="rounded-lg"
-                    />
-                  ) : (
-                    <video width={30} height={30} src={selectedMedia} controls>
-                      {`${mediaName} It seems your browser does not support video uploads`}
-                    </video>
-                  )}
-                  <input
-                    onChange={mediaChange}
-                    className="hidden"
-                    type="file"
-                    accept="image/jpeg, image/png, image/jpg, image/svg, image/gif, video/3gp, video/mp4, video/mov, video/quicktime"
-                    id="input-post-file"
-                  />
-                </label>
+              {showPacks ? (
+                <span className="pr-1">
+                  <StickerPicker onSelect={sendSelectedSticker} />
+                </span>
               ) : (
-                <span className="flex flex-row space-x-1 justify-center items-center">
-                  {/* {!searchMode && (
+                <textarea
+                  value={content}
+                  onChange={(e) => {
+                    const textarea = textareaRef.current;
+                    if (textarea) {
+                      textarea.style.height = "2rem";
+                      textarea.style.height = `${textarea.scrollHeight}px`;
+                    }
+                    setContent(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && !searchMode) {
+                      e.preventDefault();
+                      sendMessage();
+                    } else if (e.key === "Enter" && e.shiftKey) {
+                      e.preventDefault();
+                      setContent((prev) => prev + "\n");
+                    }
+                  }}
+                  ref={textareaRef}
+                  maxLength={1900}
+                  placeholder={
+                    searchMode
+                      ? "Search for messages in chat..."
+                      : "Type something"
+                  }
+                  className={`resize-none ${
+                    searchMode ? "h-8" : "h-8"
+                  } bg-transparent w-full mx-2 text-xs font-semibold border-none focus:outline-none focus:ring-0`}
+                />
+              )}
+
+              <span
+                onClick={() => {
+                  setShowPacks((prev) => !prev);
+                }}
+                className="h-full mr-1 my-auto bg-[#4a5764] rounded-lg"
+              >
+                <svg
+                  fill={darkMode ? "#27292F" : "white"}
+                  stroke={darkMode ? "#27292F" : "white"}
+                  strokeWidth={1}
+                  width="23px"
+                  height="23px"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M20,11.5 L20,7.5 C20,5.56700338 18.4329966,4 16.5,4 L7.5,4 C5.56700338,4 4,5.56700338 4,7.5 L4,16.5 C4,18.4329966 5.56700338,20 7.5,20 L12.5,20 C13.3284271,20 14,19.3284271 14,18.5 L14,16.5 C14,14.5670034 15.5670034,13 17.5,13 L18.5,13 C19.3284271,13 20,12.3284271 20,11.5 Z M19.9266247,13.5532532 C19.522053,13.8348821 19.0303092,14 18.5,14 L17.5,14 C16.1192881,14 15,15.1192881 15,16.5 L15,18.5 C15,18.9222858 14.8952995,19.3201175 14.7104416,19.668952 C17.4490113,18.8255402 19.5186665,16.4560464 19.9266247,13.5532532 L19.9266247,13.5532532 Z M7.5,3 L16.5,3 C18.9852814,3 21,5.01471863 21,7.5 L21,12.5 C21,17.1944204 17.1944204,21 12.5,21 L7.5,21 C5.01471863,21 3,18.9852814 3,16.5 L3,7.5 C3,5.01471863 5.01471863,3 7.5,3 Z" />
+                </svg>
+              </span>
+
+              {!showPacks &&
+                (selectedMedia ? (
+                  <label onClick={mediaChange} htmlFor="input-post-file">
+                    {isImage ? (
+                      <Image
+                        src={selectedMedia}
+                        alt="Invalid post media. Click to change"
+                        height={30}
+                        width={30}
+                        className="rounded-lg"
+                      />
+                    ) : (
+                      <video
+                        width={30}
+                        height={30}
+                        src={selectedMedia}
+                        controls
+                      >
+                        {`${mediaName} It seems your browser does not support video uploads`}
+                      </video>
+                    )}
+                    <input
+                      onChange={mediaChange}
+                      className="hidden"
+                      type="file"
+                      accept="image/jpeg, image/png, image/jpg, image/svg, image/gif, video/3gp, video/mp4, video/mov, video/quicktime"
+                      id="input-post-file"
+                    />
+                  </label>
+                ) : (
+                  <span className="flex flex-row space-x-1 justify-center items-center">
+                    {/* {!searchMode && (
                     <span className="bg-[#5D6879] p-0.5 h-7 w-7 flex items-center justify-center rounded-full ">
                       <svg
                         onClick={() => {
@@ -339,25 +389,34 @@ const textareaRef = useRef(null)
                       </svg>
                     </span>
                   )} */}
-                  <label
-                    htmlFor="input-post-file"
-                    className="relative cursor-pointer"
-                  >
-                    <span className="flex flex-row items-end">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
-  <path id="image" d="M17,0H5A5,5,0,0,0,0,5V17a5,5,0,0,0,5,5H17a5,5,0,0,0,5-5V5a5,5,0,0,0-5-5ZM6.07,5a2,2,0,1,1-2,2,2,2,0,0,1,2-2ZM20,17a3.009,3.009,0,0,1-3,3H5a3.009,3.009,0,0,1-3-3v-.24l3.8-3.04a.668.668,0,0,1,.73-.05l2.84,1.7a2.624,2.624,0,0,0,3.36-.54l3.94-4.61a.642.642,0,0,1,.47-.22.614.614,0,0,1,.47.19L20,12.57Z" fill="#4a5764"/>
-</svg>
-                    </span>
-                    <input
-                      onChange={mediaChange}
-                      className="hidden"
-                      type="file"
-                      accept="image/jpeg, image/png, image/jpg, image/svg, image/gif, video/3gp, video/mp4, video/mov, video/quicktime"
-                      id="input-post-file"
-                    />
-                  </label>
-                </span>
-              )}
+                    <label
+                      htmlFor="input-post-file"
+                      className="relative cursor-pointer"
+                    >
+                      <span className="flex flex-row items-end">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="22"
+                          height="22"
+                          viewBox="0 0 22 22"
+                        >
+                          <path
+                            id="image"
+                            d="M17,0H5A5,5,0,0,0,0,5V17a5,5,0,0,0,5,5H17a5,5,0,0,0,5-5V5a5,5,0,0,0-5-5ZM6.07,5a2,2,0,1,1-2,2,2,2,0,0,1,2-2ZM20,17a3.009,3.009,0,0,1-3,3H5a3.009,3.009,0,0,1-3-3v-.24l3.8-3.04a.668.668,0,0,1,.73-.05l2.84,1.7a2.624,2.624,0,0,0,3.36-.54l3.94-4.61a.642.642,0,0,1,.47-.22.614.614,0,0,1,.47.19L20,12.57Z"
+                            fill="#4a5764"
+                          />
+                        </svg>
+                      </span>
+                      <input
+                        onChange={mediaChange}
+                        className="hidden"
+                        type="file"
+                        accept="image/jpeg, image/png, image/jpg, image/svg, image/gif, video/3gp, video/mp4, video/mov, video/quicktime"
+                        id="input-post-file"
+                      />
+                    </label>
+                  </span>
+                ))}
             </span>
           )}
 
@@ -394,7 +453,9 @@ const textareaRef = useRef(null)
               ) : (
                 <span className="flex flex-row space-x-1">
                   <span
-                    className={`cursor-pointer rounded-full ${darkMode ? '' : 'border'} p-2 flex justify-center items-center bg-[#EB4463]`}
+                    className={`cursor-pointer rounded-full ${
+                      darkMode ? "" : "border"
+                    } p-2 flex justify-center items-center bg-[#EB4463]`}
                   >
                     <svg
                       onClick={sendMessage}
@@ -412,7 +473,7 @@ const textareaRef = useRef(null)
                           fillRule="evenodd"
                         />
                       </g>
-                    </svg> 
+                    </svg>
                   </span>
                 </span>
               )}

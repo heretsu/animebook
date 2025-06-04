@@ -287,6 +287,7 @@ export default function Home() {
               src={selectedMedia}
               autoPlay
               loop
+              controls
             ></video>
           )}
 

@@ -77,6 +77,8 @@ export const BinSvg = ({ pixels }) => {
 export default function CommunityPostCard({
   id,
   media,
+  title,
+  flair,
   content,
   created_at,
   users,
@@ -85,9 +87,9 @@ export default function CommunityPostCard({
   community,
   comments,
   focusPostId,
-  fetchCommunityDetails
+  fetchCommunityDetails,
 }) {
-  const [openPostOptions, setOpenPostOptions] = useState(false)
+  const [openPostOptions, setOpenPostOptions] = useState(false);
   const { fullPageReload } = PageLoadOptions();
   const router = useRouter();
   const { sendNotification, postTimeAgo } = DappLibrary();
@@ -101,7 +103,7 @@ export default function CommunityPostCard({
     videoRef,
     handlePlay,
     activeVideo,
-    allCommunityPolls
+    allCommunityPolls,
   } = useContext(UserContext);
   const [upvoted, setUpvoted] = useState(false);
   const [upvotes, setUpvotes] = useState(null);
@@ -113,8 +115,8 @@ export default function CommunityPostCard({
   const [bookmarked, setBookmarked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [playVideo, setPlayVideo] = useState(false);
-  const [open, setOpen] = useState(false)
-const [pollLoadedData, setPollLoadedData] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [pollLoadedData, setPollLoadedData] = useState(false);
   const deleteAction = () => {
     setDeletePost({ postid: id, media: media });
   };
@@ -271,10 +273,9 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
     }
   };
 
-  
   const [imgSrc, setImgSrc] = useState(users.avatar);
 
-  const [pollVotes, setPollVotes] = useState(null)
+  const [pollVotes, setPollVotes] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [pollReentry, setPollReentry] = useState(false);
 
@@ -319,19 +320,19 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
   };
   const fetchPollVotes = (id) => {
     supabase
-    .from("community_poll_votes")
-    .select()
-    .eq("pollid", id)
-    .then((res) => {
-      if (res.data !== undefined && res.data !== null) {
-        setPollVotes(res.data);
-        setSelectedOption(
-          res.data.find((lk) => lk.userid === myProfileId)?.optionid
-        );
-        setPollReentry(true);
-      }
-    });
-  }
+      .from("community_poll_votes")
+      .select()
+      .eq("pollid", id)
+      .then((res) => {
+        if (res.data !== undefined && res.data !== null) {
+          setPollVotes(res.data);
+          setSelectedOption(
+            res.data.find((lk) => lk.userid === myProfileId)?.optionid
+          );
+          setPollReentry(true);
+        }
+      });
+  };
 
   useEffect(() => {
     if (users.id !== myProfileId) {
@@ -345,7 +346,7 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
       });
     }
     fetchUpvotes();
-    if (!pollLoadedData && ispoll && allCommunityPolls){
+    if (!pollLoadedData && ispoll && allCommunityPolls) {
       const pollObj = allCommunityPolls.find((poll) => poll.postid === id);
       const pollId = pollObj?.id;
       fetchPollVotes(pollId);
@@ -442,74 +443,73 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
             </span>
           </span>
           <span className="flex flex-row items-center space-x-1">
-
-          {userData &&
-            (router.pathname === "/profile/[user]" &&
-            users.id === myProfileId ? (
-              <span
-                onClick={() => {
-                  //deleteAction()
-                }}
-                className="cursor-pointer"
-              >
-                {/* <BinSvg pixels={"20px"} /> */}
-              </span>
-            ) : (
-              <svg
-                onClick={() => {
-                  if (userData) {
-                    addBookmark();
-                  } else {
-                    fullPageReload("/signin");
-                  }
-                }}
-                xmlns="http://www.w3.org/2000/svg"
-                width="13.909"
-                height="17"
-                viewBox="0 0 13.909 17"
-                fill={bookmarked ? "#04dbc4" : "#ADB6C3"}
-              >
-                <path
-                  id="bookmark"
-                  d="M15.909,2.318V16.227a.773.773,0,0,1-1.283.58L8.955,11.846,3.283,16.807A.773.773,0,0,1,2,16.227V2.318A2.325,2.325,0,0,1,4.318,0h9.273a2.325,2.325,0,0,1,2.318,2.318Z"
-                  transform="translate(-2)"
+            {userData &&
+              (router.pathname === "/profile/[user]" &&
+              users.id === myProfileId ? (
+                <span
+                  onClick={() => {
+                    //deleteAction()
+                  }}
+                  className="cursor-pointer"
+                >
+                  {/* <BinSvg pixels={"20px"} /> */}
+                </span>
+              ) : (
+                <svg
+                  onClick={() => {
+                    if (userData) {
+                      addBookmark();
+                    } else {
+                      fullPageReload("/signin");
+                    }
+                  }}
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="13.909"
+                  height="17"
+                  viewBox="0 0 13.909 17"
                   fill={bookmarked ? "#04dbc4" : "#ADB6C3"}
+                >
+                  <path
+                    id="bookmark"
+                    d="M15.909,2.318V16.227a.773.773,0,0,1-1.283.58L8.955,11.846,3.283,16.807A.773.773,0,0,1,2,16.227V2.318A2.325,2.325,0,0,1,4.318,0h9.273a2.325,2.325,0,0,1,2.318,2.318Z"
+                    transform="translate(-2)"
+                    fill={bookmarked ? "#04dbc4" : "#ADB6C3"}
+                  />
+                </svg>
+              ))}
+            <svg
+              className="rotate-90 cursor-pointer"
+              onClick={() => setOpen(!open)}
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="4"
+              viewBox="0 0 14 4"
+            >
+              <g transform="translate(-0.645 3.864) rotate(-90)">
+                <circle cx="2" cy="2" r="2" fill="#adb6c3" />
+                <circle
+                  cx="2"
+                  cy="2"
+                  r="2"
+                  transform="translate(0 5)"
+                  fill="#adb6c3"
                 />
-              </svg>
-            ))}
-<svg
-                    className="rotate-90 cursor-pointer"
-                    onClick={() => setOpen(!open)}
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="4"
-                    viewBox="0 0 14 4"
-                  >
-                    <g transform="translate(-0.645 3.864) rotate(-90)">
-                      <circle cx="2" cy="2" r="2" fill="#adb6c3" />
-                      <circle
-                        cx="2"
-                        cy="2"
-                        r="2"
-                        transform="translate(0 5)"
-                        fill="#adb6c3"
-                      />
-                      <circle
-                        cx="2"
-                        cy="2"
-                        r="2"
-                        transform="translate(0 10)"
-                        fill="#adb6c3"
-                      />
-                    </g>
-                  </svg>
-            </span>
+                <circle
+                  cx="2"
+                  cy="2"
+                  r="2"
+                  transform="translate(0 10)"
+                  fill="#adb6c3"
+                />
+              </g>
+            </svg>
+          </span>
         </span>
         {content !== null && content !== undefined && content !== "" && (
           <span
-          className={`${
-            ispoll && "font-semibold"
-          } text-sm leading-tight break-words whitespace-pre-wrap`}
+            className={`${
+              ispoll && "font-semibold"
+            } flex flex-col text-sm leading-tight break-words whitespace-pre-wrap`}
             onClick={() => {
               fullPageReload(
                 `/communities/${community.split("&")[0]}&${id}`,
@@ -518,61 +518,67 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
             }}
             style={{ whiteSpace: "pre-wrap" }}
           >
+            <span className="font-semibold text-base">{title}</span>
+            <span className={`cursor-pointer mt-0.5 mb-2 w-fit font-semibold rounded-2xl py-0.5 px-2 text-xs text-white ${flair && flair.toLowerCase() === 'discussion' ? 'bg-purple-500' : flair && flair.toLowerCase() === 'spoiler' ? 'bg-red-500' : 'bg-green-400'}`}>{flair}</span>
             <CommentConfig text={content} tags={true} />
           </span>
         )}
         {ispoll &&
-            allCommunityPolls &&
-            allCommunityPolls
-              .filter((poll) => poll.postid === id)
-              .map((poll) => (
-                <span key={poll.id} className="flex flex-col">
-                  <span className="pb-2 text-sm leading-tight break-words whitespace-pre-wrap">
-                    <CommentConfig text={poll.question} tags={true} />
-                  </span>
-                  {poll.options.length > 0 &&
-                    poll.options.map((opts, index) => {
-                      const votesForOption = pollVotes?.filter(
-                        (pv) => pv.pollid === poll.id && pv.optionid === index
-                      );
-                      const voteCount = votesForOption?.length || 0;
-                      const totalVotes =
-                        pollVotes?.filter((pv) => pv.pollid === poll.id)
-                          .length || 0;
-                      const percentage =
-                        totalVotes > 0
-                          ? Math.round((voteCount / totalVotes) * 100)
-                          : 0;
-                      return (
-                        <span
-                          key={index}
-                          onClick={() => {
-                            if (selectedOption === index) {
-                              setSelectedOption(null);
-                              applyVote(poll.id, index);
-                            } else {
-                              setSelectedOption(index);
-                              applyVote(poll.id, index);
-                            }
-                          }}
-                          className={`${
-                            darkMode
-                              ? "bg-[#292C33] border-[#32353C]"
-                              : "bg-[#F9F9F9] border-[#EEEDEF]"
-                          } h-fit mb-1.5 rounded-md cursor-pointer text-sm`}
-                        >
-                          <PollOption
-                            selectedOption={selectedOption}
-                            opts={opts}
-                            percentage={percentage}
-                            darkMode={darkMode}
-                          />
-                        </span>
-                      );
-                    })}
-                  {pollVotes && pollVotes.length && <span className="text-sm">{`${pollVotes.length} ${pollVotes.length === 1 ? 'vote' : 'votes'}`}</span>}
+          allCommunityPolls &&
+          allCommunityPolls
+            .filter((poll) => poll.postid === id)
+            .map((poll) => (
+              <span key={poll.id} className="flex flex-col">
+                <span className="pb-2 text-sm leading-tight break-words whitespace-pre-wrap">
+                  <CommentConfig text={poll.question} tags={true} />
                 </span>
-              ))}
+                {poll.options.length > 0 &&
+                  poll.options.map((opts, index) => {
+                    const votesForOption = pollVotes?.filter(
+                      (pv) => pv.pollid === poll.id && pv.optionid === index
+                    );
+                    const voteCount = votesForOption?.length || 0;
+                    const totalVotes =
+                      pollVotes?.filter((pv) => pv.pollid === poll.id).length ||
+                      0;
+                    const percentage =
+                      totalVotes > 0
+                        ? Math.round((voteCount / totalVotes) * 100)
+                        : 0;
+                    return (
+                      <span
+                        key={index}
+                        onClick={() => {
+                          if (selectedOption === index) {
+                            setSelectedOption(null);
+                            applyVote(poll.id, index);
+                          } else {
+                            setSelectedOption(index);
+                            applyVote(poll.id, index);
+                          }
+                        }}
+                        className={`${
+                          darkMode
+                            ? "bg-[#292C33] border-[#32353C]"
+                            : "bg-[#F9F9F9] border-[#EEEDEF]"
+                        } h-fit mb-1.5 rounded-md cursor-pointer text-sm`}
+                      >
+                        <PollOption
+                          selectedOption={selectedOption}
+                          opts={opts}
+                          percentage={percentage}
+                          darkMode={darkMode}
+                        />
+                      </span>
+                    );
+                  })}
+                {pollVotes && pollVotes.length && (
+                  <span className="text-sm">{`${pollVotes.length} ${
+                    pollVotes.length === 1 ? "vote" : "votes"
+                  }`}</span>
+                )}
+              </span>
+            ))}
         <span className="relative w-full max-h-[600px] flex justify-center">
           {media !== null &&
             media !== undefined &&
@@ -608,6 +614,7 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
                   height={600}
                   width={600}
                   onPlay={() => handlePlay(id)}
+                  controls
                 ></video>
                 {(!playVideo || activeVideo !== id) && (
                   <svg
@@ -649,7 +656,6 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
               </span>
             ))}
         </span>
-        
 
         <div className="text-white flex flex-row justify-between items-center">
           <div className="flex flex-row items-center space-x-4 pr-4 py-2">
@@ -750,7 +756,9 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
                 {comments.filter((c) => c.parentid === null).length}
               </div>
               <svg
-                onClick={() => {setOpenPostOptions(true)}}
+                onClick={() => {
+                  setOpenPostOptions(true);
+                }}
                 xmlns="http://www.w3.org/2000/svg"
                 width="14.522"
                 height="14"
@@ -815,100 +823,101 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
           </div> */}
         </div>
         {open && (
-                  <div
-                    id="zMax"
-                    className={`right-0 lg:right-[21%] border absolute mt-1 w-44 bg-black rounded-lg shadow-lg ${
-                      darkMode
-                        ? "border-gray-700 bg-[#1E1F24] text-white"
-                        : "border-gray-300 bg-white text-black"
-                    }`}
+          <div
+            id="zMax"
+            className={`right-0 lg:right-[21%] border absolute mt-1 w-44 bg-black rounded-lg shadow-lg ${
+              darkMode
+                ? "border-gray-700 bg-[#1E1F24] text-white"
+                : "border-gray-300 bg-white text-black"
+            }`}
+          >
+            <ul className={`space-y-1`}>
+              {userData && users.id === myProfileId && (
+                <li
+                  onClick={() => {
+                    deleteAction();
+                  }}
+                  className={`border-b ${
+                    darkMode ? "border-gray-900" : "border-gray-100"
+                  } px-4 py-2 flex items-center space-x-2 hover:bg-gray-100 cursor-pointer`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12.331"
+                    height="15.854"
+                    viewBox="0 0 12.331 15.854"
                   >
-                    <ul className={`space-y-1`}>
-                    {userData && users.id === myProfileId && (
-                        <li
-                          onClick={() => {
-                            deleteAction();
-                          }}
-                          className={`border-b ${
-                            darkMode ? "border-gray-900" : "border-gray-100"
-                          } px-4 py-2 flex items-center space-x-2 hover:bg-gray-100 cursor-pointer`}
+                    <g
+                      id="delete_1_"
+                      data-name="delete (1)"
+                      transform="translate(-42.667)"
+                    >
+                      <g
+                        id="Gruppe_3315"
+                        data-name="Gruppe 3315"
+                        transform="translate(42.667)"
+                      >
+                        <g
+                          id="Gruppe_3314"
+                          data-name="Gruppe 3314"
+                          transform="translate(0)"
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="12.331"
-                            height="15.854"
-                            viewBox="0 0 12.331 15.854"
-                          >
-                            <g
-                              id="delete_1_"
-                              data-name="delete (1)"
-                              transform="translate(-42.667)"
-                            >
-                              <g
-                                id="Gruppe_3315"
-                                data-name="Gruppe 3315"
-                                transform="translate(42.667)"
-                              >
-                                <g
-                                  id="Gruppe_3314"
-                                  data-name="Gruppe 3314"
-                                  transform="translate(0)"
-                                >
-                                  <path
-                                    id="Pfad_4759"
-                                    data-name="Pfad 4759"
-                                    d="M64,95.9a1.761,1.761,0,0,0,1.762,1.762h7.046A1.761,1.761,0,0,0,74.569,95.9V85.333H64Z"
-                                    transform="translate(-63.119 -81.81)"
-                                    fill="#5d6879"
-                                  />
-                                  <path
-                                    id="Pfad_4760"
-                                    data-name="Pfad 4760"
-                                    d="M51.915.881,51.034,0h-4.4L45.75.881H42.667V2.642H55V.881Z"
-                                    transform="translate(-42.667)"
-                                    fill="#5d6879"
-                                  />
-                                </g>
-                              </g>
-                            </g>
-                          </svg>
-                          <span>Delete</span>
-                        </li>
-                      )}
+                          <path
+                            id="Pfad_4759"
+                            data-name="Pfad 4759"
+                            d="M64,95.9a1.761,1.761,0,0,0,1.762,1.762h7.046A1.761,1.761,0,0,0,74.569,95.9V85.333H64Z"
+                            transform="translate(-63.119 -81.81)"
+                            fill="#5d6879"
+                          />
+                          <path
+                            id="Pfad_4760"
+                            data-name="Pfad 4760"
+                            d="M51.915.881,51.034,0h-4.4L45.75.881H42.667V2.642H55V.881Z"
+                            transform="translate(-42.667)"
+                            fill="#5d6879"
+                          />
+                        </g>
+                      </g>
+                    </g>
+                  </svg>
+                  <span>Delete</span>
+                </li>
+              )}
 
-                      <ShareSystem
-                        postUrl={`https://animebook.io/communities/${community.split("&")[0]}&${id}`}
-                        custom={true}
-                      />
-                     
+              <ShareSystem
+                postUrl={`https://animebook.io/communities/${
+                  community.split("&")[0]
+                }&${id}`}
+                custom={true}
+              />
 
-                      {userData && users.id !== myProfileId && (
-                        <li
-                          onClick={() => {
-                            setOpenPostOptions(true);
-                          }}
-                          className={`px-4 py-2 flex items-center space-x-2 ${
-                            !darkMode && "hover:bg-gray-100"
-                          } cursor-pointer`}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="16"
-                            viewBox="0 0 14 16"
-                          >
-                            <path
-                              d="M16.451,7.12a1.317,1.317,0,0,0-.663.18,1.342,1.342,0,0,0-.664,1.16V22.2a.83.83,0,0,0,.859.915h.935a.83.83,0,0,0,.858-.915V16.883c3.494-.236,5.131,2.288,9.143,1.093.513-.153.726-.362.726-.86V10.683c0-.367-.341-.8-.726-.661C23.09,11.343,21,9.042,17.776,9.015V8.461a1.34,1.34,0,0,0-.663-1.16,1.313,1.313,0,0,0-.662-.18Z"
-                              transform="translate(-15.124 -7.12)"
-                              fill="#5f6877"
-                            />
-                          </svg>
-                          <span>Report</span>
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                )}
+              {userData && users.id !== myProfileId && (
+                <li
+                  onClick={() => {
+                    setOpenPostOptions(true);
+                  }}
+                  className={`px-4 py-2 flex items-center space-x-2 ${
+                    !darkMode && "hover:bg-gray-100"
+                  } cursor-pointer`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="16"
+                    viewBox="0 0 14 16"
+                  >
+                    <path
+                      d="M16.451,7.12a1.317,1.317,0,0,0-.663.18,1.342,1.342,0,0,0-.664,1.16V22.2a.83.83,0,0,0,.859.915h.935a.83.83,0,0,0,.858-.915V16.883c3.494-.236,5.131,2.288,9.143,1.093.513-.153.726-.362.726-.86V10.683c0-.367-.341-.8-.726-.661C23.09,11.343,21,9.042,17.776,9.015V8.461a1.34,1.34,0,0,0-.663-1.16,1.313,1.313,0,0,0-.662-.18Z"
+                      transform="translate(-15.124 -7.12)"
+                      fill="#5f6877"
+                    />
+                  </svg>
+                  <span>Report</span>
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
 
         {openPostOptions && (
           <>
@@ -930,17 +939,21 @@ const [pollLoadedData, setPollLoadedData] = useState(false)
           </>
         )}
         {deletePost !== null && (
-        <>
-          <PopupModal success={"7"} isCommunity={true} fetchCommunityDetails={fetchCommunityDetails} />
-          <div
-            onClick={() => {
-              setDeletePost(null);
-            }}
-            id="overlay"
-            className="bg-black bg-opacity-80"
-          ></div>
-        </>
-      )}
+          <>
+            <PopupModal
+              success={"7"}
+              isCommunity={true}
+              fetchCommunityDetails={fetchCommunityDetails}
+            />
+            <div
+              onClick={() => {
+                setDeletePost(null);
+              }}
+              id="overlay"
+              className="bg-black bg-opacity-80"
+            ></div>
+          </>
+        )}
       </div>
     )
   );

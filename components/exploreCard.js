@@ -193,6 +193,7 @@ export default function ExploreCard({
             width={500}
             height={500}
             src={media}
+            controls
             autoPlay
             loop
             crossOrigin="anonymous"

@@ -742,6 +742,8 @@ const Messages = ({ message }) => {
                                 : "bg-black text-white bg-opacity-60"
                             } backdrop-blur-md flex ${
                               chat.attachments && "flex-col"
+                            } ${
+                              chat.attachments && chat.attachments.length && chat.attachments[0]?.startsWith('/stickers')  && "bg-transparent w-40"
                             }`}
                           >
                             {chat.attachments &&

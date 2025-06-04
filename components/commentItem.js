@@ -168,7 +168,7 @@ export default function CommentItem({
                           alt="user profile"
                           height={300}
                           width={300}
-                          className="pt-1 relative max-h-[600px] mx-auto rounded-lg object-cover w-full"
+                          className={`pt-1 relative ${comment.media.startsWith('/stickers') ? 'w-20 h-30' : 'max-h-[600px] w-full mx-auto'} rounded-lg object-cover`}
                         />
                       </span>
                     </span>

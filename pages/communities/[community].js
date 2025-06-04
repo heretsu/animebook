@@ -167,7 +167,7 @@ const Community = ({ community }) => {
     const posts = await supabase
       .from("community_posts")
       .select(
-        "id, created_at, content, media, communityid, users(id, avatar, username, created_at, cover, bio, ki), ispoll"
+        "id, created_at, title, flair, content, media, communityid, users(id, avatar, username, created_at, cover, bio, ki), ispoll"
       )
       .eq("communityid", data[0].id)
       .order("created_at", { ascending: false });

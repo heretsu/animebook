@@ -9,8 +9,9 @@ import GifPicker from "./gifPicker";
 import DbUsers from "@/hooks/dbUsers";
 import PollCreator from "./pollCreator";
 import { useTranslation } from "react-i18next";
+import FlairPicker from "./flairPicker";
 
-const SmallPostContainer = ({setNewPost, communityId, community }) => {
+const SmallPostContainer = ({ setNewPost, communityId, community }) => {
   const { t } = useTranslation();
 
   const { fullPageReload } = PageLoadOptions();
@@ -23,7 +24,7 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
     setOriginalPostValues,
     setCommunities,
   } = useContext(UserContext);
-  const [openPoll, setOpenPoll] = useState(false)
+  const [openPoll, setOpenPoll] = useState(false);
   const router = useRouter();
   const [content, setContent] = useState("");
   const [mediaContent, setMediaContent] = useState("");
@@ -40,6 +41,8 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
   const [gifSelected, setGifSelected] = useState(false);
   const [gifLink, setGifLink] = useState(null);
   const { fetchAllPosts, fetchAllReposts } = DbUsers();
+  const [flairTopic, setFlairTopic] = useState("")
+  const [selectedFlair, setSelectedFlair] = useState("");
 
   const fetchCommunities = async () => {
     const { data } = await supabase
@@ -161,9 +164,9 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
         media: gifLink,
         content: content.trim() !== "" ? content.trim() : "",
       });
-    
+
       setContent("");
-      const textarea = textareaRef.current
+      const textarea = textareaRef.current;
       textarea.style.height = "2rem";
       setGifSelected(false);
       setSelectedMedia(null);
@@ -198,11 +201,13 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
           if (communityId) {
             await supabase.from("community_posts").insert({
               userid: userNumId,
+              title: flairTopic,
               media: mediaUrl,
               content: content.trim() !== "" ? content.trim() : "",
+              flair: selectedFlair,
               communityid: parseInt(communityId),
             });
-            fullPageReload(`/communities/${community}`, 'window');
+            fullPageReload(`/communities/${community}`, "window");
           } else {
             await supabase.from("posts").insert({
               userid: userNumId,
@@ -211,9 +216,9 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
             });
             // fullPageReload("/home");
             setContent("");
-            const textarea = textareaRef.current
+            const textarea = textareaRef.current;
             textarea.style.height = "2rem";
-      
+
             setGifSelected(false);
             setSelectedMedia(null);
             setMediaFile(null);
@@ -227,15 +232,18 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
         if (communityId) {
           await supabase.from("community_posts").insert({
             userid: userNumId,
+            title: flairTopic,
             media: null,
             content: content,
+            flair: selectedFlair,
             communityid: parseInt(communityId),
           });
-          fullPageReload(`/communities/${community}`, 'window');
+          fullPageReload(`/communities/${community}`, "window");
+          setFlairTopic("")
+          setSelectedFlair("")
           setContent("");
-          const textarea = textareaRef.current
+          const textarea = textareaRef.current;
           textarea.style.height = "2rem";
-    
           setGifSelected(false);
           setSelectedMedia(null);
           setMediaFile(null);
@@ -249,9 +257,9 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
           });
           // fullPageReload("/home");
           setContent("");
-          const textarea = textareaRef.current
+          const textarea = textareaRef.current;
           textarea.style.height = "2rem";
-    
+
           setGifSelected(false);
           setSelectedMedia(null);
           setMediaFile(null);
@@ -284,30 +292,28 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
   }, [selectedMedia]);
   return (
     <div
-      className={`border rounded-sm p-4 flex flex-row w-full ${
+      className={`border rounded-sm p-4 flex flex-col space-y-2 w-full ${
         darkMode
           ? "bg-[#1e1f24] text-white border-[#292C33]"
           : "bg-white border-[#EEEDEF]"
       } justify-center items-center`}
     >
-      <span
+      {(!router.pathname === "/communities" ||
+        router.pathname === "/communities/[community]") && !openPoll && (
+          <span
         className={`rounded-md border w-full p-2 ${
-          openPoll ? 'border-none bg-transparent' : ( darkMode
+          darkMode
             ? "bg-[#27292F] border-[#32353C] text-white"
-            : "bg-[#F9F9F9] border-[#EEEDEF]")
+            : "bg-[#F9F9F9] border-[#EEEDEF]"
         } relative flex flex-row ${
           showGifPicker ? "flex" : "justify-between items-center"
         } ${selectedMedia && "flex-col"} space-x-0`}
       >
-        {openPoll ? <>
-        <PollCreator setNewPost={setNewPost} darkMode={darkMode} setOpenPoll={setOpenPoll} userNumId={userNumId} postLoading={postLoading} setPostLoading={setPostLoading} errorMsg={errorMsg} setErrorMsg={setErrorMsg} communityId={communityId} community={community} fetchPosts={fetchPosts}/>
-        </> :  <>
-        {!showGifPicker && (
           <textarea
-            value={content}
+            value={flairTopic}
             onKeyDown={(e) => {
               if (e.key === "Backspace" && content && content.length === 1) {
-                setContent("");
+                setFlairTopic("");
               }
             }}
             onChange={(e) => {
@@ -318,25 +324,99 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
               }
 
               if (e.target.value && e.target.value.length < 1900) {
-                setContent(e.target.value);
+                setFlairTopic(e.target.value);
               }
             }}
             onInput={(e) => {
               // Ensure textarea shrinks when selecting and deleting text
               if (e.target.value === "") {
-                setContent(""); // Reset content
+                setFlairTopic(""); // Reset content
                 e.target.style.height = "2rem"; // Reset to h-8
               }
             }}
             ref={textareaRef}
-            placeholder={`${t("What's on your mind")}?`}
+            placeholder={`${t("Title")}`}
             className={`text-sm resize-none w-full bg-transparent ${
               darkMode ? "placeholder:text-gray-400 text-white" : "text-black"
             } h-8 placeholder:text-xs border-none focus:outline-none focus:ring-0`}
           />
+          </span>
         )}
-        <span className="flex flex-row space-x-1 justify-center items-center">
-          {/* {!showGifPicker && !selectedMedia && (
+        
+
+       {(!router.pathname === "/communities" ||
+        router.pathname === "/communities/[community]") && <FlairPicker community={community} selected={selectedFlair} onSelect={setSelectedFlair}/>}
+
+      <span
+        className={`rounded-md border w-full p-2 ${
+          openPoll
+            ? "border-none bg-transparent"
+            : darkMode
+            ? "bg-[#27292F] border-[#32353C] text-white"
+            : "bg-[#F9F9F9] border-[#EEEDEF]"
+        } relative flex flex-row ${
+          showGifPicker ? "flex" : "justify-between items-center"
+        } ${selectedMedia && "flex-col"} space-x-0`}
+      >
+        {openPoll ? (
+          <>
+            <PollCreator
+              setNewPost={setNewPost}
+              darkMode={darkMode}
+              setOpenPoll={setOpenPoll}
+              userNumId={userNumId}
+              postLoading={postLoading}
+              setPostLoading={setPostLoading}
+              errorMsg={errorMsg}
+              setErrorMsg={setErrorMsg}
+              communityId={communityId}
+              community={community}
+              fetchPosts={fetchPosts}
+            />
+          </>
+        ) : (
+          <>
+            {!showGifPicker && (
+              <textarea
+                value={content}
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "Backspace" &&
+                    content &&
+                    content.length === 1
+                  ) {
+                    setContent("");
+                  }
+                }}
+                onChange={(e) => {
+                  const textarea = textareaRef.current;
+                  if (textarea) {
+                    textarea.style.height = "2rem";
+                    textarea.style.height = `${textarea.scrollHeight}px`;
+                  }
+
+                  if (e.target.value && e.target.value.length < 1900) {
+                    setContent(e.target.value);
+                  }
+                }}
+                onInput={(e) => {
+                  // Ensure textarea shrinks when selecting and deleting text
+                  if (e.target.value === "") {
+                    setContent(""); // Reset content
+                    e.target.style.height = "2rem"; // Reset to h-8
+                  }
+                }}
+                ref={textareaRef}
+                placeholder={`${t("What's on your mind")}?`}
+                className={`text-sm resize-none w-full bg-transparent ${
+                  darkMode
+                    ? "placeholder:text-gray-400 text-white"
+                    : "text-black"
+                } h-8 placeholder:text-xs border-none focus:outline-none focus:ring-0`}
+              />
+            )}
+            <span className="flex flex-row space-x-1 justify-center items-center">
+              {/* {!showGifPicker && !selectedMedia && (
             <svg
               onClick={() => {
                 setShowGifPicker(true);
@@ -354,174 +434,190 @@ const SmallPostContainer = ({setNewPost, communityId, community }) => {
               />
             </svg>
           )} */}
-          {!selectedMedia && <svg 
-            onClick={()=>{ setOpenPoll(true)}}
-            width="24px"
-            height="24px"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="#EB4463"
-            className="cursor-pointer"
-          >
-            <path d="M7 11h7v2H7zm0-4h10.97v2H7zm0 8h13v2H7zM4 4h2v16H4z" />
-          </svg>}
-          {selectedMedia &&  <span
-                    onClick={() => {
-                      setSelectedMedia(false)
-                    }}
-                    className={`${darkMode ? 'bg-white text-black' : 'bg-black text-white'} font-bold text-sm flex justify-center cursor-pointer text-center items-center text-black h-fit w-fit p-1 rounded-md`}
+              {!selectedMedia && (
+                <svg
+                  onClick={() => {
+                    setOpenPoll(true);
+                  }}
+                  width="24px"
+                  height="24px"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="#EB4463"
+                  className="cursor-pointer"
+                >
+                  <path d="M7 11h7v2H7zm0-4h10.97v2H7zm0 8h13v2H7zM4 4h2v16H4z" />
+                </svg>
+              )}
+              {selectedMedia && (
+                <span
+                  onClick={() => {
+                    setSelectedMedia(false);
+                  }}
+                  className={`${
+                    darkMode ? "bg-white text-black" : "bg-black text-white"
+                  } font-bold text-sm flex justify-center cursor-pointer text-center items-center text-black h-fit w-fit p-1 rounded-md`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width={15}
+                    height={15}
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    stroke="currentColor"
+                    strokeWidth={4}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                     <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={15}
-    height={15}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    stroke="currentColor"
-    strokeWidth={4}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1={18} y1={6} x2={6} y2={18} />
-    <line x1={6} y1={6} x2={18} y2={18} />
-  </svg>
-                    
-                  </span>}
-          {selectedMedia ? (
-            <label
-              onClick={(e) => {
-                if (gifSelected) {
-                  setShowGifPicker(true);
-                } else {
-                  mediaChange(e);
-                }
-              }}
-              htmlFor="input-post-file"
-            >
-              {isImage ? (
-                <Image
-                  src={selectedMedia}
-                  alt="Invalid post media. Click to change"
-                  height={300}
-                  width={300}
-                />
+                    <line x1={18} y1={6} x2={6} y2={18} />
+                    <line x1={6} y1={6} x2={18} y2={18} />
+                  </svg>
+                </span>
+              )}
+              {selectedMedia ? (
+                <label
+                  onClick={(e) => {
+                    if (gifSelected) {
+                      setShowGifPicker(true);
+                    } else {
+                      mediaChange(e);
+                    }
+                  }}
+                  htmlFor="input-post-file"
+                >
+                  {isImage ? (
+                    <Image
+                      src={selectedMedia}
+                      alt="Invalid post media. Click to change"
+                      height={300}
+                      width={300}
+                    />
+                  ) : (
+                    <video
+                      width={300}
+                      height={300}
+                      src={selectedMedia}
+                      controls
+                    >
+                      {`${mediaName} It seems your browser does not support video uploads`}
+                    </video>
+                  )}
+                  {!gifSelected && (
+                    <input
+                      onChange={mediaChange}
+                      className="hidden"
+                      type="file"
+                      accept="image/jpeg, image/png, image/jpg, image/svg, image/gif, video/3gp, video/mp4, video/mov, video/quicktime"
+                      id="input-post-file"
+                    />
+                  )}
+                </label>
               ) : (
-                <video width={300} height={300} src={selectedMedia} controls>
-                  {`${mediaName} It seems your browser does not support video uploads`}
-                </video>
+                !showGifPicker && (
+                  <label
+                    htmlFor="input-post-file"
+                    className="relative cursor-pointer"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="22"
+                      height="22"
+                      viewBox="0 0 22 22"
+                    >
+                      <path
+                        id="image"
+                        d="M17,0H5A5,5,0,0,0,0,5V17a5,5,0,0,0,5,5H17a5,5,0,0,0,5-5V5a5,5,0,0,0-5-5ZM6.07,5a2,2,0,1,1-2,2,2,2,0,0,1,2-2ZM20,17a3.009,3.009,0,0,1-3,3H5a3.009,3.009,0,0,1-3-3v-.24l3.8-3.04a.668.668,0,0,1,.73-.05l2.84,1.7a2.624,2.624,0,0,0,3.36-.54l3.94-4.61a.642.642,0,0,1,.47-.22.614.614,0,0,1,.47.19L20,12.57Z"
+                        fill={darkMode ? "#6A6B71" : "#4a5764"}
+                      />
+                    </svg>
+
+                    <input
+                      onChange={mediaChange}
+                      className="hidden"
+                      type="file"
+                      accept="image/jpeg, image/png, image/jpg, image/svg, image/gif, video/3gp, video/mp4, video/mov, video/quicktime"
+                      id="input-post-file"
+                    />
+                  </label>
+                )
               )}
-              {!gifSelected && (
-                <input
-                  onChange={mediaChange}
-                  className="hidden"
-                  type="file"
-                  accept="image/jpeg, image/png, image/jpg, image/svg, image/gif, video/3gp, video/mp4, video/mov, video/quicktime"
-                  id="input-post-file"
+            </span>
+
+            {showGifPicker && (
+              <span className="w-full">
+                <GifPicker
+                  onGifSelect={handleGifSelect}
+                  darkMode={darkMode}
+                  setShowGifPicker={setShowGifPicker}
                 />
-              )}
-            </label>
+              </span>
+            )}
+          </>
+        )}
+      </span>
+
+      {!openPoll && (
+        <span className="flex flex-col">
+          {postLoading ? (
+            <span className="mx-auto">
+              <Spinner spinnerSize={"medium"} />
+            </span>
           ) : (
-            !showGifPicker && (
-              <label
-                htmlFor="input-post-file"
-                className="relative cursor-pointer"
+            <>
+              <span
+                onClick={() => {
+                  if (mediaFile || content.trim() !== "" || gifLink) {
+                    createPost();
+                  }
+                }}
+                className={`hidden lg:block rounded w-fit mx-auto hover:shadow cursor-pointer ml-4 px-7 py-1.5 bg-[#EB4463] text-sm font-medium text-center text-white`}
+              >
+                {t("Post")}
+              </span>
+              <span
+                onClick={() => {
+                  if (mediaFile || content.trim() !== "" || gifLink) {
+                    createPost();
+                  }
+                }}
+                className={`ml-2 lg:hidden bg-[#EB4463] rounded-full h-9 w-9 flex justify-center items-center`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 22 22"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 21.5 21.5"
                 >
-                  <path
-                    id="image"
-                    d="M17,0H5A5,5,0,0,0,0,5V17a5,5,0,0,0,5,5H17a5,5,0,0,0,5-5V5a5,5,0,0,0-5-5ZM6.07,5a2,2,0,1,1-2,2,2,2,0,0,1,2-2ZM20,17a3.009,3.009,0,0,1-3,3H5a3.009,3.009,0,0,1-3-3v-.24l3.8-3.04a.668.668,0,0,1,.73-.05l2.84,1.7a2.624,2.624,0,0,0,3.36-.54l3.94-4.61a.642.642,0,0,1,.47-.22.614.614,0,0,1,.47.19L20,12.57Z"
-                    fill={darkMode ? "#6A6B71" : "#4a5764"}
-                  />
+                  <g id="Icon" transform="translate(-1.25 -1.25)">
+                    <path
+                      id="Pfad_4721"
+                      data-name="Pfad 4721"
+                      d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
+                      fill="white"
+                      fillRule="evenodd"
+                    />
+                  </g>
                 </svg>
-
-                <input
-                  onChange={mediaChange}
-                  className="hidden"
-                  type="file"
-                  accept="image/jpeg, image/png, image/jpg, image/svg, image/gif, video/3gp, video/mp4, video/mov, video/quicktime"
-                  id="input-post-file"
-                />
-              </label>
-            )
+              </span>
+            </>
+          )}
+          {errorMsg !== "" && (
+            <span className="text-sm w-full flex flex-row justify-center items-center">
+              <svg
+                fill="red"
+                width="20px"
+                height="20px"
+                viewBox="0 -8 528 528"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title>{"fail"}</title>
+                <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
+              </svg>
+              <p className="text-red-500">{errorMsg}</p>
+            </span>
           )}
         </span>
-
-        {showGifPicker && (
-          <span className="w-full">
-            <GifPicker
-              onGifSelect={handleGifSelect}
-              darkMode={darkMode}
-              setShowGifPicker={setShowGifPicker}
-            />
-          </span>
-        )}</>}
-      </span>
-
-      {!openPoll && <span className="flex flex-col">
-        {postLoading ? (
-          <span className="mx-auto">
-            <Spinner spinnerSize={"medium"} />
-          </span>
-        ) : (
-          <>
-            <span
-              onClick={() => {
-                if (mediaFile || content.trim() !== "" || gifLink) {
-                  createPost();
-                }
-              }}
-              className={`hidden lg:block rounded w-fit mx-auto hover:shadow cursor-pointer ml-4 px-7 py-1.5 bg-[#EB4463] text-sm font-medium text-center text-white`}
-            >
-              {t('Post')}
-            </span>
-            <span
-              onClick={() => {
-                if (mediaFile || content.trim() !== "" || gifLink) {
-                  createPost();
-                }
-              }}
-              className={`ml-2 lg:hidden bg-[#EB4463] rounded-full h-9 w-9 flex justify-center items-center`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 21.5 21.5"
-              >
-                <g id="Icon" transform="translate(-1.25 -1.25)">
-                  <path
-                    id="Pfad_4721"
-                    data-name="Pfad 4721"
-                    d="M1.3,3.542a1.845,1.845,0,0,1,2.615-2.1l17.81,8.9a1.845,1.845,0,0,1,0,3.3l-17.81,8.9a1.845,1.845,0,0,1-2.615-2.1L3.17,13,14,12,3.17,11,1.305,3.542Z"
-                    fill="white"
-                    fillRule="evenodd"
-                  />
-                </g>
-              </svg>
-            </span>
-          </>
-        )}
-        {errorMsg !== "" && (
-          <span className="text-sm w-full flex flex-row justify-center items-center">
-            <svg
-              fill="red"
-              width="20px"
-              height="20px"
-              viewBox="0 -8 528 528"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <title>{"fail"}</title>
-              <path d="M264 456Q210 456 164 429 118 402 91 356 64 310 64 256 64 202 91 156 118 110 164 83 210 56 264 56 318 56 364 83 410 110 437 156 464 202 464 256 464 310 437 356 410 402 364 429 318 456 264 456ZM264 288L328 352 360 320 296 256 360 192 328 160 264 224 200 160 168 192 232 256 168 320 200 352 264 288Z" />
-            </svg>
-            <p className="text-red-500">{errorMsg}</p>
-          </span>
-        )}
-      </span>}
+      )}
     </div>
   );
 };

@@ -18,6 +18,7 @@ import ShareSystem from "./shareSystem";
 import UserWithBadge from "./userWithBadge";
 import { AvatarWithBorder } from "./AvatarProps";
 import { useTranslation } from "react-i18next";
+import StickerPicker from "./stickerPacker";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
@@ -97,7 +98,7 @@ export default function PostCard({
   // const videoRef = useRef(null);
   const { t } = useTranslation();
 
-  const [translateVersion, setTranslateVersion] = useState(false)
+  const [translateVersion, setTranslateVersion] = useState(false);
   const commentRef = useRef(null);
   const [myTextComment, setMyTextComment] = useState("");
   const router = useRouter();
@@ -232,8 +233,6 @@ export default function PostCard({
       setMyTextComment("");
       fetchComments();
     } else {
-      console.log("hmm");
-      console.log(myTextComment);
       if (myTextComment !== "") {
         let commentToSend = myTextComment;
         setMyTextComment("");
@@ -636,6 +635,34 @@ export default function PostCard({
   const [pollVotes, setPollVotes] = useState(null);
 
   const [pollReentry, setPollReentry] = useState(false);
+  const [showPacks, setShowPacks] = useState(false)
+
+  const sendSelectedSticker = async (stickerUrl) => {
+    if (userData === undefined || userData === null) {
+      fullPageReload("/signin");
+      return;
+    }
+    if (router.pathname === "/[username]/post/[postid]") {
+      await supabase.from("comments").insert({
+        postid: id,
+        content: '',
+        userid: myProfileId,
+        parentid: commentMsg.startsWith("@") ? globalParentId : null,
+        media: stickerUrl,
+      });
+    } else {
+      await supabase.from("comments").insert({
+        postid: id,
+        content: '',
+        userid: myProfileId,
+        parentid: myTextComment.startsWith("@") ? parentId : null,
+        media: stickerUrl,
+      });
+    }
+    setShowPacks(false)
+    fetchComments();
+  }
+
 
   const fetchCommentLikes = (id) => {
     supabase
@@ -1128,8 +1155,8 @@ export default function PostCard({
                     <ul className={`space-y-1`}>
                       <li
                         onClick={() => {
-                          setTranslateVersion(true)
-                          setOpen(false)
+                          setTranslateVersion(true);
+                          setOpen(false);
                         }}
                         className={`border-b ${
                           darkMode ? "border-gray-900" : "border-gray-100"
@@ -1178,7 +1205,7 @@ export default function PostCard({
                             strokeLinecap="round"
                           />
                         </svg>
-                        <span>{t('Translate')}</span>
+                        <span>{t("Translate")}</span>
                       </li>
                       {userData && users.id === myProfileId && (
                         <li
@@ -1228,7 +1255,7 @@ export default function PostCard({
                               </g>
                             </g>
                           </svg>
-                          <span>{t('Delete')}</span>
+                          <span>{t("Delete")}</span>
                         </li>
                       )}
 
@@ -1258,7 +1285,7 @@ export default function PostCard({
                               fill="#5f6877"
                             />
                           </svg>
-                          <span>{t('Report')}</span>
+                          <span>{t("Report")}</span>
                         </li>
                       )}
                     </ul>
@@ -1316,7 +1343,12 @@ export default function PostCard({
                 ispoll && "font-semibold"
               } text-sm leading-tight break-words whitespace-pre-wrap`}
             >
-              <CommentConfig translateVersion={translateVersion} setTranslateVersion={setTranslateVersion} text={content} tags={true} />
+              <CommentConfig
+                translateVersion={translateVersion}
+                setTranslateVersion={setTranslateVersion}
+                text={content}
+                tags={true}
+              />
             </span>
           )}
           {ispoll &&
@@ -1326,7 +1358,12 @@ export default function PostCard({
               .map((poll) => (
                 <span key={poll.id} className="flex flex-col">
                   <span className="pb-2 text-sm leading-tight break-words whitespace-pre-wrap">
-                    <CommentConfig translateVersion={translateVersion} setTranslateVersion={setTranslateVersion} text={poll.question} tags={true} />
+                    <CommentConfig
+                      translateVersion={translateVersion}
+                      setTranslateVersion={setTranslateVersion}
+                      text={poll.question}
+                      tags={true}
+                    />
                   </span>
                   {poll.options.length > 0 &&
                     poll.options.map((opts, index) => {
@@ -1430,6 +1467,7 @@ export default function PostCard({
                     height={600}
                     width={600}
                     onPlay={() => handlePlay(id)}
+                    controls
 
                     // onProgress={(e) => {
                     //   loadVideoSnippet(e);
@@ -1803,7 +1841,7 @@ export default function PostCard({
                       : "bg-[#F9F9F9] border-[#EEEDEF]"
                   }`}
                 >
-                  <input
+                  {showPacks ? <span className="pr-1"><StickerPicker onSelect={sendSelectedSticker}/></span> : <input
                     ref={
                       router.pathname === "/[username]/post/[postid]"
                         ? inputRef
@@ -1836,9 +1874,23 @@ export default function PostCard({
                       darkMode ? "text-white" : "text-gray-800"
                     } text-xs w-full bg-transparent border-none focus:ring-0`}
                     placeholder="Comment on this post..."
-                  />
+                  />}
 
-                  {selectedCommentMedia ? (
+                  <span onClick={()=>{setShowPacks(prev => !prev)}} className="h-full mr-1 bg-[#5D6879] rounded-lg">
+                    <svg
+                      fill="white"
+                      stroke="white"
+                      strokeWidth={1}
+                      width="20px"
+                      height="20px"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M20,11.5 L20,7.5 C20,5.56700338 18.4329966,4 16.5,4 L7.5,4 C5.56700338,4 4,5.56700338 4,7.5 L4,16.5 C4,18.4329966 5.56700338,20 7.5,20 L12.5,20 C13.3284271,20 14,19.3284271 14,18.5 L14,16.5 C14,14.5670034 15.5670034,13 17.5,13 L18.5,13 C19.3284271,13 20,12.3284271 20,11.5 Z M19.9266247,13.5532532 C19.522053,13.8348821 19.0303092,14 18.5,14 L17.5,14 C16.1192881,14 15,15.1192881 15,16.5 L15,18.5 C15,18.9222858 14.8952995,19.3201175 14.7104416,19.668952 C17.4490113,18.8255402 19.5186665,16.4560464 19.9266247,13.5532532 L19.9266247,13.5532532 Z M7.5,3 L16.5,3 C18.9852814,3 21,5.01471863 21,7.5 L21,12.5 C21,17.1944204 17.1944204,21 12.5,21 L7.5,21 C5.01471863,21 3,18.9852814 3,16.5 L3,7.5 C3,5.01471863 5.01471863,3 7.5,3 Z" />
+                    </svg>
+                  </span>
+
+                  {!showPacks && (selectedCommentMedia ? (
                     <label htmlFor="input-post-file">
                       <Image
                         src={selectedCommentMedia}
@@ -1909,7 +1961,7 @@ export default function PostCard({
                         id="input-comment-file"
                       />
                     </label>
-                  )}
+                  ))}
                 </span>
                 <span
                   onClick={() => {
