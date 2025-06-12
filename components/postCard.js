@@ -365,10 +365,10 @@ export default function PostCard({
               await supabase
                 .from("users")
                 .update({
-                  ki:
-                    parseFloat(users.ki) !== 0
-                      ? parseFloat(users.ki) - 0.08
-                      : 0,
+                  // ki:
+                  //   parseFloat(users.ki) !== 0
+                  //     ? parseFloat(users.ki) - 0.08
+                  //     : 0,
                 })
                 .eq("id", users.id);
             }
@@ -390,10 +390,10 @@ export default function PostCard({
             // fetchLikes();
             sendNotification("likepost", users.id, likes, id);
             if (users.id !== myProfileId) {
-              await supabase
-                .from("users")
-                .update({ ki: parseFloat(users.ki) + 0.08 })
-                .eq("id", users.id);
+              // await supabase
+              //   .from("users")
+              //   .update({ ki: parseFloat(users.ki) + 0.08 })
+              //   .eq("id", users.id);
             }
           });
       }

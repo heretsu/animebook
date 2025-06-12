@@ -846,7 +846,7 @@ const Signin = () => {
                 </span>
                 <span
                   onClick={() => {
-                    fullPageReload("privacy-policy");
+                    fullPageReload("/privacy-policy");
                   }}
                   className="cursor-pointer underline"
                 >

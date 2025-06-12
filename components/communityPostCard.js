@@ -518,8 +518,9 @@ export default function CommunityPostCard({
             }}
             style={{ whiteSpace: "pre-wrap" }}
           >
-            <span className="font-semibold text-base">{title}</span>
-            <span className={`cursor-pointer mt-0.5 mb-2 w-fit font-semibold rounded-2xl py-0.5 px-2 text-xs text-white ${flair && flair.toLowerCase() === 'discussion' ? 'bg-purple-500' : flair && flair.toLowerCase() === 'spoiler' ? 'bg-red-500' : 'bg-green-400'}`}>{flair}</span>
+                        <span className={`cursor-pointer mb-1 w-fit font-semibold rounded-2xl py-0.5 px-2 text-xs text-white ${flair && flair.toLowerCase() === 'discussion' ? 'bg-purple-500' : flair && flair.toLowerCase() === 'spoiler' ? 'bg-red-500' : 'bg-green-400'}`}>{flair}</span>
+
+            <span className="font-semibold text-base mb-2">{title}</span>
             <CommentConfig text={content} tags={true} />
           </span>
         )}
