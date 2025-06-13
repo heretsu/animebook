@@ -2002,7 +2002,7 @@ export default function PostCard({
 
                 {myComment ? (
                   <span className="flex flex-row items-center justify-between w-full">
-                    <span className="flex flex-row items-center">
+                    <span className={`flex flex-row ${myComment.media ? 'items-start' : 'items-center'}`}>
                       <span className="relative flex h-6 w-6 flex-shrink-0">
                         <AvatarWithBorder userInfo={userData} size={35} />
                       </span>
@@ -2012,6 +2012,22 @@ export default function PostCard({
                             {userData.username}
                             {":"}
                           </span>
+
+                          {myComment.media && (
+                  <span className="w-full flex flex-row justify-start items-start">
+                    <span className="w-full flex flex-col items-start justify-start">
+                      <span className="flex justify-start items-start w-full mr-2 relative">
+                        <Image
+                          src={myComment.media}
+                          alt="user profile"
+                          height={300}
+                          width={300}
+                          className={`pt-1 relative w-12 h-18 rounded-lg object-cover`}
+                        />
+                      </span>
+                    </span>
+                  </span>
+                )}
                           <span>{myComment}</span>
                         </span>
                         <span
@@ -2076,7 +2092,7 @@ export default function PostCard({
                   </span>
                 ) : (
                   <span className="flex flex-row items-center justify-between w-full">
-                    <span className="flex flex-row items-center">
+                    <span className={`flex flex-row ${randomComment.media ? 'items-start' : 'items-center'}`}>
                       <span
                         // onClick={() => {
                         //   fullPageReload(`/profile/${userData.username}`, "window");
@@ -2097,6 +2113,22 @@ export default function PostCard({
                             {randomComment.users.username}
                             {":"}
                           </span>
+
+                          {randomComment.media && (
+                  <span className="w-full flex flex-row justify-start items-start">
+                    <span className="w-full flex flex-col items-start justify-start">
+                      <span className="flex justify-start items-start w-full mr-2 relative">
+                        <Image
+                          src={randomComment.media}
+                          alt="user profile"
+                          height={300}
+                          width={300}
+                          className={`pt-1 relative w-12 h-18 rounded-lg object-cover`}
+                        />
+                      </span>
+                    </span>
+                  </span>
+                )}
                           <span>{randomComment.content}</span>
                         </span>
                         <span
