@@ -260,6 +260,59 @@ const SideBar = () => {
         </span>
 
         <span className="flex flex-col px-2 py-3 space-y-4 text-slate-500 text-[13px] font-bold">
+        <span onClick={() => {
+                fullPageReload(`/live`, "window");
+              }} className="cursor-pointer w-fit flex flex-row items-center space-x-2">
+            <svg
+                fill={
+                  router.pathname === "/live" || router.pathname === "/watch" || router.pathname === "/watch/[roomName]"
+                    ? "#EA334E"
+                    : darkMode
+                    ? "white"
+                    : "#5d6879"
+                }
+                width="20px"
+                height="20px"
+                viewBox="0 0 24 24"
+                id="video-recorder-2"
+                data-name="Flat Color"
+                xmlns="http://www.w3.org/2000/svg"
+                className="icon flat-color"
+              >
+                <path
+                  id="secondary"
+                  d="M21.11,6.34a2,2,0,0,0-1.88-.18L14.62,8.08A1,1,0,0,0,14,9v6a1,1,0,0,0,.62.92l4.61,1.92A1.9,1.9,0,0,0,20,18a1.94,1.94,0,0,0,1.11-.34A2,2,0,0,0,22,16V8A2,2,0,0,0,21.11,6.34Z"
+                  style={{
+                    fill: router.pathname == "/live"
+                    ? "#EA334E"
+                    : darkMode ? 'white' : '#5d6879',
+                  }}
+                />
+                <rect
+                  id="primary"
+                  x={2}
+                  y={5}
+                  width={14}
+                  height={14}
+                  rx={2}
+                  style={{
+                    fill: router.pathname == "/live"
+                    ? "#EA334E"
+                    : darkMode ? 'white' : '#5d6879',
+                  }}
+                />
+              </svg>
+            <span
+              className={`${
+                router.pathname === "/live" 
+                  ? "text-[#EA334E]"
+                  : (darkMode ? "text-white" : "text-[#5d6879]")
+              }`}
+            >
+              Live Streams
+            </span>
+          </span>
+
           <span onClick={() => {
                 fullPageReload(`/profile/${userData.username}`, "window");
               }} className="cursor-pointer w-fit flex flex-row items-center space-x-2">

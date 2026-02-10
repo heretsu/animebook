@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url("https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;600;700&display=swap");
 
 @import url("https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;600;700&display=swap");
@@ -7,10 +11,6 @@
   --text-color: #000000;
   --font-bai: "Bai Jamjuree", sans-serif;
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 body {
   font-family: var(--font-bai);
@@ -180,25 +180,6 @@ li {
   left: 50%;
   transform: translate(-50%, 50%);
   z-index: 70;
-}
-
-#tip-modal {
-  position: fixed;
-  top: 5%;
-  left: 50%;
-  transform: translate(-50%, 50%);
-  z-index: 70;
-}
-#tip-overlay {
-  z-index: 60;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(15, 15, 15, 0.356);
-  /* background-color: rgba(0, 0, 0, 0.5); */
-  /* pointer-events: none; */
 }
 
 #tutorial {
@@ -1272,4 +1253,86 @@ img {
 
 #highZ{
   z-index: 999;
+}
+.responsive-height {
+  height: 100%;
+}
+
+@media (min-width: 1024px) {
+  .responsive-height {
+    height: 60%;
+  }
+}
+
+.eighty-vh {
+  height: 100%;
+}
+
+@media (min-width: 1024px) {
+  .eighty-vh {
+    height: 92%;
+  }
+}
+.tag-chip-regular {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.3) 0%,
+    rgba(236, 72, 153, 0.3) 100%
+  );
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.3) 0%,
+    rgba(236, 72, 153, 0.3) 100%
+  );
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #e2e8f0;
+  font-weight: 500;
+  animation: slideIn 0.2s ease-out;
+}
+.tag-chip span {
+  line-height: 1;
+}
+
+.gridpoints {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); 
+}
+
+@media only screen and (min-width: 600px) and (max-width: 825px) {
+  .gridpoints {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); 
+    width: fit-content;
+  }
+}
+
+@media only screen and (min-width: 825px) {
+  .gridpoints {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); 
+    width: fit-content;
+  }
+}
+
+#giftjar-modal {
+  position: fixed;
+  top: 1%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  z-index: 70;
 }

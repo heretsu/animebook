@@ -161,7 +161,7 @@ export default function CommentCard({ openComments }) {
             // onClick={() => {
             //   fullPageReload(`/profile/${userData.username}`, "window");
             // }}
-            className="relative flex h-8 w-8 flex-shrink-0"
+            className="relative flex h-8 w-8 flex flex-shrink-0"
           >
             <Image
               src={userData.avatar}

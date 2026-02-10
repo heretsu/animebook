@@ -35,7 +35,9 @@ const NavBarDependencies = () => {
     postValues,
     setPostValues,
     setTagsFilter,
-    communities, unreadCount, setUnreadCount
+    communities,
+    unreadCount,
+    setUnreadCount,
   } = useContext(UserContext);
   const [currentRoute, setCurrentRoute] = useState("/home");
   const router = useRouter();
@@ -260,13 +262,16 @@ const NavBarDependencies = () => {
         //     : [] :
         originalPostValues
           ? originalPostValues.filter((post) =>
-              post?.content?.toLowerCase().includes(e.target.value.toLowerCase())
+              post?.content
+                ?.toLowerCase()
+                .includes(e.target.value.toLowerCase())
             )
           : [];
 
       const foundExplorePosts = originalExplorePosts
         ? originalExplorePosts.filter((post) =>
-            post?.post?.content?.toLowerCase()
+            post?.post?.content
+              ?.toLowerCase()
               .includes(e.target.value.toLowerCase())
           )
         : [];
@@ -371,7 +376,7 @@ export const MobileNavBar = () => {
     currentRoute,
     router,
     darkMode,
-    t
+    t,
   } = NavBarDependencies();
 
   return (
@@ -474,7 +479,7 @@ export const MobileNavBar = () => {
                 : "text-[#292C33]"
             }`}
           >
-             {t("Explore")}
+            {t("Explore")}
           </span>
         </span>
         {/* </span> */}
@@ -878,22 +883,351 @@ const NavBar = () => {
           : "bg-white border-[#EEEDEF]"
       } border-r fixed invisible lg:visible h-screen py-2 pl-4 min-w-[250px] flex flex-col`}
     >
-      <div className="w-full h-full">
-        <span
-          className={`${
-            darkMode ? "bg-[#1e1f24]" : "bg-white"
-          } flex flex-col justify-center items-center pb-4 pr-4`}
-        >
-          {
+      {router.pathname !== "/stream" && router.pathname !== "/live" && router.pathname !== "/watch" && router.pathname !== "/watch/[roomName]" && router.pathname !== "/stream-analytics" && router.pathname !== "/streamer-earnings" ? (
+        <div className="w-full h-full">
+          {/* <div
+            onClick={() => {
+              router.push("/stream");
+            }}
+            className={`border-b ${darkMode ? "border-[#32353C]" : "border-[#D0D3DB]"} cursor-pointer text-sm mb-3 w-fit relative flex justify-between items-center gap-2`}
+          >
+            <span>Go Live</span>
+            <div className="relative">
+              <div
+                className="h-1 w-1 rounded-full bg-[#EA334E] absolute"
+                style={{
+                  animation: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
+                }}
+              />
+              <div className="h-1.5 w-1.5 rounded-full bg-[#EA334E]" />
+            </div>
+          </div>
+          <span
+            className={`${
+              darkMode ? "bg-[#1e1f24]" : "bg-white"
+            } flex flex-col justify-center items-center pb-4 pr-4`}
+          >
+            {
+              <span
+                className={`border rounded ${
+                  darkMode
+                    ? "bg-zinc-800 border-[#32353C]"
+                    : "bg-white border-[#D0D3DB]"
+                } px-2 py-0.5 w-full flex flex-row items-center`}
+              >
+                <svg
+                  className="w-4 h-4 text-slate-400"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                  />
+                </svg>
+                <input
+                  value={searchedWord}
+                  onChange={searchForItem}
+                  onClick={getAllSearchData}
+                  type="search"
+                  className={`w-full text-xs ${
+                    darkMode ? "text-white" : "text-gray-500"
+                  } bg-transparent border-none focus:ring-0 placeholder-[#6A6B71]`}
+                  placeholder="Search for users and more..."
+                />
+              </span>
+            }
+            {(openSuggestions !== null || openUsers !== null) && (
+              <span className="w-full flex flex-col">
+                {openSuggestions !== null && (
+                  <span className="w-full flex flex-col">
+                    <span
+                      onClick={() => {
+                        fullPageReload(`/search?${searchedWord}`, "window");
+                        // if (
+                        //   router.pathname !== "/explore" &&
+                        //   openSuggestions.foundPosts &&
+                        //   openSuggestions.foundPosts.length === 0
+                        // ) {
+                        //   return;
+                        // } else {
+                        //   router.push('/search/')
+                        //   setPostValues(openSuggestions.foundPosts);
+                        // }
+                        // if (
+                        //   router.pathname === "/explore" &&
+                        //   openSuggestions.foundExplorePosts &&
+                        //   openSuggestions.foundExplorePosts.length === 0
+                        // ) {
+                        //   return;
+                        // } else {
+                        //   setExplorePosts(openSuggestions.foundExplorePosts);
+                        // }
+
+                        // setOpenSuggestions(null);
+                      }}
+                      className={`${
+                        darkMode ? "text-white" : "text-black"
+                      } p-2 flex flex-row items-center cursor-pointer hover:bg-[#EA334E] hover:text-white font-medium`}
+                    >
+                      {`${
+                        router.pathname === "/explore"
+                          ? openSuggestions.foundExplorePosts.length
+                          : openSuggestions.foundPosts.length
+                      } posts found`}
+                    </span>
+                    <span
+                      onClick={() => {
+                        if (
+                          openSuggestions.foundUsers &&
+                          openSuggestions.foundUsers.length === 0
+                        ) {
+                          return;
+                        }
+                        const users = openSuggestions.foundUsers;
+                        setOpenSuggestions(null);
+                        setOpenUsers(users);
+                      }}
+                      className={`${
+                        darkMode ? "text-white" : "text-black"
+                      } p-2 flex flex-row items-center cursor-pointer hover:bg-[#EA334E] hover:text-white font-medium`}
+                    >
+                      {`${openSuggestions.foundUsers.length} ${t("users")} ${t(
+                        "found"
+                      )}`}
+                    </span>
+                  </span>
+                )}
+                {openUsers !== null && openUsers.length !== 0 && (
+                  <span>
+                    <span className="py-1 w-full flex justify-end">
+                      <span
+                        onClick={() => {
+                          setOpenUsers(null);
+                        }}
+                        className={`cursor-pointer text-sm hover:text-[#EA334E] border ${
+                          darkMode
+                            ? "border-white bg-white text-black"
+                            : "border-gray-200 bg-gray-100 text-slate-400"
+                        } py-0.5 px-1.5 rounded-2xl`}
+                      >
+                        {t("clear")}
+                      </span>
+                    </span>
+
+                    <span>
+                      {openUsers.slice(0, 8).map((os) => {
+                        return (
+                          <span
+                            key={os.id}
+                            onClick={() => {
+                              fullPageReload(
+                                `/profile/${os.username}`,
+                                "window"
+                              );
+                            }}
+                            className={`${
+                              darkMode ? "text-white" : "text-black"
+                            } p-2 flex flex-row items-center cursor-pointer hover:bg-[#EA334E] hover:text-white font-medium`}
+                          >
+                            <span className="relative h-8 w-8 flex">
+                              {valuesLoaded && (
+                                <Image
+                                  src={imgSrcs[os.id]}
+                                  alt="user"
+                                  width={30}
+                                  height={30}
+                                  className="border border-white rounded-full"
+                                  onError={() => handleImageError(os.id)}
+                                />
+                              )}
+                            </span>
+                            <span>{os.username}</span>
+                          </span>
+                        );
+                      })}
+                    </span>
+                  </span>
+                )}
+              </span>
+            )}
+          </span> */}
+
+          <div
+            className={`pb-2 pr-4 text-sm ${
+              darkMode ? "text-white" : "text-slate-600"
+            } block font-normal`}
+          >
             <span
-              className={`border rounded ${
-                darkMode
-                  ? "bg-zinc-800 border-[#32353C]"
-                  : "bg-white border-[#D0D3DB]"
-              } px-2 py-0.5 w-full flex flex-row items-center`}
+              onClick={() => {
+                fullPageReload("/home", "window");
+              }}
+              className={
+                currentRoute == "/home" || currentRoute == "/create"
+                  ? `${
+                      darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                    } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                  : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+              }
             >
               <svg
-                className="w-4 h-4 text-slate-400"
+                xmlns="http://www.w3.org/2000/svg"
+                width="15.858"
+                height="16.987"
+                viewBox="0 0 19.858 20.987"
+              >
+                <g id="torii-gate" transform="translate(0 -42.669)">
+                  <g
+                    id="Gruppe_3248"
+                    data-name="Gruppe 3248"
+                    transform="translate(0 42.669)"
+                  >
+                    <path
+                      id="Pfad_4689"
+                      data-name="Pfad 4689"
+                      d="M19.759,42.854a.368.368,0,0,0-.4-.173,38.6,38.6,0,0,1-9.425,1.037A38.592,38.592,0,0,1,.5,42.681a.368.368,0,0,0-.4.173.638.638,0,0,0-.069.534l.827,2.623a.44.44,0,0,0,.347.328c.019,0,.84.1,2.083.2l-.109,2.423H2.068a.479.479,0,0,0-.414.525v2.1a.479.479,0,0,0,.414.525h.956L2.483,63.1a.612.612,0,0,0,.112.392.378.378,0,0,0,.3.166H4.551a.471.471,0,0,0,.413-.492l.545-11.051h8.841l.545,11.051a.471.471,0,0,0,.413.492h1.655a.378.378,0,0,0,.3-.166.612.612,0,0,0,.112-.392l-.541-10.985h.956a.479.479,0,0,0,.414-.525v-2.1a.479.479,0,0,0-.414-.525H16.68l-.109-2.423c1.243-.107,2.064-.2,2.083-.2A.44.44,0,0,0,19,46.012l.827-2.623A.638.638,0,0,0,19.759,42.854ZM8.688,48.965H5.662l.1-2.24c.926.057,1.921.1,2.921.125v2.114Zm2.482,0V46.851c1-.023,1.995-.069,2.921-.125l.1,2.24Z"
+                      transform="translate(0 -42.669)"
+                      fill={
+                        currentRoute == "/home" || currentRoute == "/create"
+                          ? "#EA334E"
+                          : darkMode
+                          ? "white"
+                          : "#5d6879"
+                      }
+                    />
+                  </g>
+                </g>
+              </svg>
+
+              <span>{t("Home")}</span>
+              {/* </div> */}
+            </span>
+            <span>
+              <span
+                // href={"/explore"}
+                onClick={() => {
+                  fullPageReload("/explore", "window");
+                }}
+                className={
+                  currentRoute == "/explore"
+                    ? `${
+                        darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                      } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                    : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+                }
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16.318"
+                  height="16.318"
+                  viewBox="0 0 22.318 22.318"
+                >
+                  <g
+                    id="Layer_32"
+                    data-name="Layer 32"
+                    transform="translate(-3 -2.998)"
+                  >
+                    <path
+                      id="Pfad_4696"
+                      data-name="Pfad 4696"
+                      d="M24.933,9.54a.77.77,0,0,1-1.418.414.385.385,0,0,0-.591-.072,1.539,1.539,0,0,1-2.22-.093A.377.377,0,0,0,20.4,9.66a.385.385,0,0,0-.294.162A1.154,1.154,0,1,1,19.161,8a1.137,1.137,0,0,1,.715.251.385.385,0,0,0,.588-.137,1.536,1.536,0,0,1,2.907.408.385.385,0,0,0,.521.3.735.735,0,0,1,.271-.05.77.77,0,0,1,.77.77ZM5.309,5.692a1.137,1.137,0,0,1,.715.251.385.385,0,0,0,.588-.137,1.536,1.536,0,0,1,2.907.408.385.385,0,0,0,.521.3.735.735,0,0,1,.271-.05.77.77,0,1,1-.648,1.184.385.385,0,0,0-.591-.072,1.539,1.539,0,0,1-2.22-.093.385.385,0,0,0-.6.033,1.154,1.154,0,1,1-.94-1.821ZM3,14.158A11.126,11.126,0,0,1,4.5,8.587a1.9,1.9,0,0,0,2.09-.3,2.369,2.369,0,0,0,2.7.1,1.539,1.539,0,1,0,1.024-2.69c-.044,0-.088,0-.131.006a2.286,2.286,0,0,0-1.3-1.367A11.132,11.132,0,0,1,22.266,6.5a2.283,2.283,0,0,0-2.279.917,1.9,1.9,0,0,0-.825-.185,1.924,1.924,0,1,0,1.277,3.36,2.369,2.369,0,0,0,2.7.1,1.52,1.52,0,0,0,1.691.231,11.074,11.074,0,0,1-1.75,9.922l-3.633-5.738a2.854,2.854,0,0,0-2.423-1.333H11.292a2.854,2.854,0,0,0-2.424,1.333L5.237,20.843A11.168,11.168,0,0,1,3,14.158Zm16.605,2.635a1.919,1.919,0,0,1-1.214.443,1.893,1.893,0,0,1-1.385-.6.385.385,0,0,0-.646.147,2.306,2.306,0,0,1-2.125,1.6.374.374,0,0,0-.077-.007,2.306,2.306,0,0,1-2.2-1.6.385.385,0,0,0-.647-.148,1.893,1.893,0,0,1-1.385.6,1.924,1.924,0,0,1-1.21-.44l.8-1.27a2.088,2.088,0,0,1,1.773-.975h5.733a2.088,2.088,0,0,1,1.773.975ZM3.314,25.317,8.3,17.445a2.676,2.676,0,0,0,3.144.081,3.073,3.073,0,0,0,2.629,1.624.407.407,0,0,0,.087.01,3.071,3.071,0,0,0,2.716-1.625,2.676,2.676,0,0,0,3.147-.083L25,25.317Z"
+                      transform="translate(0 0)"
+                      fill={
+                        currentRoute == "/explore"
+                          ? "#EA334E"
+                          : darkMode
+                          ? "white"
+                          : "#5d6879"
+                      }
+                    />
+                  </g>
+                </svg>
+
+                <span>{t("Explore")}</span>
+                {/* </div> */}
+              </span>
+            </span>
+            {/* <span
+              onClick={() => {
+                fullPageReload("/live", "window");
+              }}
+              className={
+                currentRoute == "/live"
+                  ? `${
+                      darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                    } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                  : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+              }
+            >
+              <svg
+                fill={
+                  currentRoute === "/live" || currentRoute === "/watch" || currentRoute === "/watch/[roomName]"
+                    ? "#EA334E"
+                    : darkMode
+                    ? "white"
+                    : "#5d6879"
+                }
+                width="20px"
+                height="20px"
+                viewBox="0 0 24 24"
+                id="video-recorder-2"
+                data-name="Flat Color"
+                xmlns="http://www.w3.org/2000/svg"
+                className="icon flat-color"
+              >
+                <path
+                  id="secondary"
+                  d="M21.11,6.34a2,2,0,0,0-1.88-.18L14.62,8.08A1,1,0,0,0,14,9v6a1,1,0,0,0,.62.92l4.61,1.92A1.9,1.9,0,0,0,20,18a1.94,1.94,0,0,0,1.11-.34A2,2,0,0,0,22,16V8A2,2,0,0,0,21.11,6.34Z"
+                  style={{
+                    fill: currentRoute == "/live"
+                    ? "#EA334E"
+                    : darkMode ? 'white' : '#5d6879',
+                  }}
+                />
+                <rect
+                  id="primary"
+                  x={2}
+                  y={5}
+                  width={14}
+                  height={14}
+                  rx={2}
+                  style={{
+                    fill: currentRoute == "/live"
+                    ? "#EA334E"
+                    : darkMode ? 'white' : '#5d6879',
+                  }}
+                />
+              </svg>
+
+              <span>{t("Live Streams")}</span>
+            </span> */}
+            <span
+              onClick={() => {
+                fullPageReload("/search", "window");
+              }}
+              className={
+                currentRoute == "/search"
+                  ? `${
+                      darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                    } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                  : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+              }
+            >
+              <svg
+                className={`${
+                  currentRoute == "/search"
+                    ? "#EA334E"
+                    : darkMode
+                    ? "text-white"
+                    : "text-[#5d6879]"
+                } rotate-12`}
+                width="17.858"
+                height="18.987"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -903,190 +1237,22 @@ const NavBar = () => {
                   stroke="currentColor"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth="2"
+                  strokeWidth="2.5"
                   d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
                 />
               </svg>
-              <input
-                value={searchedWord}
-                onChange={searchForItem}
-                onClick={getAllSearchData}
-                type="search"
-                className={`w-full text-xs ${
-                  darkMode ? "text-white" : "text-gray-500"
-                } bg-transparent border-none focus:ring-0 placeholder-[#6A6B71]`}
-                placeholder="Search for users and more..."
-              />
+
+              <span>{t("Search")}</span>
+              {/* </div> */}
             </span>
-          }
-          {(openSuggestions !== null || openUsers !== null) && (
-            <span className="w-full flex flex-col">
-              {openSuggestions !== null && (
-                <span className="w-full flex flex-col">
-                  <span
-                    onClick={() => {
-                      fullPageReload(`/search?${searchedWord}`, "window");
-                      // if (
-                      //   router.pathname !== "/explore" &&
-                      //   openSuggestions.foundPosts &&
-                      //   openSuggestions.foundPosts.length === 0
-                      // ) {
-                      //   return;
-                      // } else {
-                      //   router.push('/search/')
-                      //   setPostValues(openSuggestions.foundPosts);
-                      // }
-                      // if (
-                      //   router.pathname === "/explore" &&
-                      //   openSuggestions.foundExplorePosts &&
-                      //   openSuggestions.foundExplorePosts.length === 0
-                      // ) {
-                      //   return;
-                      // } else {
-                      //   setExplorePosts(openSuggestions.foundExplorePosts);
-                      // }
-
-                      // setOpenSuggestions(null);
-                    }}
-                    className={`${
-                      darkMode ? "text-white" : "text-black"
-                    } p-2 flex flex-row items-center cursor-pointer hover:bg-[#EA334E] hover:text-white font-medium`}
-                  >
-                    {`${
-                      router.pathname === "/explore"
-                        ? openSuggestions.foundExplorePosts.length
-                        : openSuggestions.foundPosts.length
-                    } posts found`}
-                  </span>
-                  <span
-                    onClick={() => {
-                      if (
-                        openSuggestions.foundUsers &&
-                        openSuggestions.foundUsers.length === 0
-                      ) {
-                        return;
-                      }
-                      const users = openSuggestions.foundUsers;
-                      setOpenSuggestions(null);
-                      setOpenUsers(users);
-                    }}
-                    className={`${
-                      darkMode ? "text-white" : "text-black"
-                    } p-2 flex flex-row items-center cursor-pointer hover:bg-[#EA334E] hover:text-white font-medium`}
-                  >
-                    {`${openSuggestions.foundUsers.length} ${t('users')} ${t('found')}`}
-                  </span>
-                </span>
-              )}
-              {openUsers !== null && openUsers.length !== 0 && (
-                <span>
-                  <span className="py-1 w-full flex justify-end">
-                    <span
-                      onClick={() => {
-                        setOpenUsers(null);
-                      }}
-                      className={`cursor-pointer text-sm hover:text-[#EA334E] border ${
-                        darkMode
-                          ? "border-white bg-white text-black"
-                          : "border-gray-200 bg-gray-100 text-slate-400"
-                      } py-0.5 px-1.5 rounded-2xl`}
-                    >
-                      {t("clear")}
-                    </span>
-                  </span>
-
-                  <span>
-                    {openUsers.slice(0, 8).map((os) => {
-                      return (
-                        <span
-                          key={os.id}
-                          onClick={() => {
-                            fullPageReload(`/profile/${os.username}`, "window");
-                          }}
-                          className={`${
-                            darkMode ? "text-white" : "text-black"
-                          } p-2 flex flex-row items-center cursor-pointer hover:bg-[#EA334E] hover:text-white font-medium`}
-                        >
-                          <span className="relative h-8 w-8 flex">
-                            {valuesLoaded && (
-                              <Image
-                                src={imgSrcs[os.id]}
-                                alt="user"
-                                width={30}
-                                height={30}
-                                className="border border-white rounded-full"
-                                onError={() => handleImageError(os.id)}
-                              />
-                            )}
-                          </span>
-                          <span>{os.username}</span>
-                        </span>
-                      );
-                    })}
-                  </span>
-                </span>
-              )}
-            </span>
-          )}
-        </span>
-
-        <div
-          className={`pb-2 pr-4 text-sm ${
-            darkMode ? "text-white" : "text-slate-600"
-          } block font-normal`}
-        >
-          <span
-            onClick={() => {
-              fullPageReload("/home", "window");
-            }}
-            className={
-              currentRoute == "/home" || currentRoute == "/create"
-                ? `${
-                    darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
-                  } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
-                : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
-            }
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="15.858"
-              height="16.987"
-              viewBox="0 0 19.858 20.987"
-            >
-              <g id="torii-gate" transform="translate(0 -42.669)">
-                <g
-                  id="Gruppe_3248"
-                  data-name="Gruppe 3248"
-                  transform="translate(0 42.669)"
-                >
-                  <path
-                    id="Pfad_4689"
-                    data-name="Pfad 4689"
-                    d="M19.759,42.854a.368.368,0,0,0-.4-.173,38.6,38.6,0,0,1-9.425,1.037A38.592,38.592,0,0,1,.5,42.681a.368.368,0,0,0-.4.173.638.638,0,0,0-.069.534l.827,2.623a.44.44,0,0,0,.347.328c.019,0,.84.1,2.083.2l-.109,2.423H2.068a.479.479,0,0,0-.414.525v2.1a.479.479,0,0,0,.414.525h.956L2.483,63.1a.612.612,0,0,0,.112.392.378.378,0,0,0,.3.166H4.551a.471.471,0,0,0,.413-.492l.545-11.051h8.841l.545,11.051a.471.471,0,0,0,.413.492h1.655a.378.378,0,0,0,.3-.166.612.612,0,0,0,.112-.392l-.541-10.985h.956a.479.479,0,0,0,.414-.525v-2.1a.479.479,0,0,0-.414-.525H16.68l-.109-2.423c1.243-.107,2.064-.2,2.083-.2A.44.44,0,0,0,19,46.012l.827-2.623A.638.638,0,0,0,19.759,42.854ZM8.688,48.965H5.662l.1-2.24c.926.057,1.921.1,2.921.125v2.114Zm2.482,0V46.851c1-.023,1.995-.069,2.921-.125l.1,2.24Z"
-                    transform="translate(0 -42.669)"
-                    fill={
-                      currentRoute == "/home" || currentRoute == "/create"
-                        ? "#EA334E"
-                        : darkMode
-                        ? "white"
-                        : "#5d6879"
-                    }
-                  />
-                </g>
-              </g>
-            </svg>
-
-            <span>{t('Home')}</span>
-            {/* </div> */}
-          </span>
-          <span>
             <span
-              // href={"/explore"}
+              // href={"/communities"}
               onClick={() => {
-                fullPageReload("/explore", "window");
+                fullPageReload("/communities"), "window";
               }}
               className={
-                currentRoute == "/explore"
+                currentRoute == "/communities" ||
+                currentRoute == "/communities/[community]"
                   ? `${
                       darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
                     } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
@@ -1095,22 +1261,243 @@ const NavBar = () => {
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16.318"
-                height="16.318"
-                viewBox="0 0 22.318 22.318"
+                width="17.318"
+                height="20.966"
+                viewBox="0 0 22.318 25.966"
               >
-                <g
-                  id="Layer_32"
-                  data-name="Layer 32"
-                  transform="translate(-3 -2.998)"
-                >
+                <g id="maneki-neko" transform="translate(-38.923 -24.871)">
                   <path
-                    id="Pfad_4696"
-                    data-name="Pfad 4696"
-                    d="M24.933,9.54a.77.77,0,0,1-1.418.414.385.385,0,0,0-.591-.072,1.539,1.539,0,0,1-2.22-.093A.377.377,0,0,0,20.4,9.66a.385.385,0,0,0-.294.162A1.154,1.154,0,1,1,19.161,8a1.137,1.137,0,0,1,.715.251.385.385,0,0,0,.588-.137,1.536,1.536,0,0,1,2.907.408.385.385,0,0,0,.521.3.735.735,0,0,1,.271-.05.77.77,0,0,1,.77.77ZM5.309,5.692a1.137,1.137,0,0,1,.715.251.385.385,0,0,0,.588-.137,1.536,1.536,0,0,1,2.907.408.385.385,0,0,0,.521.3.735.735,0,0,1,.271-.05.77.77,0,1,1-.648,1.184.385.385,0,0,0-.591-.072,1.539,1.539,0,0,1-2.22-.093.385.385,0,0,0-.6.033,1.154,1.154,0,1,1-.94-1.821ZM3,14.158A11.126,11.126,0,0,1,4.5,8.587a1.9,1.9,0,0,0,2.09-.3,2.369,2.369,0,0,0,2.7.1,1.539,1.539,0,1,0,1.024-2.69c-.044,0-.088,0-.131.006a2.286,2.286,0,0,0-1.3-1.367A11.132,11.132,0,0,1,22.266,6.5a2.283,2.283,0,0,0-2.279.917,1.9,1.9,0,0,0-.825-.185,1.924,1.924,0,1,0,1.277,3.36,2.369,2.369,0,0,0,2.7.1,1.52,1.52,0,0,0,1.691.231,11.074,11.074,0,0,1-1.75,9.922l-3.633-5.738a2.854,2.854,0,0,0-2.423-1.333H11.292a2.854,2.854,0,0,0-2.424,1.333L5.237,20.843A11.168,11.168,0,0,1,3,14.158Zm16.605,2.635a1.919,1.919,0,0,1-1.214.443,1.893,1.893,0,0,1-1.385-.6.385.385,0,0,0-.646.147,2.306,2.306,0,0,1-2.125,1.6.374.374,0,0,0-.077-.007,2.306,2.306,0,0,1-2.2-1.6.385.385,0,0,0-.647-.148,1.893,1.893,0,0,1-1.385.6,1.924,1.924,0,0,1-1.21-.44l.8-1.27a2.088,2.088,0,0,1,1.773-.975h5.733a2.088,2.088,0,0,1,1.773.975ZM3.314,25.317,8.3,17.445a2.676,2.676,0,0,0,3.144.081,3.073,3.073,0,0,0,2.629,1.624.407.407,0,0,0,.087.01,3.071,3.071,0,0,0,2.716-1.625,2.676,2.676,0,0,0,3.147-.083L25,25.317Z"
-                    transform="translate(0 0)"
+                    id="Pfad_4672"
+                    data-name="Pfad 4672"
+                    d="M85.59,158.787a2.831,2.831,0,0,1,.762-2.625,4.848,4.848,0,0,1-.692-.613c-.681.472-2.026.95-4.666,1.118a1.714,1.714,0,0,1-3.384,0,13.315,13.315,0,0,1-3.788-.674,3.711,3.711,0,0,0,.052,1.2,1.9,1.9,0,0,0,.6,1.038,3.3,3.3,0,0,0,.756.42,3.034,3.034,0,0,1,1.044.657,2.027,2.027,0,0,1,.495,1.374,3.437,3.437,0,0,1,.862.517,2.365,2.365,0,0,1,.9,1.618,2.511,2.511,0,0,1-.856,2.032c.989,0,2.294,0,3.254,0a2.51,2.51,0,0,1-.855-2.031,2.365,2.365,0,0,1,.9-1.618,4.154,4.154,0,0,1,3.045-.823c1.981.191,3.5,1.536,3.445,3.03a3.754,3.754,0,0,0,.643-.631,3.556,3.556,0,0,0,.731-1.842c-.081.005-.161.009-.241.009A2.983,2.983,0,0,1,85.59,158.787Z"
+                    transform="translate(-30.587 -114.612)"
                     fill={
-                      currentRoute == "/explore"
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4673"
+                    data-name="Pfad 4673"
+                    d="M41.272,198.384a6.619,6.619,0,0,1-.383-.616,3.62,3.62,0,0,0,.744,2.03,3.749,3.749,0,0,0,.647.637,2.211,2.211,0,0,1,.13-.819A6.068,6.068,0,0,1,41.272,198.384Z"
+                    transform="translate(-1.724 -151.64)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4674"
+                    data-name="Pfad 4674"
+                    d="M175.462,163.206h-.036a2.648,2.648,0,0,1-1.162-.305,2.312,2.312,0,0,0-.71,2.2,2.494,2.494,0,0,0,2.753,1.732,6.7,6.7,0,0,0-.171-1.437A19.515,19.515,0,0,0,175.462,163.206Z"
+                    transform="translate(-118.026 -121.059)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4675"
+                    data-name="Pfad 4675"
+                    d="M62.9,203.571a1.837,1.837,0,0,0-.7-1.25,2.789,2.789,0,0,0-.572-.362c-.008.038-.015.076-.024.114a2.982,2.982,0,0,1-1.2,1.792,2.854,2.854,0,0,1-1.588.458,3.429,3.429,0,0,1-.863-.112,4.518,4.518,0,0,1-1.309-.585,1.666,1.666,0,0,0-.045.556,1.836,1.836,0,0,0,.7,1.25,3.666,3.666,0,0,0,2.648.7C61.69,205.965,63.014,204.816,62.9,203.571Z"
+                    transform="translate(-15.497 -155.316)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4676"
+                    data-name="Pfad 4676"
+                    d="M132.534,199.06c-.139-.013-.278-.02-.416-.02a3.529,3.529,0,0,0-2.232.721,1.836,1.836,0,0,0-.7,1.25c-.112,1.245,1.212,2.394,2.951,2.562a3.667,3.667,0,0,0,2.648-.7,1.836,1.836,0,0,0,.7-1.25c.112-1.245-1.212-2.394-2.951-2.562Z"
+                    transform="translate(-79.156 -152.755)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4677"
+                    data-name="Pfad 4677"
+                    d="M74.665,151.376q-.047.2-.082.411a12.171,12.171,0,0,0,3.714.678,1.71,1.71,0,0,1,.441-.9H76.051A5.3,5.3,0,0,1,74.665,151.376Z"
+                    transform="translate(-31.275 -110.952)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4678"
+                    data-name="Pfad 4678"
+                    d="M128.765,150.432a1.71,1.71,0,0,1,.441.9c2.545-.164,3.745-.613,4.311-.989-.077-.1-.14-.186-.19-.258a5.29,5.29,0,0,1-1.876.343Z"
+                    transform="translate(-78.796 -109.823)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4679"
+                    data-name="Pfad 4679"
+                    d="M110.091,152.877a1.174,1.174,0,1,0,.211,0Z"
+                    transform="translate(-61.481 -112.268)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4680"
+                    data-name="Pfad 4680"
+                    d="M44.937,142.952a2.5,2.5,0,0,1-2.144,2.473,5.135,5.135,0,0,0,3.194,3.005A2.534,2.534,0,0,0,48,148.157a2.436,2.436,0,0,0,.972-1.467,1.718,1.718,0,0,0-.287-1.566,2.6,2.6,0,0,0-.869-.531,3.749,3.749,0,0,1-.879-.5,2.44,2.44,0,0,1-.784-1.332,4.345,4.345,0,0,1-.054-1.481,8,8,0,0,1,.166-.971,5.336,5.336,0,0,1-2-1.358,9.051,9.051,0,0,0-1.108,1.494c-.018.032-.036.064-.054.1a2.5,2.5,0,0,1,1.832,2.407Z"
+                    transform="translate(-3.394 -100.058)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4681"
+                    data-name="Pfad 4681"
+                    d="M41,157.814a1.955,1.955,0,0,0-1.547-1.914,5.037,5.037,0,0,0-.262,3.865A1.96,1.96,0,0,0,41,157.814Z"
+                    transform="translate(0 -114.92)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4682"
+                    data-name="Pfad 4682"
+                    d="M118.306,111.569h-.036l.037.009.037-.009h-.038Z"
+                    transform="translate(-69.591 -76.038)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4683"
+                    data-name="Pfad 4683"
+                    d="M52.452,40.068H60.33a4.766,4.766,0,0,0,3.607-1.65,3.664,3.664,0,0,0,.411-.866,3.464,3.464,0,0,0,.113-2.023A1.954,1.954,0,0,1,63.3,34.469a2.544,2.544,0,0,1,.5-2.714,2.8,2.8,0,0,1,1.1-.909,4.755,4.755,0,0,0-.405-.942.27.27,0,0,1-.032-.09A7.8,7.8,0,0,0,62.4,25.593a1.968,1.968,0,0,0-1.536-.717c-1.1.088-2.1,1.476-2.835,2.49a.27.27,0,0,1-.219.112h-2.91a.27.27,0,0,1-.219-.112c-.731-1.013-1.733-2.4-2.835-2.49q-.057,0-.113,0a2.049,2.049,0,0,0-1.423.722,6.664,6.664,0,0,0-.907,1.136,2.63,2.63,0,0,1,.993.264c.443-.617.95-1.087,1.252-1.121.786-.1,1.424.779,1.89,1.423a.27.27,0,0,1-.158.422l-.208.048a13.174,13.174,0,0,0-1.59.446,3.1,3.1,0,0,1-.483,3.23,3.183,3.183,0,0,1-2.44,1.2,2.672,2.672,0,0,1-.979-.184v2.831a4.782,4.782,0,0,0,4.777,4.777Zm6.8-12.773c.467-.645,1.106-1.528,1.9-1.423.527.058,1.691,1.468,2.03,2.656a.27.27,0,0,1-.368.322,15.179,15.179,0,0,0-3.192-1.085l-.208-.048a.27.27,0,0,1-.158-.422ZM61.79,33l-.406.357a1.776,1.776,0,0,0-2.6-.005l-.349-.413A2.321,2.321,0,0,1,61.79,33Zm-6.6,3.7a1.889,1.889,0,0,0,.894-1.207,1.541,1.541,0,0,1-1.023-1.061.271.271,0,0,1,.1-.293,2.393,2.393,0,0,1,1.229-.412h0a2.4,2.4,0,0,1,1.227.406.271.271,0,0,1,.105.293A1.54,1.54,0,0,1,56.7,35.493,1.889,1.889,0,0,0,57.6,36.7a1.573,1.573,0,0,0,1.423-.32l.3.453a2.522,2.522,0,0,1-1.355.477,1.509,1.509,0,0,1-.567-.108,2.021,2.021,0,0,1-1-1.018,2.021,2.021,0,0,1-1,1.018,1.509,1.509,0,0,1-.567.108,2.521,2.521,0,0,1-1.355-.477l.3-.453A1.573,1.573,0,0,0,55.186,36.7Zm-.838-3.763L54,33.35a1.765,1.765,0,0,0-2.6,0L50.992,33A2.321,2.321,0,0,1,54.348,32.937Z"
+                    transform="translate(-7.675 0)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4684"
+                    data-name="Pfad 4684"
+                    d="M50.784,48.161a2.552,2.552,0,0,0,.393-2.7c-.314.121-.672.269-1.094.452a.27.27,0,0,1-.368-.322,4.712,4.712,0,0,1,.485-1.079,2.142,2.142,0,0,0-1.008-.183,8.506,8.506,0,0,0-.87,2.753.27.27,0,0,1-.027.086,4.725,4.725,0,0,0-.5,1.771,2.469,2.469,0,0,0,2.984-.777Z"
+                    transform="translate(-7.785 -17.062)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4685"
+                    data-name="Pfad 4685"
+                    d="M148.5,37.353c-.38-.046-.8.415-1.145.874a14.213,14.213,0,0,1,2.5.822A4.3,4.3,0,0,0,148.5,37.353Z"
+                    transform="translate(-95.102 -10.944)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4686"
+                    data-name="Pfad 4686"
+                    d="M70.78,37.348h0a4.3,4.3,0,0,0-1.358,1.7,14.209,14.209,0,0,1,2.5-.822C71.574,37.76,71.157,37.3,70.78,37.348Z"
+                    transform="translate(-26.748 -10.939)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4687"
+                    data-name="Pfad 4687"
+                    d="M113.315,102.025a.844.844,0,0,0,.735-.521,1.685,1.685,0,0,0-.735-.2h0a1.682,1.682,0,0,0-.737.206.842.842,0,0,0,.736.516Z"
+                    transform="translate(-64.598 -67.034)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4688"
+                    data-name="Pfad 4688"
+                    d="M175.83,77.985a2.973,2.973,0,0,0-2.255-1.818,1.994,1.994,0,0,0-1.916.886,2.1,2.1,0,0,0-.457,2.14,1.431,1.431,0,0,0,.809.784c.264.013.43.285.492.809a4.718,4.718,0,0,1-.384,2.351,3.577,3.577,0,0,1-1.958,1.911,3.4,3.4,0,0,0,2.352,1.534c.9.016,1.795-.649,2.647-1.971a7.242,7.242,0,0,0,.67-6.625Z"
+                    transform="translate(-115.102 -44.975)"
+                    fill={
+                      currentRoute == "/communities" ||
+                      currentRoute == "/communities/[community]"
                         ? "#EA334E"
                         : darkMode
                         ? "white"
@@ -1120,605 +1507,568 @@ const NavBar = () => {
                 </g>
               </svg>
 
-              <span>{t('Explore')}</span>
+              <span>Communities</span>
               {/* </div> */}
             </span>
-          </span>
-          <span
-            // href={"/search"}
-            onClick={() => {
-              fullPageReload("/search", "window");
-            }}
-            className={
-              currentRoute == "/search"
-                ? `${
-                    darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
-                  } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
-                : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
-            }
-          >
-            <svg
-              className={`${
-                currentRoute == "/search"
-                  ? "#EA334E"
-                  : darkMode
-                  ? "text-white"
-                  : "text-[#5d6879]"
-              } rotate-12`}
-              width="17.858"
-              height="18.987"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 20"
+
+            <span
+              // href={"/leaderboard"}
+              onClick={() => {
+                fullPageReload("/leaderboard", "window");
+              }}
+              className={
+                currentRoute == "/leaderboard"
+                  ? `${
+                      darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                    } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                  : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+              }
             >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.5"
-                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-              />
-            </svg>
-
-            <span>{t('Search')}</span>
-            {/* </div> */}
-          </span>
-          <span
-            // href={"/communities"}
-            onClick={() => {
-              fullPageReload("/communities"), "window"
-            }}
-            className={
-              currentRoute == "/communities" ||
-              currentRoute == "/communities/[community]"
-                ? `${
-                    darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
-                  } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
-                : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
-            }
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="17.318"
-              height="20.966"
-              viewBox="0 0 22.318 25.966"
-            >
-              <g id="maneki-neko" transform="translate(-38.923 -24.871)">
-                <path
-                  id="Pfad_4672"
-                  data-name="Pfad 4672"
-                  d="M85.59,158.787a2.831,2.831,0,0,1,.762-2.625,4.848,4.848,0,0,1-.692-.613c-.681.472-2.026.95-4.666,1.118a1.714,1.714,0,0,1-3.384,0,13.315,13.315,0,0,1-3.788-.674,3.711,3.711,0,0,0,.052,1.2,1.9,1.9,0,0,0,.6,1.038,3.3,3.3,0,0,0,.756.42,3.034,3.034,0,0,1,1.044.657,2.027,2.027,0,0,1,.495,1.374,3.437,3.437,0,0,1,.862.517,2.365,2.365,0,0,1,.9,1.618,2.511,2.511,0,0,1-.856,2.032c.989,0,2.294,0,3.254,0a2.51,2.51,0,0,1-.855-2.031,2.365,2.365,0,0,1,.9-1.618,4.154,4.154,0,0,1,3.045-.823c1.981.191,3.5,1.536,3.445,3.03a3.754,3.754,0,0,0,.643-.631,3.556,3.556,0,0,0,.731-1.842c-.081.005-.161.009-.241.009A2.983,2.983,0,0,1,85.59,158.787Z"
-                  transform="translate(-30.587 -114.612)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4673"
-                  data-name="Pfad 4673"
-                  d="M41.272,198.384a6.619,6.619,0,0,1-.383-.616,3.62,3.62,0,0,0,.744,2.03,3.749,3.749,0,0,0,.647.637,2.211,2.211,0,0,1,.13-.819A6.068,6.068,0,0,1,41.272,198.384Z"
-                  transform="translate(-1.724 -151.64)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4674"
-                  data-name="Pfad 4674"
-                  d="M175.462,163.206h-.036a2.648,2.648,0,0,1-1.162-.305,2.312,2.312,0,0,0-.71,2.2,2.494,2.494,0,0,0,2.753,1.732,6.7,6.7,0,0,0-.171-1.437A19.515,19.515,0,0,0,175.462,163.206Z"
-                  transform="translate(-118.026 -121.059)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4675"
-                  data-name="Pfad 4675"
-                  d="M62.9,203.571a1.837,1.837,0,0,0-.7-1.25,2.789,2.789,0,0,0-.572-.362c-.008.038-.015.076-.024.114a2.982,2.982,0,0,1-1.2,1.792,2.854,2.854,0,0,1-1.588.458,3.429,3.429,0,0,1-.863-.112,4.518,4.518,0,0,1-1.309-.585,1.666,1.666,0,0,0-.045.556,1.836,1.836,0,0,0,.7,1.25,3.666,3.666,0,0,0,2.648.7C61.69,205.965,63.014,204.816,62.9,203.571Z"
-                  transform="translate(-15.497 -155.316)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4676"
-                  data-name="Pfad 4676"
-                  d="M132.534,199.06c-.139-.013-.278-.02-.416-.02a3.529,3.529,0,0,0-2.232.721,1.836,1.836,0,0,0-.7,1.25c-.112,1.245,1.212,2.394,2.951,2.562a3.667,3.667,0,0,0,2.648-.7,1.836,1.836,0,0,0,.7-1.25c.112-1.245-1.212-2.394-2.951-2.562Z"
-                  transform="translate(-79.156 -152.755)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4677"
-                  data-name="Pfad 4677"
-                  d="M74.665,151.376q-.047.2-.082.411a12.171,12.171,0,0,0,3.714.678,1.71,1.71,0,0,1,.441-.9H76.051A5.3,5.3,0,0,1,74.665,151.376Z"
-                  transform="translate(-31.275 -110.952)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4678"
-                  data-name="Pfad 4678"
-                  d="M128.765,150.432a1.71,1.71,0,0,1,.441.9c2.545-.164,3.745-.613,4.311-.989-.077-.1-.14-.186-.19-.258a5.29,5.29,0,0,1-1.876.343Z"
-                  transform="translate(-78.796 -109.823)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4679"
-                  data-name="Pfad 4679"
-                  d="M110.091,152.877a1.174,1.174,0,1,0,.211,0Z"
-                  transform="translate(-61.481 -112.268)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4680"
-                  data-name="Pfad 4680"
-                  d="M44.937,142.952a2.5,2.5,0,0,1-2.144,2.473,5.135,5.135,0,0,0,3.194,3.005A2.534,2.534,0,0,0,48,148.157a2.436,2.436,0,0,0,.972-1.467,1.718,1.718,0,0,0-.287-1.566,2.6,2.6,0,0,0-.869-.531,3.749,3.749,0,0,1-.879-.5,2.44,2.44,0,0,1-.784-1.332,4.345,4.345,0,0,1-.054-1.481,8,8,0,0,1,.166-.971,5.336,5.336,0,0,1-2-1.358,9.051,9.051,0,0,0-1.108,1.494c-.018.032-.036.064-.054.1a2.5,2.5,0,0,1,1.832,2.407Z"
-                  transform="translate(-3.394 -100.058)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4681"
-                  data-name="Pfad 4681"
-                  d="M41,157.814a1.955,1.955,0,0,0-1.547-1.914,5.037,5.037,0,0,0-.262,3.865A1.96,1.96,0,0,0,41,157.814Z"
-                  transform="translate(0 -114.92)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4682"
-                  data-name="Pfad 4682"
-                  d="M118.306,111.569h-.036l.037.009.037-.009h-.038Z"
-                  transform="translate(-69.591 -76.038)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4683"
-                  data-name="Pfad 4683"
-                  d="M52.452,40.068H60.33a4.766,4.766,0,0,0,3.607-1.65,3.664,3.664,0,0,0,.411-.866,3.464,3.464,0,0,0,.113-2.023A1.954,1.954,0,0,1,63.3,34.469a2.544,2.544,0,0,1,.5-2.714,2.8,2.8,0,0,1,1.1-.909,4.755,4.755,0,0,0-.405-.942.27.27,0,0,1-.032-.09A7.8,7.8,0,0,0,62.4,25.593a1.968,1.968,0,0,0-1.536-.717c-1.1.088-2.1,1.476-2.835,2.49a.27.27,0,0,1-.219.112h-2.91a.27.27,0,0,1-.219-.112c-.731-1.013-1.733-2.4-2.835-2.49q-.057,0-.113,0a2.049,2.049,0,0,0-1.423.722,6.664,6.664,0,0,0-.907,1.136,2.63,2.63,0,0,1,.993.264c.443-.617.95-1.087,1.252-1.121.786-.1,1.424.779,1.89,1.423a.27.27,0,0,1-.158.422l-.208.048a13.174,13.174,0,0,0-1.59.446,3.1,3.1,0,0,1-.483,3.23,3.183,3.183,0,0,1-2.44,1.2,2.672,2.672,0,0,1-.979-.184v2.831a4.782,4.782,0,0,0,4.777,4.777Zm6.8-12.773c.467-.645,1.106-1.528,1.9-1.423.527.058,1.691,1.468,2.03,2.656a.27.27,0,0,1-.368.322,15.179,15.179,0,0,0-3.192-1.085l-.208-.048a.27.27,0,0,1-.158-.422ZM61.79,33l-.406.357a1.776,1.776,0,0,0-2.6-.005l-.349-.413A2.321,2.321,0,0,1,61.79,33Zm-6.6,3.7a1.889,1.889,0,0,0,.894-1.207,1.541,1.541,0,0,1-1.023-1.061.271.271,0,0,1,.1-.293,2.393,2.393,0,0,1,1.229-.412h0a2.4,2.4,0,0,1,1.227.406.271.271,0,0,1,.105.293A1.54,1.54,0,0,1,56.7,35.493,1.889,1.889,0,0,0,57.6,36.7a1.573,1.573,0,0,0,1.423-.32l.3.453a2.522,2.522,0,0,1-1.355.477,1.509,1.509,0,0,1-.567-.108,2.021,2.021,0,0,1-1-1.018,2.021,2.021,0,0,1-1,1.018,1.509,1.509,0,0,1-.567.108,2.521,2.521,0,0,1-1.355-.477l.3-.453A1.573,1.573,0,0,0,55.186,36.7Zm-.838-3.763L54,33.35a1.765,1.765,0,0,0-2.6,0L50.992,33A2.321,2.321,0,0,1,54.348,32.937Z"
-                  transform="translate(-7.675 0)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4684"
-                  data-name="Pfad 4684"
-                  d="M50.784,48.161a2.552,2.552,0,0,0,.393-2.7c-.314.121-.672.269-1.094.452a.27.27,0,0,1-.368-.322,4.712,4.712,0,0,1,.485-1.079,2.142,2.142,0,0,0-1.008-.183,8.506,8.506,0,0,0-.87,2.753.27.27,0,0,1-.027.086,4.725,4.725,0,0,0-.5,1.771,2.469,2.469,0,0,0,2.984-.777Z"
-                  transform="translate(-7.785 -17.062)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4685"
-                  data-name="Pfad 4685"
-                  d="M148.5,37.353c-.38-.046-.8.415-1.145.874a14.213,14.213,0,0,1,2.5.822A4.3,4.3,0,0,0,148.5,37.353Z"
-                  transform="translate(-95.102 -10.944)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4686"
-                  data-name="Pfad 4686"
-                  d="M70.78,37.348h0a4.3,4.3,0,0,0-1.358,1.7,14.209,14.209,0,0,1,2.5-.822C71.574,37.76,71.157,37.3,70.78,37.348Z"
-                  transform="translate(-26.748 -10.939)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4687"
-                  data-name="Pfad 4687"
-                  d="M113.315,102.025a.844.844,0,0,0,.735-.521,1.685,1.685,0,0,0-.735-.2h0a1.682,1.682,0,0,0-.737.206.842.842,0,0,0,.736.516Z"
-                  transform="translate(-64.598 -67.034)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4688"
-                  data-name="Pfad 4688"
-                  d="M175.83,77.985a2.973,2.973,0,0,0-2.255-1.818,1.994,1.994,0,0,0-1.916.886,2.1,2.1,0,0,0-.457,2.14,1.431,1.431,0,0,0,.809.784c.264.013.43.285.492.809a4.718,4.718,0,0,1-.384,2.351,3.577,3.577,0,0,1-1.958,1.911,3.4,3.4,0,0,0,2.352,1.534c.9.016,1.795-.649,2.647-1.971a7.242,7.242,0,0,0,.67-6.625Z"
-                  transform="translate(-115.102 -44.975)"
-                  fill={
-                    currentRoute == "/communities" ||
-                    currentRoute == "/communities/[community]"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-              </g>
-            </svg>
-
-            <span>Communities</span>
-            {/* </div> */}
-          </span>
-
-          <span
-            // href={"/leaderboard"}
-            onClick={() => {
-              fullPageReload("/leaderboard", "window");
-            }}
-            className={
-              currentRoute == "/leaderboard"
-                ? `${
-                    darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
-                  } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
-                : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
-            }
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18.399"
-              height="20.944"
-              viewBox="0 0 18.399 20.944"
-            >
-              <g id="podium" transform="translate(-4.768)">
-                <g
-                  id="Gruppe_3296"
-                  data-name="Gruppe 3296"
-                  transform="translate(9.715)"
-                >
-                  <g id="Gruppe_3295" data-name="Gruppe 3295">
-                    <path
-                      id="Pfad_4752"
-                      data-name="Pfad 4752"
-                      d="M148.347,3.429a.637.637,0,0,0-.5-.466l-2.2-.357L144.673.382a.587.587,0,0,0-1.1,0l-.983,2.224-2.2.357a.637.637,0,0,0-.5.466.741.741,0,0,0,.155.7l1.59,1.731-.376,2.444a.724.724,0,0,0,.244.67.561.561,0,0,0,.646.052l1.965-1.154,1.964,1.154a.56.56,0,0,0,.646-.052.724.724,0,0,0,.244-.67L146.6,5.862l1.59-1.731A.743.743,0,0,0,148.347,3.429Z"
-                      transform="translate(-139.869)"
-                      fill={
-                        currentRoute == "/leaderboard"
-                          ? "#EA334E"
-                          : darkMode
-                          ? "white"
-                          : "#5d6879"
-                      }
-                    />
-                  </g>
-                </g>
-                <g
-                  id="Gruppe_3298"
-                  data-name="Gruppe 3298"
-                  transform="translate(10.901 10.439)"
-                >
-                  <g id="Gruppe_3297" data-name="Gruppe 3297">
-                    <path
-                      id="Pfad_4753"
-                      data-name="Pfad 4753"
-                      d="M177.776,255.185h-4.906a.652.652,0,0,0-.613.685v9.82h6.133v-9.82A.652.652,0,0,0,177.776,255.185Z"
-                      transform="translate(-172.256 -255.185)"
-                      fill={
-                        currentRoute == "/leaderboard"
-                          ? "#EA334E"
-                          : darkMode
-                          ? "white"
-                          : "#5d6879"
-                      }
-                    />
-                  </g>
-                </g>
-                <g
-                  id="Gruppe_3300"
-                  data-name="Gruppe 3300"
-                  transform="translate(4.768 13.179)"
-                >
-                  <g id="Gruppe_3299" data-name="Gruppe 3299">
-                    <path
-                      id="Pfad_4754"
-                      data-name="Pfad 4754"
-                      d="M5.381,322.18a.652.652,0,0,0-.613.685V329.4a.516.516,0,0,0,.485.542H9.674V322.18Z"
-                      transform="translate(-4.768 -322.18)"
-                      fill={
-                        currentRoute == "/leaderboard"
-                          ? "#EA334E"
-                          : darkMode
-                          ? "white"
-                          : "#5d6879"
-                      }
-                    />
-                  </g>
-                </g>
-                <g
-                  id="Gruppe_3302"
-                  data-name="Gruppe 3302"
-                  transform="translate(18.261 15.92)"
-                >
-                  <g id="Gruppe_3301" data-name="Gruppe 3301">
-                    <path
-                      id="Pfad_4755"
-                      data-name="Pfad 4755"
-                      d="M377.535,389.175h-4.293V394.2h4.422a.516.516,0,0,0,.485-.542v-3.8A.652.652,0,0,0,377.535,389.175Z"
-                      transform="translate(-373.242 -389.175)"
-                      fill={
-                        currentRoute == "/leaderboard"
-                          ? "#EA334E"
-                          : darkMode
-                          ? "white"
-                          : "#5d6879"
-                      }
-                    />
-                  </g>
-                </g>
-              </g>
-            </svg>
-            <span>{t('Leaderboard')}</span>
-            {/* </div> */}
-          </span>
-
-          <span
-            // href={"/earn"}
-            onClick={() => {
-              fullPageReload("/earn", "window");
-            }}
-            className={
-              currentRoute == "/earn"
-                ? `${
-                    darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
-                  } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
-                : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
-            }
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="19.818"
-              height="19.842"
-              viewBox="0 0 19.818 22.944"
-            >
-              <g id="layer1" transform="translate(-1.059 -280.596)">
-                <path
-                  id="path4503"
-                  d="M10.968,280.6a13,13,0,0,0-6.938,1.846,5.7,5.7,0,0,0-2.97,4.655v9.943a5.7,5.7,0,0,0,2.97,4.655,13,13,0,0,0,6.938,1.846,13,13,0,0,0,6.936-1.846,5.7,5.7,0,0,0,2.973-4.655V287.1a5.7,5.7,0,0,0-2.973-4.655A13,13,0,0,0,10.968,280.6Zm0,.765a12.384,12.384,0,0,1,6.575,1.739,4.356,4.356,0,0,1,0,7.995,12.384,12.384,0,0,1-6.575,1.739,12.394,12.394,0,0,1-6.578-1.739,4.358,4.358,0,0,1,0-7.995A12.394,12.394,0,0,1,10.968,281.361Zm0,1.911A9.977,9.977,0,0,0,6.3,284.32,3.353,3.353,0,0,0,4.244,287.1a3.161,3.161,0,0,0,1.729,2.578c3.55-1.015,5.919-3.268,6.4-6.319a12.045,12.045,0,0,0-1.408-.083Zm2.1.188A8.741,8.741,0,0,1,11.488,287a9.387,9.387,0,0,0,5.833,1.365,2.434,2.434,0,0,0,.371-1.27,3.357,3.357,0,0,0-2.064-2.778,8.7,8.7,0,0,0-2.558-.859Zm-2.044,4.13a9.686,9.686,0,0,1-4.08,2.582,10.521,10.521,0,0,0,4.021.746,9.968,9.968,0,0,0,4.661-1.047,5.311,5.311,0,0,0,1.023-.715,10.1,10.1,0,0,1-5.625-1.566Z"
-                  transform="translate(0 0)"
-                  fill={
-                    currentRoute == "/earn"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-              </g>
-            </svg>
-
-            <span>{t("Earn & Shop")}</span>
-            {/* </div> */}
-          </span>
-
-          <span
-            // href={"/settings"}
-            onClick={() => {
-              fullPageReload("/settings", "window");
-            }}
-            className={
-              currentRoute == "/settings"
-                ? `${
-                    darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
-                  } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
-                : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
-            }
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20.116"
-              height="20.113"
-              viewBox="0 0 22.116 22.113"
-            >
-              <g
-                id="ninja-blade"
-                transform="matrix(0.966, 0.259, -0.259, 0.966, 1.141, -6.117)"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18.399"
+                height="20.944"
+                viewBox="0 0 18.399 20.944"
               >
-                <path
-                  id="Pfad_4702"
-                  data-name="Pfad 4702"
-                  d="M9.052,15.187a1.2,1.2,0,0,0-.953.686L5.033,22.538a.359.359,0,0,0,.477.477L12.052,20a1.2,1.2,0,0,0,.69-.982,1.23,1.23,0,0,1,2.448-.025,1.2,1.2,0,0,0,.686.953l6.666,3.069a.353.353,0,0,0,.148.032.364.364,0,0,0,.256-.1.352.352,0,0,0,.072-.4L20,16a1.2,1.2,0,0,0-.982-.69,1.228,1.228,0,0,1-.852-1.993,1.206,1.206,0,0,1,.823-.451,1.209,1.209,0,0,0,.953-.686l3.069-6.669a.359.359,0,0,0-.477-.477L16,8.041a1.207,1.207,0,0,0-.693.986,1.221,1.221,0,0,1-.426.827,1.227,1.227,0,0,1-2.018-.8,1.209,1.209,0,0,0-.686-.95L5.506,5.029a.359.359,0,0,0-.477.477l3.015,6.543a1.186,1.186,0,0,0,.982.69,1.233,1.233,0,0,1,.906,1.917,1.189,1.189,0,0,1-.881.531Zm3.69-2.441a1.81,1.81,0,1,1,1.282,3.091,1.813,1.813,0,0,1-1.282-3.091Z"
-                  transform="translate(0 0)"
-                  className="text-zinc-200"
-                  fill={
-                    currentRoute == "/settings"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-                <path
-                  id="Pfad_4703"
-                  data-name="Pfad 4703"
-                  d="M28.838,28.846a1.088,1.088,0,1,0-1.538,0,1.092,1.092,0,0,0,1.538,0Z"
-                  transform="translate(-14.048 -14.053)"
-                  className="text-zinc-200"
-                  fill={
-                    currentRoute == "/settings"
-                      ? "#EA334E"
-                      : darkMode
-                      ? "white"
-                      : "#5d6879"
-                  }
-                />
-              </g>
-            </svg>
+                <g id="podium" transform="translate(-4.768)">
+                  <g
+                    id="Gruppe_3296"
+                    data-name="Gruppe 3296"
+                    transform="translate(9.715)"
+                  >
+                    <g id="Gruppe_3295" data-name="Gruppe 3295">
+                      <path
+                        id="Pfad_4752"
+                        data-name="Pfad 4752"
+                        d="M148.347,3.429a.637.637,0,0,0-.5-.466l-2.2-.357L144.673.382a.587.587,0,0,0-1.1,0l-.983,2.224-2.2.357a.637.637,0,0,0-.5.466.741.741,0,0,0,.155.7l1.59,1.731-.376,2.444a.724.724,0,0,0,.244.67.561.561,0,0,0,.646.052l1.965-1.154,1.964,1.154a.56.56,0,0,0,.646-.052.724.724,0,0,0,.244-.67L146.6,5.862l1.59-1.731A.743.743,0,0,0,148.347,3.429Z"
+                        transform="translate(-139.869)"
+                        fill={
+                          currentRoute == "/leaderboard"
+                            ? "#EA334E"
+                            : darkMode
+                            ? "white"
+                            : "#5d6879"
+                        }
+                      />
+                    </g>
+                  </g>
+                  <g
+                    id="Gruppe_3298"
+                    data-name="Gruppe 3298"
+                    transform="translate(10.901 10.439)"
+                  >
+                    <g id="Gruppe_3297" data-name="Gruppe 3297">
+                      <path
+                        id="Pfad_4753"
+                        data-name="Pfad 4753"
+                        d="M177.776,255.185h-4.906a.652.652,0,0,0-.613.685v9.82h6.133v-9.82A.652.652,0,0,0,177.776,255.185Z"
+                        transform="translate(-172.256 -255.185)"
+                        fill={
+                          currentRoute == "/leaderboard"
+                            ? "#EA334E"
+                            : darkMode
+                            ? "white"
+                            : "#5d6879"
+                        }
+                      />
+                    </g>
+                  </g>
+                  <g
+                    id="Gruppe_3300"
+                    data-name="Gruppe 3300"
+                    transform="translate(4.768 13.179)"
+                  >
+                    <g id="Gruppe_3299" data-name="Gruppe 3299">
+                      <path
+                        id="Pfad_4754"
+                        data-name="Pfad 4754"
+                        d="M5.381,322.18a.652.652,0,0,0-.613.685V329.4a.516.516,0,0,0,.485.542H9.674V322.18Z"
+                        transform="translate(-4.768 -322.18)"
+                        fill={
+                          currentRoute == "/leaderboard"
+                            ? "#EA334E"
+                            : darkMode
+                            ? "white"
+                            : "#5d6879"
+                        }
+                      />
+                    </g>
+                  </g>
+                  <g
+                    id="Gruppe_3302"
+                    data-name="Gruppe 3302"
+                    transform="translate(18.261 15.92)"
+                  >
+                    <g id="Gruppe_3301" data-name="Gruppe 3301">
+                      <path
+                        id="Pfad_4755"
+                        data-name="Pfad 4755"
+                        d="M377.535,389.175h-4.293V394.2h4.422a.516.516,0,0,0,.485-.542v-3.8A.652.652,0,0,0,377.535,389.175Z"
+                        transform="translate(-373.242 -389.175)"
+                        fill={
+                          currentRoute == "/leaderboard"
+                            ? "#EA334E"
+                            : darkMode
+                            ? "white"
+                            : "#5d6879"
+                        }
+                      />
+                    </g>
+                  </g>
+                </g>
+              </svg>
+              <span>{t("Leaderboard")}</span>
+              {/* </div> */}
+            </span>
 
-            <span>{t('Settings')}</span>
-          </span>
+            <span
+              // href={"/earn"}
+              onClick={() => {
+                fullPageReload("/earn", "window");
+              }}
+              className={
+                currentRoute == "/earn"
+                  ? `${
+                      darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                    } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                  : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+              }
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="19.818"
+                height="19.842"
+                viewBox="0 0 19.818 22.944"
+              >
+                <g id="layer1" transform="translate(-1.059 -280.596)">
+                  <path
+                    id="path4503"
+                    d="M10.968,280.6a13,13,0,0,0-6.938,1.846,5.7,5.7,0,0,0-2.97,4.655v9.943a5.7,5.7,0,0,0,2.97,4.655,13,13,0,0,0,6.938,1.846,13,13,0,0,0,6.936-1.846,5.7,5.7,0,0,0,2.973-4.655V287.1a5.7,5.7,0,0,0-2.973-4.655A13,13,0,0,0,10.968,280.6Zm0,.765a12.384,12.384,0,0,1,6.575,1.739,4.356,4.356,0,0,1,0,7.995,12.384,12.384,0,0,1-6.575,1.739,12.394,12.394,0,0,1-6.578-1.739,4.358,4.358,0,0,1,0-7.995A12.394,12.394,0,0,1,10.968,281.361Zm0,1.911A9.977,9.977,0,0,0,6.3,284.32,3.353,3.353,0,0,0,4.244,287.1a3.161,3.161,0,0,0,1.729,2.578c3.55-1.015,5.919-3.268,6.4-6.319a12.045,12.045,0,0,0-1.408-.083Zm2.1.188A8.741,8.741,0,0,1,11.488,287a9.387,9.387,0,0,0,5.833,1.365,2.434,2.434,0,0,0,.371-1.27,3.357,3.357,0,0,0-2.064-2.778,8.7,8.7,0,0,0-2.558-.859Zm-2.044,4.13a9.686,9.686,0,0,1-4.08,2.582,10.521,10.521,0,0,0,4.021.746,9.968,9.968,0,0,0,4.661-1.047,5.311,5.311,0,0,0,1.023-.715,10.1,10.1,0,0,1-5.625-1.566Z"
+                    transform="translate(0 0)"
+                    fill={
+                      currentRoute == "/earn"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                </g>
+              </svg>
+
+              <span>{t("Earn & Shop")}</span>
+              {/* </div> */}
+            </span>
+
+            <span
+              // href={"/settings"}
+              onClick={() => {
+                fullPageReload("/settings", "window");
+              }}
+              className={
+                currentRoute == "/settings"
+                  ? `${
+                      darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                    } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                  : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+              }
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20.116"
+                height="20.113"
+                viewBox="0 0 22.116 22.113"
+              >
+                <g
+                  id="ninja-blade"
+                  transform="matrix(0.966, 0.259, -0.259, 0.966, 1.141, -6.117)"
+                >
+                  <path
+                    id="Pfad_4702"
+                    data-name="Pfad 4702"
+                    d="M9.052,15.187a1.2,1.2,0,0,0-.953.686L5.033,22.538a.359.359,0,0,0,.477.477L12.052,20a1.2,1.2,0,0,0,.69-.982,1.23,1.23,0,0,1,2.448-.025,1.2,1.2,0,0,0,.686.953l6.666,3.069a.353.353,0,0,0,.148.032.364.364,0,0,0,.256-.1.352.352,0,0,0,.072-.4L20,16a1.2,1.2,0,0,0-.982-.69,1.228,1.228,0,0,1-.852-1.993,1.206,1.206,0,0,1,.823-.451,1.209,1.209,0,0,0,.953-.686l3.069-6.669a.359.359,0,0,0-.477-.477L16,8.041a1.207,1.207,0,0,0-.693.986,1.221,1.221,0,0,1-.426.827,1.227,1.227,0,0,1-2.018-.8,1.209,1.209,0,0,0-.686-.95L5.506,5.029a.359.359,0,0,0-.477.477l3.015,6.543a1.186,1.186,0,0,0,.982.69,1.233,1.233,0,0,1,.906,1.917,1.189,1.189,0,0,1-.881.531Zm3.69-2.441a1.81,1.81,0,1,1,1.282,3.091,1.813,1.813,0,0,1-1.282-3.091Z"
+                    transform="translate(0 0)"
+                    className="text-zinc-200"
+                    fill={
+                      currentRoute == "/settings"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                  <path
+                    id="Pfad_4703"
+                    data-name="Pfad 4703"
+                    d="M28.838,28.846a1.088,1.088,0,1,0-1.538,0,1.092,1.092,0,0,0,1.538,0Z"
+                    transform="translate(-14.048 -14.053)"
+                    className="text-zinc-200"
+                    fill={
+                      currentRoute == "/settings"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879"
+                    }
+                  />
+                </g>
+              </svg>
+
+              <span>{t("Settings")}</span>
+            </span>
+          </div>
+          {communities &&
+            communities.length > 0 &&
+            (communities?.filter((community) => community.isAMember) || [])
+              .length > 0 && (
+              <div
+                className={`${
+                  darkMode ? "text-white" : "text-[#5D6879]"
+                } flex flex-col py-3 pr-4`}
+              >
+                <span
+                  className={`flex flex-col pt-3 border-t ${
+                    darkMode ? "border-[#32353C]" : "border-[#D0D3DB]"
+                  }`}
+                >
+                  <span className="pb-2 text-sm font-light">
+                    {t("My Communities")}
+                  </span>
+                  {communities
+                    .filter((myCommunity) => myCommunity.isAMember)
+                    .slice(0, 3)
+                    .map((community) => {
+                      return (
+                        <span
+                          key={community.id}
+                          onClick={() => {
+                            fullPageReload(
+                              `/communities/${community.name}`.replace(
+                                " ",
+                                "+"
+                              ),
+                              "window"
+                            );
+                          }}
+                          className={`${
+                            darkMode ? "bg-[#1e1f24]" : "bg-white"
+                          } cursor-pointer w-full flex flex-row rounded`}
+                        >
+                          <span className="relative h-8 w-8 flex my-auto">
+                            <Image
+                              src={community.avatar}
+                              alt="post"
+                              height={35}
+                              width={35}
+                              className={`rounded-full border ${
+                                darkMode ? "border-white" : "border-black"
+                              }`}
+                            />
+                          </span>
+                          <span className="pl-1.5 flex flex-col text-sm">
+                            <span className="font-normal">
+                              {formatGroupName(community.name)}
+                            </span>
+
+                            <span className="font-light text-[0.7rem]">
+                              {`${community.membersLength} ${
+                                community.membersLength === 1
+                                  ? "Member"
+                                  : "Members"
+                              }`}
+                            </span>
+                          </span>
+                        </span>
+                      );
+                    })}
+                </span>
+                <span
+                  onClick={() => {
+                    fullPageReload("/communities", "window");
+                  }}
+                  className={`cursor-pointer pt-1 pb-4 mb-3 border-b ${
+                    darkMode ? "border-[#32353C]" : "border-[#D0D3DB]"
+                  } font-light text-[0.7rem] underline`}
+                >
+                  {t("View all communities")}
+                </span>
+              </div>
+            )}
+
+          <div className="text-[0.8rem] font-semibold w-full flex justify-center pr-4">
+            <span
+              onClick={() => {
+                fullPageReload("/create", "window");
+              }}
+              className="rounded cursor-pointer w-full bg-[#EA334E] py-2 text-center text-white"
+            >
+              {t("POST SOMETHING")}
+            </span>
+          </div>
         </div>
-        {communities &&
-          communities.length > 0 &&
-          (communities?.filter((community) => community.isAMember) || [])
-            .length > 0 && (
-            <div
-              className={`${
-                darkMode ? "text-white" : "text-[#5D6879]"
-              } flex flex-col py-3 pr-4`}
+      ) : (
+        <div className="w-full h-full">
+          <div
+            className={`pb-2 pr-4 text-sm ${
+              darkMode ? "text-white" : "text-slate-600"
+            } block font-normal`}
+          >
+            <span
+              onClick={() => {
+                fullPageReload("/stream", "window");
+              }}
+              className={
+                currentRoute == "/stream"
+                  ? `${
+                      darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                    } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                  : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+              }
             >
-              <span
-                className={`flex flex-col pt-3 border-t ${
-                  darkMode ? "border-[#32353C]" : "border-[#D0D3DB]"
-                }`}
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                id="signal"
+                className="icon glyph"
               >
-                <span className="pb-2 text-sm font-light">{t('My Communities')}</span>
-                {communities
-                  .filter((myCommunity) => myCommunity.isAMember)
-                  .slice(0, 3)
-                  .map((community) => {
-                    return (
-                      <span
-                        key={community.id}
-                        onClick={() => {
-                          fullPageReload(
-                            `/communities/${community.name}`.replace(" ", "+"), "window"
-                          );
-                        }}
-                        className={`${
-                          darkMode ? "bg-[#1e1f24]" : "bg-white"
-                        } cursor-pointer w-full flex flex-row rounded`}
-                      >
-                        <span className="relative h-8 w-8 flex my-auto">
-                          <Image
-                            src={community.avatar}
-                            alt="post"
-                            height={35}
-                            width={35}
-                            className={`rounded-full border ${
-                              darkMode ? "border-white" : "border-black"
-                            }`}
-                          />
-                        </span>
-                        <span className="pl-1.5 flex flex-col text-sm">
-                          <span className="font-normal">
-                            {formatGroupName(community.name)}
-                          </span>
+                <path
+                  d="M12,11.36a2,2,0,1,1,2-2A2,2,0,0,1,12,11.36Zm0-2h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Z"
+                  style={{
+                    fill:
+                      currentRoute == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M12,22a1,1,0,0,1-1-1V11.36a1,1,0,0,1,2,0V21A1,1,0,0,1,12,22Z"
+                  style={{
+                    fill:
+                      currentRoute == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M15.54,13.9a1,1,0,0,1-.71-1.71,4,4,0,0,0,0-5.65,1,1,0,0,1,0-1.42,1,1,0,0,1,1.41,0,6,6,0,0,1,0,8.49A1,1,0,0,1,15.54,13.9Z"
+                  style={{
+                    fill:
+                      currentRoute == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M8.46,13.9a1,1,0,0,1-.7-.29,6,6,0,0,1,0-8.49,1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.42,4,4,0,0,0,0,5.65,1,1,0,0,1-.71,1.71Z"
+                  style={{
+                    fill:
+                      currentRoute == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M18.36,16.73a1,1,0,0,1-.7-1.71,8,8,0,0,0,0-11.31,1,1,0,0,1,0-1.42,1,1,0,0,1,1.41,0,10,10,0,0,1,0,14.15A1,1,0,0,1,18.36,16.73Z"
+                  style={{
+                    fill:
+                      currentRoute == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M5.64,16.73a1,1,0,0,1-.71-.29,10,10,0,0,1,0-14.15,1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.42A8,8,0,0,0,6.34,15a1,1,0,0,1-.7,1.71Z"
+                  style={{
+                    fill:
+                      currentRoute == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+              </svg>
 
-                          <span className="font-light text-[0.7rem]">
-                            {`${community.membersLength} ${
-                              community.membersLength === 1
-                                ? "Member"
-                                : "Members"
-                            }`}
-                          </span>
-                        </span>
-                      </span>
-                    );
-                  })}
-              </span>
+              <span>{t("Stream Manager")}</span>
+              {/* </div> */}
+            </span>
+            <span>
               <span
                 onClick={() => {
-                  fullPageReload("/communities", "window");
+                  fullPageReload("/stream-analytics", "window");
                 }}
-                className={`cursor-pointer pt-1 pb-4 mb-3 border-b ${
-                  darkMode ? "border-[#32353C]" : "border-[#D0D3DB]"
-                } font-light text-[0.7rem] underline`}
+                className={
+                  currentRoute == "/stream-analytics"
+                    ? `${
+                        darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                      } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                    : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+                }
               >
-                {t('View all communities')}
+                <svg
+                  fill={
+                    currentRoute == "/stream-analytics"
+                      ? "#EA334E"
+                      : darkMode
+                      ? "white"
+                      : "#5d6879"
+                  }
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M21.71,7.29a1,1,0,0,0-1.42,0L14,13.59,9.71,9.29a1,1,0,0,0-1.42,0l-6,6a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L9,11.41l4.29,4.3a1,1,0,0,0,1.42,0l7-7A1,1,0,0,0,21.71,7.29Z" />
+                </svg>
+                <span>{t("Analytics")}</span>
+                {/* </div> */}
               </span>
-            </div>
-          )}
+            </span>
+            <span
+              // href={"/search"}
+              onClick={() => {
+                fullPageReload("/live", "window");
+              }}
+              className={
+                currentRoute == "/live"
+                  ? `${
+                      darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                    } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                  : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+              }
+            >
+              <svg
+                fill={
+                  currentRoute === "/live" || currentRoute === "/watch" || currentRoute === "/watch/[roomName]"
+                    ? "#EA334E"
+                    : darkMode
+                    ? "white"
+                    : "#5d6879"
+                }
+                width="20px"
+                height="20px"
+                viewBox="0 0 24 24"
+                id="video-recorder-2"
+                data-name="Flat Color"
+                xmlns="http://www.w3.org/2000/svg"
+                className="icon flat-color"
+              >
+                <path
+                  id="secondary"
+                  d="M21.11,6.34a2,2,0,0,0-1.88-.18L14.62,8.08A1,1,0,0,0,14,9v6a1,1,0,0,0,.62.92l4.61,1.92A1.9,1.9,0,0,0,20,18a1.94,1.94,0,0,0,1.11-.34A2,2,0,0,0,22,16V8A2,2,0,0,0,21.11,6.34Z"
+                  style={{
+                    fill: currentRoute == "/live"
+                    ? "#EA334E"
+                    : darkMode ? 'white' : '#5d6879',
+                  }}
+                />
+                <rect
+                  id="primary"
+                  x={2}
+                  y={5}
+                  width={14}
+                  height={14}
+                  rx={2}
+                  style={{
+                    fill: currentRoute == "/live"
+                    ? "#EA334E"
+                    : darkMode ? 'white' : '#5d6879',
+                  }}
+                />
+              </svg>
 
-        <div className="text-[0.8rem] font-semibold w-full flex justify-center pr-4">
-          <span
-            onClick={() => {
-              fullPageReload("/create", "window");
-            }}
-            className="rounded cursor-pointer w-full bg-[#EA334E] py-2 text-center text-white"
-          >
-            {t('POST SOMETHING')}
-          </span>
+              <span>{t("Live Streams")}</span>
+              {/* </div> */}
+            </span>
+
+            <span
+              // href={"/earn"}
+              onClick={() => {
+                fullPageReload("/streamer-earnings", "window");
+              }}
+              className={
+                currentRoute == "/streamer-earnings"
+                  ? `${
+                      darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                    } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                  : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+              }
+            >
+              <svg
+                fill={
+                  currentRoute == "/streamer-earnings"
+                    ? "#EA334E"
+                    : darkMode
+                    ? "white"
+                    : "#5d6879"
+                }
+                className="mr-1"
+                width="16"
+                height="18"
+                viewBox="0 0 50 50"
+                baseProfile="tiny"
+                xmlns="http://www.w3.org/2000/svg"
+                overflow="inherit"
+              >
+                <path d="M50 50l-.015-25.059c0-13.781-11.186-24.946-24.967-24.946-13.781 0-24.967 11.173-24.967 24.955l.201 25.085 5.748-.014v-25.07c0-10.741 8.262-19.447 19-19.447 10.74 0 19 8.707 19 19.448v25.048h6zm-16.803-9.074l-.092-.168.048-.062.044-.062c.86-.355 1.641-.79 2.339-1.31.698-.522 1.106-1.286 1.348-2.296.027-.117.116-.389.116-.804v-20.853c0-.503-.089-1.025-.387-1.556-.296-.54-.637-1.023-1.09-1.452-.439-.425-.921-.721-1.472-1.006-.55-.282-1.064-.357-1.571-.357h-14.922c-.476 0-.988.067-1.54.335-.551.267-1.058.577-1.516.995-.459.413-.798.865-1.096 1.382-.294.527-.406 1.018-.406 1.528v21.164c0 .353.054.728.228 1.11.179.389.381.752.648 1.088.268.348.549.661.862.941.312.282.608.512.908.688.145.061.403.154.777.271.369.119.539.19.511.246l-6.105 9.252h3.561l4.458-6h12.302l4.452 6h3.606l-6.011-9.074zm-13.197-27.926c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v1c0 .55-.45 1-1 1h-8c-.55 0-1-.45-1-1v-1zm-3.936 4.885c.133-.282.237-.538.444-.779.211-.238.422-.58.703-.729.281-.15.54-.377.837-.377h13.857c.267 0 .532.215.801.328.268.12.512.363.737.569.222.207.31.472.448.709.131.232.109.526.109.793v4.724c0 .27.013.521-.133.775-.148.26-.298.484-.538.677-.239.189-.466.238-.733.353-.268.126-.514.072-.778.072h-13.681c-.033 0-.107.093-.225.069l-.27-.039c-.503-.088-.812-.329-1.2-.775-.385-.449-.442-.907-.442-1.443v-4.054c0-.297-.068-.589.064-.873zm3.787 19.275c-.459.475-1.034.712-1.714.712-.683 0-1.241-.237-1.673-.712-.432-.474-.646-1.058-.646-1.739 0-.624.225-1.165.669-1.624.445-.462.996-.693 1.65-.693.68 0 1.254.219 1.714.643.461.438.692 1.002.692 1.721 0 .654-.231 1.219-.692 1.692zm10.203 0c-.458-.474-.689-1.058-.689-1.739 0-.686.243-1.237.734-1.675.493-.424 1.063-.643 1.72-.643.678 0 1.236.231 1.666.693.433.459.649 1 .649 1.624 0 .682-.221 1.266-.671 1.739-.444.475-1.009.712-1.693.712-.683.001-1.253-.236-1.716-.711z" />
+              </svg>
+
+              <span>{t("Gifts & Subs")}</span>
+              {/* </div> */}
+            </span>
+
+            <span
+              // href={"/settings"}
+              onClick={() => {
+                fullPageReload(`/profile/${userData.username}`, "window");
+              }}
+              className={
+                currentRoute == "/stream-profile"
+                  ? `${
+                      darkMode ? "bg-[#25272D]" : "bg-[#F9F9F9]"
+                    } rounded text-[#EA334E] p-2.5 font-semibold text-start cursor-pointer flex flex-row space-x-2 items-center`
+                  : "p-2.5 text-start cursor-pointer flex flex-row space-x-2 items-center"
+              }
+            >
+              <span className="relative h-5 w-5 flex">
+                <Image
+                  src={userData.avatar}
+                  alt="user"
+                  width={30}
+                  height={30}
+                  className="flex-shrink-0 rounded-full"
+                  onError={() => handleImageError(os.id)}
+                />
+              </span>
+
+              <span>{t("Profile")}</span>
+            </span>
+          </div>
+
+          <div className="pt-8 text-[0.8rem] font-semibold w-full flex justify-center pr-4">
+            <span
+              onClick={() => {
+                fullPageReload("/home", "window");
+              }}
+              className="rounded cursor-pointer w-full bg-[#EA334E] py-2 text-center text-white"
+            >
+              {t("Home")}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
       {/* <span
         className={`${
           darkMode ? "text-white" : "text-black"
@@ -1752,7 +2102,6 @@ const NavBar = () => {
         )} */}
       {/* </span> */}
 
-     
       {/* <span className="bottom-1 absolute w-full space-x-2 flex flex-row bg-transparent justify-center items-center pb-2 px-4">
         <span
           className="cursor-pointer"

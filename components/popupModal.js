@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext, use } from "react";
+import { useEffect, useState, useContext } from "react";
 import Spinner from "./spinner";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -6,7 +6,6 @@ import ConnectionData from "@/lib/connectionData";
 import { UserContext } from "@/lib/userContext";
 import ETHSVG from "@/assets/eth";
 import SOLSVG from "@/assets/sol";
-import luffyLogo from "../assets/luffyLogo.png";
 import ErcTwentyToken from "../lib/static/ErcTwentyToken.json";
 import PriceFeedStation from "@/lib/priceFeedStation";
 import { ethers } from "ethers";
@@ -823,7 +822,7 @@ export default function PopupModal({
         success == "4"
           ? ""
           : success == "6"
-          ? `relative shadow-2xl justiy-center rounded-xl pb-7 w-11/12 lg:w-2/5 flex flex-col items-center`
+          ? `relative shadow-2xl justify-center rounded-xl pb-7 w-11/12 lg:w-2/5 flex flex-col items-center`
           : success == "11"
           ? `${
               darkMode ? "bg-black text-white" : "bg-white text-black"
@@ -945,7 +944,7 @@ export default function PopupModal({
               } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
             >
               <Image
-                src={luffyLogo}
+                src={'/assets/publicluffy.png'}
                 alt="luffy logo"
                 height={25}
                 width={25}
@@ -1053,7 +1052,7 @@ export default function PopupModal({
               } space-x-1 cursor-pointer rounded border shadow-xl p-1 flex flex-row items-center`}
             >
               <Image
-                src={luffyLogo}
+                src={'/assets/publicluffy.png'}
                 alt="luffy logo"
                 height={25}
                 width={25}
@@ -1219,7 +1218,7 @@ export default function PopupModal({
                   <span className="space-x-1 w-fit p-2 h-full rounded-r-lg bg-zinc-700 flex flex-row items-center">
                     <span className="w-10">
                       <Image
-                        src={luffyLogo}
+                        src={'/assets/publicluffy.png'}
                         alt="luffy logo"
                         height={35}
                         width={35}
@@ -1260,9 +1259,9 @@ export default function PopupModal({
                 placeholder={"Add a message to your tip..."}
                 className={`${
                   darkMode
-                    ? "bg-[#27292F] placeholder:text-gray-200"
-                    : "bg-gray-100"
-                } mt-1.5 placeholder:text-black placeholder:text-sm px-4 h-15 rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
+                    ? "text-white bg-[#27292F] placeholder:text-gray-200"
+                    : "bg-gray-100 placeholder:text-black"
+                } mt-1.5 placeholder:text-sm px-4 h-15 rounded-lg resize-none w-full px-2 border-none focus:outline-none focus:border-[#27292F] focus:ring-0`}
               />
               <span className={`${darkMode ? "text-white" : "text-black"}`}>
                 {coinAmount}
@@ -1297,7 +1296,7 @@ export default function PopupModal({
                   }}
                 >
                   <Image
-                    src={luffyLogo}
+                    src={'/assets/publicluffy.png'}
                     alt="luffy logo"
                     height={25}
                     width={25}
@@ -1356,7 +1355,7 @@ export default function PopupModal({
           <div
             className={`-mt-16 mb-8 lg:mt-0 ${
               darkMode ? "bg-zinc-800 text-white" : "bg-white text-black"
-            } lg:mb-0 font-semibold text-xl cursor-pointer text-center items-center h-8 w-8 rounded-full pointer-events-none`}
+            } lg:mb-0 font-semibold text-xl text-center items-center h-8 w-8 rounded-full pointer-events-none`}
           >
             x
           </div>

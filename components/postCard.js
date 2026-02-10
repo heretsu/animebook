@@ -361,17 +361,17 @@ export default function PostCard({
           .then(async () => {
             setReentry(true);
             // fetchLikes();
-            if (users.id !== myProfileId) {
-              await supabase
-                .from("users")
-                .update({
-                  // ki:
-                  //   parseFloat(users.ki) !== 0
-                  //     ? parseFloat(users.ki) - 0.08
-                  //     : 0,
-                })
-                .eq("id", users.id);
-            }
+            // if (users.id !== myProfileId) {
+            //   await supabase
+            //     .from("users")
+            //     .update({
+            //       // ki:
+            //       //   parseFloat(users.ki) !== 0
+            //       //     ? parseFloat(users.ki) - 0.08
+            //       //     : 0,
+            //     })
+            //     .eq("id", users.id);
+            // }
           });
       } else {
         setLiked(true);

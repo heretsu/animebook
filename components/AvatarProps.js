@@ -44,14 +44,14 @@ export function AvatarWithBorder({ userInfo, size }) {
   </span>
   
   ) : (
-    <span className="relative h-9 w-9 flex">
+    <span className={`relative h-8 w-8 flex flex-shrink-0`}>
 
     <Image
       src={userInfo.avatar}
       alt="user profile"
       height={size}
       width={size}
-      className="border border-white rounded-full"
+      className="border border-white rounded-full flex flex-shrink-0"
     />
         </span>
 

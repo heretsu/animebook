@@ -209,18 +209,32 @@ const Inbox = () => {
     const lastChats = Array.from(latestMessages.values());
 
     const unreadCount = {};
-    latestMessages.forEach((message, key) => {
-      const chatMessages = messages.filter(
-        (msg) => createConversationKey(msg.senderid, msg.receiverid) === key
-      );
-      let count = 0;
-      for (const msg of chatMessages) {
-        if (msg.isread) break;
-        count++;
-      }
-      unreadCount[key] = count;
-    });
 
+latestMessages.forEach((_, key) => {
+  const chatMessages = messages
+    .filter(
+      (msg) =>
+        createConversationKey(msg.senderid, msg.receiverid) === key &&
+        msg.receiverid?.toString() === userNumId?.toString()
+    )
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); // oldest to newest
+
+  // Find the index of the last read message
+  const lastReadIndex = [...chatMessages]
+    .reverse()
+    .findIndex((msg) => msg.isread === true);
+
+  const cutoffIndex =
+    lastReadIndex === -1
+      ? 0
+      : chatMessages.length - lastReadIndex; // offset from reverse
+
+  const unreadAfterLastRead = chatMessages.slice(cutoffIndex).filter((msg) => !msg.isread);
+
+  unreadCount[key] = unreadAfterLastRead.length;
+});
+
+    
     return lastChats
       .filter(
         (lc) =>
@@ -712,7 +726,7 @@ const Inbox = () => {
                                         : "font-medium"
                                     }`}
                                   >
-                                    <PreviewAsset />
+                                    {singleChat.attachments && <PreviewAsset />}
                                     {singleChat.message.length > 110
                                       ? singleChat.message
                                           .slice(0, 110)
@@ -796,7 +810,7 @@ const Inbox = () => {
                                         : "font-medium"
                                     }`}
                                   >
-                                    <PreviewAsset />
+                                   {singleChat.attachments && <PreviewAsset />}
                                     {singleChat.message.length > 110
                                       ? singleChat.message
                                           .slice(0, 110)

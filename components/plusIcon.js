@@ -74,7 +74,7 @@ const PlusIcon = ({
   return (
     <span
       onClick={followUser}
-      className={`cursor-pointer relative h-fit w-20 text-center rounded-md text-white bg-[#EB4463] py-1`}
+      className={`${color === 'transparent' ? 'bg-transparent' : 'bg-[#EB4463]'} cursor-pointer relative h-fit w-20 text-center rounded-md text-white py-1`}
     >Follow
     </span>
   );

@@ -17,9 +17,8 @@ import customBorder2 from "@/assets/customborder2.png";
 import fireborder from "@/assets/fireborder.png";
 
 import { useTranslation } from "next-i18next";
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 
 export function AvatarDesign({ border, userData, size }) {
   return (
@@ -134,7 +133,7 @@ const EditProfileContainer = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [newAddress, setNewAddress] = useState(null);
-  const [newSolAddr, setNewSolAddr] = useState(null)
+  const [newSolAddr, setNewSolAddr] = useState(null);
   const [changesLoading, setChangesLoading] = useState(false);
   const [solBalance, setSolBalance] = useState(null);
   const [ethBalance, setEthBalance] = useState(null);
@@ -267,8 +266,9 @@ const EditProfileContainer = () => {
       coverUrl === null &&
       avatarUrl === null &&
       bio === "" &&
-      newAddress === null && newSolAddr === null &&
-      selectedBorder === null 
+      newAddress === null &&
+      newSolAddr === null &&
+      selectedBorder === null
     ) {
       setErrorMsg("You made no changes");
       setChangesLoading(false);
@@ -284,7 +284,10 @@ const EditProfileContainer = () => {
         bio: bio !== "" ? bio : userData.bio,
         address: newAddress ? newAddress : userData.address,
         solAddress: newSolAddr ? newSolAddr : userData.solAddress,
-        solupdated: newSolAddr !== null && newSolAddr !== undefined && newSolAddr !== "" ? true : null
+        solupdated:
+          newSolAddr !== null && newSolAddr !== undefined && newSolAddr !== ""
+            ? true
+            : null,
       })
       .eq("useruuid", userData.useruuid);
 
@@ -453,16 +456,16 @@ const EditProfileContainer = () => {
       fetchAllChibis(userData.id);
       fetchAllBorders(userData.id);
     }
-    if (publicKey){
-      setNewSolAddr(publicKey.toBase58())
+    if (publicKey) {
+      setNewSolAddr(publicKey.toBase58());
     }
     async function fetchAllAnimes() {
-  const allAnimes = [];
-  let currentPage = 1;
-  const perPage = 50;
-  let hasNextPage = true;
+      const allAnimes = [];
+      let currentPage = 1;
+      const perPage = 50;
+      let hasNextPage = true;
 
-  const query = `
+      const query = `
     query ($page: Int, $perPage: Int) {
       Page(page: $page, perPage: $perPage) {
         pageInfo {
@@ -486,40 +489,40 @@ const EditProfileContainer = () => {
     }
   `;
 
-  while (hasNextPage) {
-    try {
-      const response = await fetch("https://graphql.anilist.co", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query,
-          variables: { page: currentPage, perPage },
-        }),
-      });
+      while (hasNextPage) {
+        try {
+          const response = await fetch("https://graphql.anilist.co", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query,
+              variables: { page: currentPage, perPage },
+            }),
+          });
 
-      const result = await response.json();
-      const media = result.data.Page.media;
-      const pageInfo = result.data.Page.pageInfo;
+          const result = await response.json();
+          const media = result.data.Page.media;
+          const pageInfo = result.data.Page.pageInfo;
 
-      allAnimes.push(...media);
-      hasNextPage = pageInfo.hasNextPage;
-      currentPage++;
-    } catch (error) {
-      console.error("Error fetching animes:", error);
-      break;
+          allAnimes.push(...media);
+          hasNextPage = pageInfo.hasNextPage;
+          currentPage++;
+        } catch (error) {
+          console.error("Error fetching animes:", error);
+          break;
+        }
+      }
+
+      setAllAnimes(allAnimes);
+      setAnimes(allAnimes); // optional if you're filtering later
     }
-  }
+    async function fetchAnimes() {
+      const allAnimes = [];
+      let currentPage = 1;
+      const perPage = 50;
+      let hasNextPage = true;
 
-  setAllAnimes(allAnimes);
-  setAnimes(allAnimes); // optional if you're filtering later
-}
-async function fetchAnimes() {
-  const allAnimes = [];
-  let currentPage = 1;
-  const perPage = 50;
-  let hasNextPage = true;
-
-  const query = `
+      const query = `
     query ($page: Int, $perPage: Int) {
       Page(page: $page, perPage: $perPage) {
         pageInfo {
@@ -539,44 +542,44 @@ async function fetchAnimes() {
     }
   `;
 
-  while (hasNextPage) {
-    try {
-      const response = await fetch("https://graphql.anilist.co", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query,
-          variables: { page: currentPage, perPage },
-        }),
-      });
+      while (hasNextPage) {
+        try {
+          const response = await fetch("https://graphql.anilist.co", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query,
+              variables: { page: currentPage, perPage },
+            }),
+          });
 
-      const result = await response.json();
-      const media = result.data.Page.media;
-      const pageInfo = result.data.Page.pageInfo;
+          const result = await response.json();
+          const media = result.data.Page.media;
+          const pageInfo = result.data.Page.pageInfo;
 
-      // Map AniList format to Jikan-like format
-      const transformed = media.map((anime) => ({
-        mal_id: anime.id, // Anilist ID used as mal_id
-        title: anime.title.english || anime.title.romaji,
-        images: {
-          jpg: {
-            image_url: anime.coverImage.large,
-          },
-        },
-      }));
+          // Map AniList format to Jikan-like format
+          const transformed = media.map((anime) => ({
+            mal_id: anime.id, // Anilist ID used as mal_id
+            title: anime.title.english || anime.title.romaji,
+            images: {
+              jpg: {
+                image_url: anime.coverImage.large,
+              },
+            },
+          }));
 
-      allAnimes.push(...transformed);
-      hasNextPage = pageInfo.hasNextPage;
-      currentPage++;
-    } catch (error) {
-      console.error("Error fetching animes:", error);
-      break;
+          allAnimes.push(...transformed);
+          hasNextPage = pageInfo.hasNextPage;
+          currentPage++;
+        } catch (error) {
+          console.error("Error fetching animes:", error);
+          break;
+        }
+      }
+
+      setAllAnimes(allAnimes);
+      setAnimes(allAnimes);
     }
-  }
-
-  setAllAnimes(allAnimes);
-  setAnimes(allAnimes);
-}
 
     fetchAnimes();
   }, [userData, publicKey]);
@@ -861,7 +864,7 @@ async function fetchAnimes() {
                 />
                 <span
                   onClick={() => {
-                    setVisible(true)
+                    setVisible(true);
                   }}
                   className="flex flex-row space-x-1 cursor-pointer bg-black text-white px-3 py-2 h-full rounded-r-lg"
                 >
@@ -889,9 +892,6 @@ async function fetchAnimes() {
                     <span
                       key={cb.id}
                       className="relative flex flex-col items-center w-16 rounded-lg"
-                      onClick={() => {
-                        setMediasClicked("animes");
-                      }}
                     >
                       <Image
                         src={cb.collectionid === 2 ? yellowchibi : free}
@@ -1251,9 +1251,9 @@ async function fetchAnimes() {
               >
                 <span className="font-bold">Exporting Private Key</span>
                 <p className="pb-4 text-xs font-medium text-gray-700">
-                  This key unlocks your original Animebook Sol wallet. Keep it secure. Do not share it with anyone.
-                  Exposing your private key may result in the loss of your
-                  assets.
+                  This key unlocks your original Animebook Sol wallet. Keep it
+                  secure. Do not share it with anyone. Exposing your private key
+                  may result in the loss of your assets.
                 </p>
                 <span className="flex flex-row justify-center items-center text-sm text-gray-700 font-medium px-2 py-1 rounded-lg border border-slate-300 bg-slate-100">
                   <svg

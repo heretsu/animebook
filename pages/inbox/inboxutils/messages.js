@@ -590,7 +590,7 @@ const Messages = ({ message }) => {
                       alt="post"
                       height={45}
                       width={45}
-                      className="rounded-full object-cover"
+                      className="h-10 w-10 rounded-full object-cover"
                     />
                   </span>
                   <span className="font-semibold text-sm">
