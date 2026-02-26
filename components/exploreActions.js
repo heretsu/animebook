@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useContext, useCallback, use } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 
 export default function ExploreActions({id, myProfileId, ownerDetails}){

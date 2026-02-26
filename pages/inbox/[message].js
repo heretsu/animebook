@@ -10,7 +10,7 @@ import {
   createRef,
   useLayoutEffect,
 } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../../lib/userContext";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import AttachmentsContainer from "@/components/attachmentsContainer";
 import DbUsers from "@/hooks/dbUsers";

@@ -13,8 +13,10 @@ const nextConfig = {
         hostname: '**',
       }
     ]
+  },
+  turbopack: {
+    root: __dirname,
   }
-  
 }
 
 module.exports = nextConfig

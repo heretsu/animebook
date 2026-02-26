@@ -1,7 +1,7 @@
 import Image from "next/image";
 import PlusIcon from "./plusIcon";
 import { useState, useContext, useEffect } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import DbUsers from "@/hooks/dbUsers";
 import Relationships from "@/hooks/relationships";
 import { useRouter } from "next/router";

@@ -1,3 +1,4 @@
+import Head from "next/head";
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import EditProfileContainer from "@/components/editProfileContainer";
 import supabase from "@/hooks/authenticateUser";
@@ -9,7 +10,7 @@ import Image from "next/image";
 import onePiece from "@/assets/onePiece.jpg";
 import { useContext, useEffect, useRef, useState } from "react";
 import NewCommunityContainer from "@/components/newCommunityContainer";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../../lib/userContext";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import SideBar from "@/components/sideBar";
 import DappLibrary from "@/lib/dappLibrary";
@@ -183,10 +184,10 @@ const Communities = () => {
   const scrollContainerRef = useRef(null);
   const handleScroll = () => {
     if (scrollContainerRef.current) {
-      if(scrollContainerRef.current.scrollLeft === 0){
-        setActiveIndex(0)
-      } else{
-        setActiveIndex(2)
+      if (scrollContainerRef.current.scrollLeft === 0) {
+        setActiveIndex(0);
+      } else {
+        setActiveIndex(2);
       }
     }
   };
@@ -224,6 +225,27 @@ const Communities = () => {
   }, [userData, communities, defaultCommunities]);
   return (
     <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
+      <Head>
+        <title>Communities - Animebook</title>
+        <meta
+          name="description"
+          content="Explore anime, manga, crypto and other communities on Animebook. Join discussions, share posts and connect with fans."
+        />
+        <meta property="og:title" content="Communities - Animebook" />
+        <meta
+          property="og:description"
+          content="Explore anime, manga, crypto and other communities on Animebook."
+        />
+        <meta
+          property="og:image"
+          content="https://animebook.io/og-default.png"
+        />
+        <meta property="og:url" content="https://animebook.io/communities" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Communities - Animebook" />
+        <link rel="canonical" href="https://animebook.io/communities" />
+      </Head>
       <div className="hidden lg:block block z-40 sticky top-0">
         <LargeTopBar relationship={false} />
       </div>
@@ -508,7 +530,7 @@ const Communities = () => {
                 <div
                   id="scrollbar-remove"
                   ref={scrollContainerRef}
-      onScroll={handleScroll}
+                  onScroll={handleScroll}
                   className="h-fit flex flex-row overflow-x-scroll lg:grid gap-2 grid-cols-3"
                 >
                   {loading ? (
@@ -532,8 +554,9 @@ const Communities = () => {
                                 `/communities/${community.name}`.replace(
                                   " ",
                                   "+"
-                                )
-                              , "window");
+                                ),
+                                "window"
+                              );
                             }}
                             className="cursor-pointer flex-shrink-0 lg:flex-shrink rounded-2xl relative flex h-[150px] sm:h-[120px] w-[60vw] lg:w-full"
                           >
@@ -719,8 +742,12 @@ const Communities = () => {
                           key={community.id}
                           onClick={() => {
                             fullPageReload(
-                              `/communities/${community.name}`.replace(" ", "+")
-                            , "window");
+                              `/communities/${community.name}`.replace(
+                                " ",
+                                "+"
+                              ),
+                              "window"
+                            );
                           }}
                           className="cursor-pointer flex-shrink-0 lg:flex-shrink rounded-2xl relative flex h-[150px] sm:h-[120px] w-[60vw] lg:w-full"
                         >
@@ -879,7 +906,11 @@ const Communities = () => {
                           key={community.id}
                           onClick={() => {
                             fullPageReload(
-                              `/communities/${community.name}`.replace(" ", "+"), "window"
+                              `/communities/${community.name}`.replace(
+                                " ",
+                                "+"
+                              ),
+                              "window"
                             );
                           }}
                           className="cursor-pointer flex-shrink-0 lg:flex-shrink rounded-2xl relative flex h-[150px] sm:h-[120px] w-[60vw] lg:w-full"
@@ -1057,8 +1088,8 @@ const Communities = () => {
           )}
         </div>
         <div className="hidden lg:block sticky right-2 top-20 heighto">
-            <LargeRightBar />
-          </div>
+          <LargeRightBar />
+        </div>
       </section>
       {sideBarOpened && <SideBar />}
       <MobileNavBar />

@@ -1,8 +1,13 @@
+import Head from "next/head";
 import NavBar, { MobileNavBar } from "@/components/navBar";
 const TermsOfService = () => {
-
   return (
     <main>
+      <Head>
+        <title>Terms of Service - Animebook</title>
+        <meta name="robots" content="noindex" />
+        <link rel="canonical" href="https://animebook.io/terms-of-service" />
+      </Head>
       <section className="mb-5 flex flex-row space-x-2 w-full">
         <NavBar />
         <div className="text-slate-900 w-full pb-2 pl-2 lg:pl-lPostCustom pr-4 xl:pr-40 mt-4 lg:mt-8 flex flex-col">
@@ -13,7 +18,7 @@ const TermsOfService = () => {
               'Welcome to Animebook.io! By accessing or using our Platform, you agree to these Terms of Service ("Terms"). Please read them carefully:'
             }
           </span>
-          <ol>
+          <ul>
             <li>
               <div className="font-semibold">Acceptance of Terms</div>
               <div>
@@ -85,10 +90,13 @@ const TermsOfService = () => {
                 distribute Platform content without permission.
               </div>
             </li>
+
             <li>
               <span className="font-semibold">Limitation of Liability</span>
               <div>
-                {'Animebook.io is provided "as is" without warranties. We are not liable for:'}
+                {
+                  'Animebook.io is provided "as is" without warranties. We are not liable for:'
+                }
               </div>
               <ul>
                 <li>Losses from Platform use or downtime.</li>
@@ -97,6 +105,27 @@ const TermsOfService = () => {
                   {
                     "Blockchain-related risks (e.g., lost private keys or transaction errors)."
                   }
+                </li>
+              </ul>
+            </li>
+            <li>
+              <span className="font-semibold">Livestreaming</span>
+              <ul>
+                <li>
+                  Users may not stream content that violates these Terms,
+                  including illegal, hateful, or infringing material.
+                </li>
+                <li>
+                  Stream thumbnails are saved and may be visible to other users
+                  on the Platform.
+                </li>
+                <li>
+                  Animebook.io reserves the right to terminate a live stream at
+                  any time for violations of these Terms.
+                </li>
+                <li>
+                  You are solely responsible for the content you broadcast
+                  during a live session.
                 </li>
               </ul>
             </li>
@@ -125,10 +154,17 @@ const TermsOfService = () => {
               <div className="font-semibold">Contact Us</div>
               <span>
                 <span>{"For questions about these Terms, contact us at "}</span>
-                <a className={"underline text-pastelGreen font-medium cursor-default"} href="https://support@animebook.io">support@animebook.io.</a>
+                <a
+                  className={
+                    "underline text-pastelGreen font-medium cursor-default"
+                  }
+                  href="https://support@animebook.io"
+                >
+                  support@animebook.io.
+                </a>
               </span>
             </li>
-          </ol>
+          </ul>
         </div>
       </section>
       <MobileNavBar />

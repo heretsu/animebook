@@ -1,3 +1,4 @@
+import Head from "next/head";
 import { useState, useContext, useEffect, useRef } from "react";
 import Image from "next/image";
 import PlusIcon from "@/components/plusIcon";
@@ -5,7 +6,7 @@ import Posts from "@/components/posts";
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import LargeTopBar, { SmallTopBar } from "@/components/largeTopBar";
 import LargeRightBar from "@/components/largeRightBar";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../../lib/userContext";
 import Relationships from "@/hooks/relationships";
 import DbUsers from "@/hooks/dbUsers";
 import supabase from "@/hooks/authenticateUser";
@@ -31,21 +32,30 @@ import { BiggerUserWithBadge } from "@/components/userWithBadge";
 import customBorder from "@/assets/customborder.png";
 import customBorder2 from "@/assets/customborder2.png";
 import { AvatarWithBorder } from "@/components/AvatarProps";
-
+import yellowchibi from "@/assets/chibis/yellowchibi.png";
+import useFormatNumber from "@/hooks/useFormatNumber";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export const getServerSideProps = async (context) => {
-  const { user } = context.query;
+  const { user } = context.params;
+  const username = user.toLowerCase().trim();
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("username, avatar, bio, ki")
+    .ilike("username", username)
+    .single();
+
+  if (!profile) return { notFound: true };
+
   return {
-    props: {
-      user: user.toLowerCase().trim(),
-    },
+    props: { user: username, profile },
   };
 };
 
-
-export default function User({ user }) {
+export default function User({ user, profile }) {
+  const { formatThisNumber } = useFormatNumber();
   const { getUserFromId } = DappLibrary();
   const { connectToWallet, disconnectWallet } = ConnectionData();
   const { getUsdPrice } = PriceFeedStation();
@@ -149,10 +159,8 @@ export default function User({ user }) {
         setFollowingObject(
           followingObject.filter((f) => f.follower_userid !== followerUserId)
         );
-        console.log("done");
-        console.log("success output: ", res);
       })
-      .catch((e) => console.log(e));
+      .catch((e) => console.log("unfollowthisuser1 error: ", e));
   };
 
   function userSpecificPosts(data) {
@@ -429,13 +437,16 @@ export default function User({ user }) {
 
   useEffect(() => {
     if (!containerRef.current) return;
-
     // Calculate how many 80px width images fit (including spacing)
     const containerWidth = containerRef.current.offsetWidth;
     const itemWidth = 84; // 80px image + 4px spacing
     const maxVisible = Math.ceil(containerWidth / itemWidth);
 
-    setVisibleCount(maxVisible);
+    console.log("aaaa");
+    console.log(containerWidth);
+    console.log(maxVisible);
+
+    setVisibleCount(12);
   }, [postValues]);
 
   const [postsLoaded, setPostsLoaded] = useState(false);
@@ -588,6 +599,43 @@ export default function User({ user }) {
 
   return (
     <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
+      <Head>
+        <title>{`${profile.username} - Animebook`}</title>
+        <meta
+          name="description"
+          content={
+            profile.bio?.slice(0, 160) ||
+            `${profile.username}'s anime profile on Animebook`
+          }
+        />
+        <meta
+          property="og:title"
+          content={`${profile.username} on Animebook`}
+        />
+        <meta
+          property="og:description"
+          content={
+            profile.bio?.slice(0, 160) ||
+            `${profile.username}'s anime profile on Animebook`
+          }
+        />
+        <meta property="og:image" content={profile.avatar} />
+        <meta
+          property="og:url"
+          content={`https://animebook.io/profile/${profile.username}`}
+        />
+        <meta property="og:type" content="profile" />
+        <meta name="twitter:card" content="summary" />
+        <meta
+          name="twitter:title"
+          content={`${profile.username} on Animebook`}
+        />
+        <meta name="twitter:image" content={profile.avatar} />
+        <link
+          rel="canonical"
+          href={`https://animebook.io/profile/${profile.username}`}
+        />
+      </Head>
       <div className="hidden lg:block block z-40 sticky top-0">
         <LargeTopBar relationship={true} />
       </div>
@@ -1590,7 +1638,7 @@ export default function User({ user }) {
                         ) : mediasClicked === "chibis" ? (
                           <span className="w-full flex justify-center pt-2">
                             <span className="w-full grid grid-cols-2 gap-2 py-2 px-1">
-                              {currentUserChibis.slice(0, 1).map((cb) => (
+                              {currentUserChibis.map((cb) => (
                                 <span
                                   key={cb.id}
                                   className="relative flex flex-col items-center w-28 rounded-lg"
@@ -1599,7 +1647,9 @@ export default function User({ user }) {
                                   }}
                                 >
                                   <Image
-                                    src={free}
+                                    src={
+                                      cb.collectionid === 2 ? yellowchibi : free
+                                    }
                                     alt="chibi"
                                     className="rounded-lg w-28 h-28 object-cover"
                                   />
@@ -1611,85 +1661,95 @@ export default function User({ user }) {
                           ""
                         )}
                       </span>
-                      {postValues.some((p)=>p.media) && <div
-                        ref={containerRef}
-                        className="hidden lg:flex w-full flex-row items-center space-x-0.5 overflow-hidden"
-                      >
-                        {postValues.filter((p)=>!p.repostAuthor)
-                          ?.slice(0, visibleCount - 1)
-                          .map((pst, index) => {
-                            if (!pst?.media) return null;
-                            const isVideo = /\.(mp4|mov|3gp)$/i.test(pst.media);
+                      {postValues.some((p) => !p.repostAuthor && p.media) && (
+                        <div
+                          ref={containerRef}
+                          className="hidden lg:flex w-full flex-row items-center space-x-0.5 overflow-hidden"
+                        >
+                          {postValues
+                            .filter((p) => !p.repostAuthor && p.media)
+                            ?.slice(0, visibleCount - 1)
+                            .map((pst, index) => {
+                              if (!pst?.media) return null;
+                              const isVideo = /\.(mp4|mov|3gp)$/i.test(
+                                pst.media
+                              );
 
-                            return (
-                              <span
-                                onClick={() => {
-                                  if (pst.media) {
-                                    setCurrentPost(pst);
-                                    setDeskMode(true);
-                                  }
-                                }}
-                                key={pst.id}
-                                className="flex h-20 w-[20%] flex-grow"
-                              >
-                                {isVideo ? (
-                                  <video
-                                    className="w-[80px] h-[80px] object-cover rounded"
-                                    src={pst.media}
-                                    crossOrigin="anonymous"
-                                  />
+                              return (
+                                <span
+                                  onClick={() => {
+                                    if (pst.media) {
+                                      setCurrentPost(pst);
+                                      setDeskMode(true);
+                                    }
+                                  }}
+                                  key={pst.id}
+                                  className="flex w-[80px] h-[80px]"
+                                >
+                                  {isVideo ? (
+                                    <video
+                                      className="w-[80px] h-[80px] object-cover rounded"
+                                      src={pst.media}
+                                      crossOrigin="anonymous"
+                                    />
+                                  ) : (
+                                    <Image
+                                      src={pst.media}
+                                      alt={"post"}
+                                      width={80}
+                                      height={80}
+                                      className="rounded"
+                                    />
+                                  )}
+                                </span>
+                              );
+                            })}
+
+                          {postValues?.filter((p) => !p.repostAuthor && p.media)
+                            .length > visibleCount && (
+                            <span
+                              onClick={() => setMediasClicked("posts")}
+                              className="cursor-pointer relative flex h-[80px] w-[80px] rounded items-center justify-center text-white font-bold text-lg overflow-hidden"
+                            >
+                              {(() => {
+                                const nextMedia = getNextMedia(
+                                  postValues?.filter(
+                                    (p) => !p.repostAuthor && p.media
+                                  ),
+                                  visibleCount - 1
+                                );
+                                const isVideo =
+                                  nextMedia &&
+                                  /\.(mp4|mov|3gp)$/i.test(nextMedia);
+
+                                return nextMedia ? (
+                                  isVideo ? (
+                                    <div className="absolute inset-0 bg-gray-500 blur-md"></div>
+                                  ) : (
+                                    <Image
+                                      src={nextMedia}
+                                      alt="blurred background"
+                                      width={80}
+                                      height={80}
+                                      className="absolute inset-0 w-full h-full object-cover blur-md brightness-75"
+                                    />
+                                  )
                                 ) : (
-                                  <Image
-                                    src={pst.media}
-                                    alt={"post"}
-                                    width={80}
-                                    height={80}
-                                    className="rounded"
-                                  />
+                                  <div className="absolute inset-0 bg-gray-500"></div>
+                                );
+                              })()}
+
+                              {/* Number Overlay */}
+                              <span className="font-semibold text-md relative z-10">
+                                +
+                                {formatThisNumber(
+                                  postValues.length - (visibleCount - 1)
                                 )}
                               </span>
-                            );
-                          })}
-
-                        {postValues?.length > visibleCount && (
-                          <span
-                            onClick={() => setMediasClicked("posts")}
-                            className="cursor-pointer relative flex h-20 w-[20%] flex-grow rounded items-center justify-center text-white font-bold text-lg overflow-hidden"
-                          >
-                            {/* Blurred Background Handling Image, Video, or Fallback */}
-                            {(() => {
-                              const nextMedia = getNextMedia(
-                                postValues,
-                                visibleCount - 1
-                              );
-                              const isVideo =
-                                nextMedia &&
-                                /\.(mp4|mov|3gp)$/i.test(nextMedia);
-
-                              return nextMedia ? (
-                                isVideo ? (
-                                  <div className="absolute inset-0 bg-gray-500 blur-md"></div>
-                                ) : (
-                                  <Image
-                                    src={nextMedia}
-                                    alt="blurred background"
-                                    width={80}
-                                    height={80}
-                                    className="absolute inset-0 w-full h-full object-cover blur-md brightness-75"
-                                  />
-                                )
-                              ) : (
-                                <div className="absolute inset-0 bg-gray-500"></div>
-                              );
-                            })()}
-
-                            {/* Number Overlay */}
-                            <span className="relative z-10">
-                              +{postValues.length - (visibleCount - 1)}
                             </span>
-                          </span>
-                        )}
-                      </div>}
+                          )}
+                        </div>
+                      )}
                     </>
                   )}
                   {/* <span className="text-white w-full h-fit flex flex-row items-center space-x-1 font-semibold">
@@ -1936,7 +1996,7 @@ export default function User({ user }) {
                     )
                   ) : userPostValues && userPostValues.length > 0 ? (
                     <span className="hidden lg:block">
-                    <Posts / > 
+                      <Posts />
                     </span>
                   ) : (
                     <span className="w-full text-gray-600 text-center">
@@ -2162,10 +2222,12 @@ export default function User({ user }) {
       )}
 
       {openPreview && contentToDisplay ? (
-        <span onClick={()=>{
-          setOpenPreview(false);
-              setContentToDisplay(null);
-        }}>
+        <span
+          onClick={() => {
+            setOpenPreview(false);
+            setContentToDisplay(null);
+          }}
+        >
           <PopupModal
             success={"11"}
             avatar={userBasicInfo.avatar}
@@ -2183,10 +2245,11 @@ export default function User({ user }) {
           ></div>
         </span>
       ) : openPreview ? (
-        <span onClick={()=>{
-          setOpenPreview(false);
-        }}>
-        
+        <span
+          onClick={() => {
+            setOpenPreview(false);
+          }}
+        >
           <PopupModal
             success={"11"}
             avatar={userBasicInfo.avatar}

@@ -1,3 +1,4 @@
+import Head from "next/head";
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import supabase from "@/hooks/authenticateUser";
 import { useRouter } from "next/router";
@@ -8,7 +9,7 @@ import onePiece from "@/assets/onePiece.jpg";
 import CommunityPosts from "@/components/communityPosts";
 import CommunityPostCard from "@/components/communityPostCard";
 import { useEffect, useContext, useState } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../../lib/userContext";
 import PostContainer from "@/components/postContainer";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import CommunityCommentItem from "@/components/communityCommentItem";
@@ -21,16 +22,29 @@ import SmallPostContainer from "@/components/smallPostContainer";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export const getServerSideProps = async (context) => {
-  const { community } = context.query;
+  const { community } = context.params;
+
+  const communityName = community.replace(" ", "+").toLowerCase().split("&")[0];
+
+  const { data } = await supabase
+    .from("communities")
+    .select("name, bio, avatar, cover")
+    .ilike("name", communityName)
+    .single();
+
+  if (!data) return { notFound: true };
 
   return {
-    props: {
-      community,
-    },
+    props: { community, communityData: data },
   };
 };
 
-const Community = ({ community }) => {
+const Community = ({ community, communityData }) => {
+  const communityDisplayName = communityData.name
+    .split("+")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+    
   const { fullPageReload } = PageLoadOptions();
   const {
     userNumId,
@@ -156,7 +170,7 @@ const Community = ({ community }) => {
     const { data } = await supabase
       .from("communities")
       .select("*")
-      .eq("name", community.replace(" ", "+").toLowerCase().split("&")[0]);
+      .ilike("name", community.replace(" ", "+").toLowerCase().split("&")[0]);
     // .eq("name", community.split("&")[0].toLowerCase());
 
     if (!data) {
@@ -255,6 +269,19 @@ const Community = ({ community }) => {
 
   return (
     <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
+      <Head>
+        <title>{`${communityDisplayName} - Animebook Community`}</title>
+        <meta name="description" content={communityData.description?.slice(0, 160) || `Join the ${communityDisplayName} community on Animebook`} />
+        <meta property="og:title" content={`${communityDisplayName} on Animebook`} />
+        <meta property="og:description" content={communityData.description?.slice(0, 160) || `Join the ${communityDisplayName} community on Animebook`} />
+        <meta property="og:image" content={communityData.cover || communityData.avatar} />
+        <meta property="og:url" content={`https://animebook.io/communities/${community}`} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${communityDisplayName} on Animebook`} />
+        <meta name="twitter:image" content={communityData.cover || communityData.avatar} />
+        <link rel="canonical" href={`https://animebook.io/communities/${community.split("&")[0]}`} />
+      </Head>
       <div className="hidden lg:block block z-40 sticky top-0">
         <LargeTopBar relationship={false} />
       </div>

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import PlusIcon from "./plusIcon";
 import { useContext, useState } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 

@@ -3,7 +3,7 @@ import CommentConfig from "./commentConfig";
 import PlusIcon from "./plusIcon";
 import { useEffect, useState, useContext, useRef } from "react";
 import supabase from "@/hooks/authenticateUser";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import Relationships from "@/hooks/relationships";
 import PostInViewport from "@/lib/postInViewport";
 import DappLibrary from "@/lib/dappLibrary";
@@ -361,17 +361,17 @@ export default function PostCard({
           .then(async () => {
             setReentry(true);
             // fetchLikes();
-            if (users.id !== myProfileId) {
-              await supabase
-                .from("users")
-                .update({
-                  // ki:
-                  //   parseFloat(users.ki) !== 0
-                  //     ? parseFloat(users.ki) - 0.08
-                  //     : 0,
-                })
-                .eq("id", users.id);
-            }
+            // if (users.id !== myProfileId) {
+            //   await supabase
+            //     .from("users")
+            //     .update({
+            //       // ki:
+            //       //   parseFloat(users.ki) !== 0
+            //       //     ? parseFloat(users.ki) - 0.08
+            //       //     : 0,
+            //     })
+            //     .eq("id", users.id);
+            // }
           });
       } else {
         setLiked(true);
@@ -1835,13 +1835,13 @@ export default function PostCard({
                   </span>
                 )}
                 <span
-                  className={`w-full flex flex-row justify-between items-center pr-2 border rounded-2xl ${
+                  className={`w-full overflow-hidden flex flex-row justify-between items-center pr-4 border rounded-2xl ${
                     darkMode
                       ? "bg-[#27292F] border-[#32353C]"
                       : "bg-[#F9F9F9] border-[#EEEDEF]"
                   }`}
                 >
-                  {showPacks ? <span className="pr-1"><StickerPicker onSelect={sendSelectedSticker}/></span> : <input
+                  {showPacks ? <span className="pr-1" style={{width: "90%"}}><StickerPicker onSelect={sendSelectedSticker}/></span> : <input
                     ref={
                       router.pathname === "/[username]/post/[postid]"
                         ? inputRef
@@ -1963,7 +1963,7 @@ export default function PostCard({
                     </label>
                   ))}
                 </span>
-                <span
+                {!showPacks && <span
                   onClick={() => {
                     router.pathname === "/[username]/post/[postid]"
                       ? postGlobalComment()
@@ -1991,7 +1991,7 @@ export default function PostCard({
                       />
                     </g>
                   </svg>
-                </span>
+                </span>}
               </div>
             }
             {randomComment && commentLikes && router.pathname === "/home" && (

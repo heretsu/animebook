@@ -1,7 +1,7 @@
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import Relationships from "@/hooks/relationships";
 import NotifCard from "@/components/notifCard";

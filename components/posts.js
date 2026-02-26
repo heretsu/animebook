@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext, useCallback } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import PostCard from "./postCard";
 import DbUsers from "@/hooks/dbUsers";
 import Spinner from "./spinner";

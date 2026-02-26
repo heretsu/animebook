@@ -3,7 +3,7 @@ import Head from "next/head";
 import LargeRightBar from "@/components/largeRightBar";
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import { useContext, useState, useEffect } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import Posts from "@/components/posts";
 import DbUsers from "@/hooks/dbUsers";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
@@ -53,7 +53,10 @@ const Search = () => {
 
       uniqueTags.forEach((tag) => {
         allTagsCount[tag] = (allTagsCount[tag] || 0) + 1;
-        if (post.media && imageExtensions.some(ext => post.media.toLowerCase().endsWith(ext))) {
+        if (
+          post.media &&
+          imageExtensions.some((ext) => post.media.toLowerCase().endsWith(ext))
+        ) {
           if (!allTagsPhotos[tag]) {
             allTagsPhotos[tag] = []; // Initialize array if not present
           }
@@ -97,7 +100,8 @@ const Search = () => {
       }
       const foundPosts = originalPostValues
         ? originalPostValues.filter((post) => {
-            return post?.content?.trim()
+            return post?.content
+              ?.trim()
               .toLowerCase()
               .includes(e.target.value.trim().toLowerCase());
           })
@@ -156,30 +160,24 @@ const Search = () => {
   return (
     <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
       <Head>
-        <title>Animebook Search</title>
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/assets/animeBcc.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/assets/animeBcc.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/assets/animeBcc.png"
-        />
-        <meta name="theme-color" content="#000" />
+        <title>Search - Animebook</title>
         <meta
           name="description"
-          content="Search trending topics and mangas on Animebook"
+          content="Search trending topics, hashtags, posts and creators on Animebook."
         />
-        <meta property="og:image" content="/assets/animeBcc.png" />
+        <meta property="og:title" content="Search - Animebook" />
+        <meta
+          property="og:description"
+          content="Search trending topics, hashtags, posts and creators on Animebook."
+        />
+        <meta
+          property="og:image"
+          content="https://animebook.io/og-default.png"
+        />
+        <meta property="og:url" content="https://animebook.io/search" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="canonical" href="https://animebook.io/search" />
       </Head>
 
       <div className="hidden lg:block block z-40 sticky top-0">
@@ -345,43 +343,67 @@ const Search = () => {
                             tag[1]
                           } ${tag[1] > 1 ? "posts" : "post"}`}</span>
                         </span>
-                        {hashtagPhotos && hashtagPhotos[tag[0]]&& hashtagPhotos[tag[0]][hashtagPhotos[tag[0]]] && <span className="relative h-12 w-12 flex">
-                          <Image
-                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 1]}
-                            alt="t"
-                            width={80}
-                            height={80}
-                            className="rounded-xl absolute left-0"
-                          />
-                          <Image
-                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 2]}
-                            alt="t"
-                            width={80}
-                            height={80}
-                            className="rounded-xl absolute left-4" 
-                          />
-                          <Image
-                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 3]}
-                            alt="t"
-                            width={80}
-                            height={80}
-                            className="rounded-xl absolute left-10" 
-                          />
-                          <Image
-                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 4]}
-                            alt="t"
-                            width={80}
-                            height={80}
-                            className="rounded-xl absolute left-20" 
-                          />
-                          <Image
-                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 5]}
-                            alt="t"
-                            width={80}
-                            height={80}
-                            className="rounded-xl absolute left-28"
-                          />
-                        </span>}
+                        {hashtagPhotos &&
+                          hashtagPhotos[tag[0]] &&
+                          hashtagPhotos[tag[0]][hashtagPhotos[tag[0]]] && (
+                            <span className="relative h-12 w-12 flex">
+                              <Image
+                                src={
+                                  hashtagPhotos[tag[0]][
+                                    hashtagPhotos[tag[0]].length - 1
+                                  ]
+                                }
+                                alt="t"
+                                width={80}
+                                height={80}
+                                className="rounded-xl absolute left-0"
+                              />
+                              <Image
+                                src={
+                                  hashtagPhotos[tag[0]][
+                                    hashtagPhotos[tag[0]].length - 2
+                                  ]
+                                }
+                                alt="t"
+                                width={80}
+                                height={80}
+                                className="rounded-xl absolute left-4"
+                              />
+                              <Image
+                                src={
+                                  hashtagPhotos[tag[0]][
+                                    hashtagPhotos[tag[0]].length - 3
+                                  ]
+                                }
+                                alt="t"
+                                width={80}
+                                height={80}
+                                className="rounded-xl absolute left-10"
+                              />
+                              <Image
+                                src={
+                                  hashtagPhotos[tag[0]][
+                                    hashtagPhotos[tag[0]].length - 4
+                                  ]
+                                }
+                                alt="t"
+                                width={80}
+                                height={80}
+                                className="rounded-xl absolute left-20"
+                              />
+                              <Image
+                                src={
+                                  hashtagPhotos[tag[0]][
+                                    hashtagPhotos[tag[0]].length - 5
+                                  ]
+                                }
+                                alt="t"
+                                width={80}
+                                height={80}
+                                className="rounded-xl absolute left-28"
+                              />
+                            </span>
+                          )}
                       </div>
                     );
                   })}
@@ -408,43 +430,67 @@ const Search = () => {
                             tag[1]
                           } ${tag[1] > 1 ? "posts" : "post"}`}</span>
                         </span>
-                        {tag[1] > 5 && hashtagPhotos && hashtagPhotos[tag[0]] && <span className="relative h-12 w-12 flex">
-                          <Image
-                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 1]}
-                            alt="t"
-                            width={80}
-                            height={80}
-                            className="rounded-xl absolute left-0"
-                          />
-                          <Image
-                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 2]}
-                            alt="t"
-                            width={80}
-                            height={80}
-                            className="rounded-xl absolute left-4" 
-                          />
-                          <Image
-                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 3]}
-                            alt="t"
-                            width={80}
-                            height={80}
-                            className="rounded-xl absolute left-10" 
-                          />
-                          <Image
-                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 4]}
-                            alt="t"
-                            width={80}
-                            height={80}
-                            className="rounded-xl absolute left-20" 
-                          />
-                          <Image
-                            src={hashtagPhotos[tag[0]][hashtagPhotos[tag[0]].length - 5]}
-                            alt="t"
-                            width={80}
-                            height={80}
-                            className="rounded-xl absolute left-28"
-                          />
-                        </span>}
+                        {tag[1] > 5 &&
+                          hashtagPhotos &&
+                          hashtagPhotos[tag[0]] && (
+                            <span className="relative h-12 w-12 flex">
+                              <Image
+                                src={
+                                  hashtagPhotos[tag[0]][
+                                    hashtagPhotos[tag[0]].length - 1
+                                  ]
+                                }
+                                alt="t"
+                                width={80}
+                                height={80}
+                                className="rounded-xl absolute left-0"
+                              />
+                              <Image
+                                src={
+                                  hashtagPhotos[tag[0]][
+                                    hashtagPhotos[tag[0]].length - 2
+                                  ]
+                                }
+                                alt="t"
+                                width={80}
+                                height={80}
+                                className="rounded-xl absolute left-4"
+                              />
+                              <Image
+                                src={
+                                  hashtagPhotos[tag[0]][
+                                    hashtagPhotos[tag[0]].length - 3
+                                  ]
+                                }
+                                alt="t"
+                                width={80}
+                                height={80}
+                                className="rounded-xl absolute left-10"
+                              />
+                              <Image
+                                src={
+                                  hashtagPhotos[tag[0]][
+                                    hashtagPhotos[tag[0]].length - 4
+                                  ]
+                                }
+                                alt="t"
+                                width={80}
+                                height={80}
+                                className="rounded-xl absolute left-20"
+                              />
+                              <Image
+                                src={
+                                  hashtagPhotos[tag[0]][
+                                    hashtagPhotos[tag[0]].length - 5
+                                  ]
+                                }
+                                alt="t"
+                                width={80}
+                                height={80}
+                                className="rounded-xl absolute left-28"
+                              />
+                            </span>
+                          )}
                       </div>
                     );
                   })}

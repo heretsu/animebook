@@ -1,4 +1,4 @@
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import { useContext, useState } from "react";
 
 const ShareSystem = ({ postUrl, custom }) => {

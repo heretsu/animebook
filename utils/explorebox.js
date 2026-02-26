@@ -5,7 +5,7 @@ import CommentConfig from "@/components/commentConfig";
 import PopupModal from "@/components/popupModal";
 import CommentItem from "@/components/commentItem";
 import supabase from "@/hooks/authenticateUser";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import DappLibrary from "@/lib/dappLibrary";
 import ShareSystem from "@/components/shareSystem";
 

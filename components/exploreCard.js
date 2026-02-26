@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useEffect, useState, useContext, useRef } from "react";
 import supabase from "@/hooks/authenticateUser";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import { useRouter } from "next/router";
 import ReactPlayer from "react-player";
 import PageLoadOptions from "@/hooks/pageLoadOptions";

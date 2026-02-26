@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import DappLibrary from "@/lib/dappLibrary";
 import supabase from "@/hooks/authenticateUser";
 

@@ -1,5 +1,6 @@
+import Head from "next/head";
 import { useState, useContext, useEffect, useRef } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../../../lib/userContext";
 import Image from "next/image";
 import CommentItem from "@/components/commentItem";
 import supabase from "@/hooks/authenticateUser";
@@ -13,15 +14,33 @@ import PopupModal from "@/components/popupModal";
 import LargeRightBar from "@/components/largeRightBar";
 
 export const getServerSideProps = async (context) => {
-  const { postid } = context.query;
+  const { postid } = context.params;
+
+  const { data: post } = await supabase
+    .from("posts")
+    .select("id, content, media, created_at, users(username, avatar)")
+    .eq("id", postid)
+    .single();
+
+  if (!post) return { notFound: true };
+
   return {
-    props: {
-      comments: postid,
-    },
+    props: { comments: postid, postData: post },
   };
 };
 
-export default function Postid({ comments }) {
+export default function Postid({ comments, postData }) {
+  const description =
+    postData?.content?.slice(0, 160) ||
+    `A post by ${postData?.users?.username} on Animebook`;
+    const image = 
+    postData?.media && 
+    !postData.media.endsWith("mp4") && 
+    !postData.media.endsWith("mov") &&
+    !postData.media.endsWith("3gp")
+      ? postData.media
+      : postData?.users?.avatar || "https://animebook.io/og-default.png";
+
   const videoRef = useRef(null);
   const router = useRouter();
   const postid = comments;
@@ -41,9 +60,9 @@ export default function Postid({ comments }) {
     newListOfComments,
     setNewListOfComments,
     darkMode,
-    setAllPolls
+    setAllPolls,
   } = useContext(UserContext);
-  const [valuesLoaded, setValuesLoaded] = useState(false)
+  const [valuesLoaded, setValuesLoaded] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [commentPostLoading, setCommentPostLoading] = useState(false);
   const [postReferenced, setPostReferenced] = useState(null);
@@ -91,10 +110,10 @@ export default function Postid({ comments }) {
   };
 
   useEffect(() => {
-    if (!valuesLoaded){
+    if (!valuesLoaded) {
       fetchSinglePostComments();
       fetchAllPolls().then((pls) => setAllPolls(pls));
-      setValuesLoaded(true)
+      setValuesLoaded(true);
     }
     if (newListOfComments) {
       setCommentValues(newListOfComments);
@@ -104,6 +123,32 @@ export default function Postid({ comments }) {
 
   return (
     <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
+      <Head>
+        <title>{`${postData?.users?.username} on Animebook`}</title>
+        <meta name="description" content={description} />
+        <meta
+          property="og:title"
+          content={`${postData?.users?.username} on Animebook`}
+        />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={image} />
+        <meta
+          property="og:url"
+          content={`https://animebook.io/${postData?.users?.username}/post/${postid}`}
+        />
+        <meta property="og:type" content="article" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content={`${postData?.users?.username} on Animebook`}
+        />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={image} />
+        <link
+          rel="canonical"
+          href={`https://animebook.io/${postData?.users?.username}/post/${postid}`}
+        />
+      </Head>
       <div className="hidden lg:block block z-40 sticky top-0">
         <LargeTopBar relationship={false} />
       </div>
@@ -199,7 +244,6 @@ export default function Postid({ comments }) {
                   ispoll={postReferenced.ispoll}
                 />
               </span>
-
 
               <span className="text-sm px-3 flex flex-row justify-between">
                 <span

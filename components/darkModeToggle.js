@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 export default function DarkModeToggle() {

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /inbox/
+Disallow: /settings/
+Disallow: /notifications/
+
+Sitemap: https://animebook.io/sitemap.xml

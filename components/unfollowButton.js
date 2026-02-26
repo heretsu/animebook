@@ -1,7 +1,7 @@
 import supabase from "@/hooks/authenticateUser";
 import DappLibrary from "@/lib/dappLibrary";
 import { useContext } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import { useRouter } from "next/router";
 import Relationships from "@/hooks/relationships";
 

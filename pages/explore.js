@@ -1,5 +1,6 @@
+import Head from "next/head";
 import { useEffect, useRef, useState, useContext, useCallback } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import Image from "next/image";
@@ -758,6 +759,17 @@ export default function Explore() {
   const toggleMute = () => setIsMuted((prev) => !prev);
   return (
     <>
+    <Head>
+      <title>Explore - Animebook</title>
+      <meta name="description" content="Explore trending anime videos, posts and creators on Animebook." />
+      <meta property="og:title" content="Explore - Animebook" />
+      <meta property="og:description" content="Explore trending anime videos, posts and creators on Animebook." />
+      <meta property="og:image" content="https://animebook.io/og-default.png" />
+      <meta property="og:url" content="https://animebook.io/explore" />
+      <meta property="og:type" content="website" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <link rel="canonical" href="https://animebook.io/explore" />
+    </Head>
       <div className="w-full xl:hidden">
         {selectedIndex !== null ? <div
         id="scrollbar-remove"

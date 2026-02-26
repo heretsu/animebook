@@ -2,7 +2,7 @@ import LargeTopBar from "@/components/largeTopBar";
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import PostContainer from "@/components/postContainer";
 import SmallPostContainer from "@/components/smallPostContainer";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import { useContext } from "react";
 
 const CreatePostPage = () => {

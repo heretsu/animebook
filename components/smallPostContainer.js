@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import supabase from "@/hooks/authenticateUser";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import Spinner from "./spinner";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import GifPicker from "./gifPicker";

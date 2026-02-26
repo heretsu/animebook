@@ -1,3 +1,4 @@
+import Head from "next/head";
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import LargeTopBar, { SmallTopBar } from "@/components/largeTopBar";
 import LargeRightBar from "@/components/largeRightBar";
@@ -5,7 +6,7 @@ import Posts from "@/components/posts";
 import Stories from "@/components/stories";
 import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import { useRouter } from "next/router";
 import CommentCard from "@/components/commentCard";
@@ -225,6 +226,17 @@ export default function Home() {
 
   return (
     <main className={`${darkMode ? 'bg-[#17181C]' : 'bg-[#F9F9F9]'}`}>
+      <Head>
+      <title>Home - Animebook</title>
+      <meta name="description" content="Trending anime videos, posts and creators on Animebook." />
+      <meta property="og:title" content="Home - Animebook" />
+      <meta property="og:description" content="Trending anime videos, posts and creators on Animebook." />
+      <meta property="og:image" content="https://animebook.io/og-default.png" />
+      <meta property="og:url" content="https://animebook.io/home" />
+      <meta property="og:type" content="website" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <link rel="canonical" href="https://animebook.io/home" />
+    </Head>
       <div className="hidden lg:block block z-40 sticky top-0">
         <LargeTopBar relationship={true} />
       </div>

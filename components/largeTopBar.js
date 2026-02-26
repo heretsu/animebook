@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import Relationships from "@/hooks/relationships";
 import DbUsers from "@/hooks/dbUsers";
 import { useRouter } from "next/router";
@@ -11,6 +11,7 @@ import newLogo from "../assets/newLogo.png";
 import { AvatarWithBorder } from "./AvatarProps";
 import supabase from "@/hooks/authenticateUser";
 import ConnectionData from "@/lib/connectionData";
+import { useTranslation } from "react-i18next";
 
 export const TopBarObjects = () => {
   const { fullPageReload } = PageLoadOptions();
@@ -227,6 +228,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
     setOpenPremium,
     currentCommunity,
   } = useContext(UserContext);
+  const { t } = useTranslation();
 
   const router = useRouter();
   const {
@@ -625,6 +627,7 @@ export const SmallTopBar = ({ middleTab, relationship }) => {
 
 const LargeTopBar = ({ relationship }) => {
   const { disconnectWallet } = ConnectionData();
+  const { t } = useTranslation();
 
   const logOut = async () => {
     try {
@@ -1254,6 +1257,180 @@ const LargeTopBar = ({ relationship }) => {
               />
             </svg>
             <span>Messages</span>
+          </span>
+        ) : router.pathname === "/live" ? (
+          <span className="flex flex-row space-x-1 items-center font-medium text-normal">
+            <svg
+                fill={ darkMode
+                    ? "white"
+                    : "#5d6879"
+                }
+                width="20px"
+                height="20px"
+                viewBox="0 0 24 24"
+                id="video-recorder-2"
+                data-name="Flat Color"
+                xmlns="http://www.w3.org/2000/svg"
+                className="icon flat-color"
+              >
+                <path
+                  id="secondary"
+                  d="M21.11,6.34a2,2,0,0,0-1.88-.18L14.62,8.08A1,1,0,0,0,14,9v6a1,1,0,0,0,.62.92l4.61,1.92A1.9,1.9,0,0,0,20,18a1.94,1.94,0,0,0,1.11-.34A2,2,0,0,0,22,16V8A2,2,0,0,0,21.11,6.34Z"
+                  style={{fill: darkMode ? 'white' : '#5d6879',
+                  }}
+                />
+                <rect
+                  id="primary"
+                  x={2}
+                  y={5}
+                  width={14}
+                  height={14}
+                  rx={2}
+                  style={{fill: darkMode ? 'white' : '#5d6879',
+                  }}
+                />
+              </svg>
+            <span>Streams</span>
+          </span>
+        ) : router.pathname === "/stream" ? (
+          <span className="flex flex-row space-x-1 items-center font-medium text-normal">
+            <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                id="signal"
+                className="icon glyph"
+              >
+                <path
+                  d="M12,11.36a2,2,0,1,1,2-2A2,2,0,0,1,12,11.36Zm0-2h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Z"
+                  style={{
+                    fill: darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M12,22a1,1,0,0,1-1-1V11.36a1,1,0,0,1,2,0V21A1,1,0,0,1,12,22Z"
+                  style={{
+                    fill: darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M15.54,13.9a1,1,0,0,1-.71-1.71,4,4,0,0,0,0-5.65,1,1,0,0,1,0-1.42,1,1,0,0,1,1.41,0,6,6,0,0,1,0,8.49A1,1,0,0,1,15.54,13.9Z"
+                  style={{
+                    fill: darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M8.46,13.9a1,1,0,0,1-.7-.29,6,6,0,0,1,0-8.49,1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.42,4,4,0,0,0,0,5.65,1,1,0,0,1-.71,1.71Z"
+                  style={{
+                    fill: darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M18.36,16.73a1,1,0,0,1-.7-1.71,8,8,0,0,0,0-11.31,1,1,0,0,1,0-1.42,1,1,0,0,1,1.41,0,10,10,0,0,1,0,14.15A1,1,0,0,1,18.36,16.73Z"
+                  style={{
+                    fill: darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M5.64,16.73a1,1,0,0,1-.71-.29,10,10,0,0,1,0-14.15,1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.42A8,8,0,0,0,6.34,15a1,1,0,0,1-.7,1.71Z"
+                  style={{
+                    fill: darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+              </svg>
+            <span>Stream Manager</span>
+          </span>
+        ) : router.pathname === "/stream-analytics" ? (
+          <span className="flex flex-row space-x-1 items-center font-medium text-normal">
+            <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                id="signal"
+                className="icon glyph"
+              >
+                <path
+                  d="M12,11.36a2,2,0,1,1,2-2A2,2,0,0,1,12,11.36Zm0-2h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Zm0,0h0Z"
+                  style={{
+                    fill:
+                      router.pathname == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M12,22a1,1,0,0,1-1-1V11.36a1,1,0,0,1,2,0V21A1,1,0,0,1,12,22Z"
+                  style={{
+                    fill:
+                      router.pathname == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M15.54,13.9a1,1,0,0,1-.71-1.71,4,4,0,0,0,0-5.65,1,1,0,0,1,0-1.42,1,1,0,0,1,1.41,0,6,6,0,0,1,0,8.49A1,1,0,0,1,15.54,13.9Z"
+                  style={{
+                    fill:
+                      router.pathname == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M8.46,13.9a1,1,0,0,1-.7-.29,6,6,0,0,1,0-8.49,1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.42,4,4,0,0,0,0,5.65,1,1,0,0,1-.71,1.71Z"
+                  style={{
+                    fill:
+                      router.pathname == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M18.36,16.73a1,1,0,0,1-.7-1.71,8,8,0,0,0,0-11.31,1,1,0,0,1,0-1.42,1,1,0,0,1,1.41,0,10,10,0,0,1,0,14.15A1,1,0,0,1,18.36,16.73Z"
+                  style={{
+                    fill:
+                      router.pathname == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+                <path
+                  d="M5.64,16.73a1,1,0,0,1-.71-.29,10,10,0,0,1,0-14.15,1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.42A8,8,0,0,0,6.34,15a1,1,0,0,1-.7,1.71Z"
+                  style={{
+                    fill:
+                      router.pathname == "/stream"
+                        ? "#EA334E"
+                        : darkMode
+                        ? "white"
+                        : "#5d6879",
+                  }}
+                />
+              </svg>
+            <span>Stream Analytics</span>
           </span>
         ) : (
           ""

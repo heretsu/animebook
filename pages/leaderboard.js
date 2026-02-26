@@ -1,9 +1,10 @@
+import Head from "next/head";
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import animeBookLogo from "@/assets/animeBookLogo.png";
 import animationData from "@/assets/kianimation.json";
 import Image from "next/image";
 import { useEffect, useState, useContext, useRef } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import dynamic from "next/dynamic";
 import LargeTopBar, { SmallTopBar } from "@/components/largeTopBar";
@@ -434,7 +435,18 @@ const Leaderboard = () => {
   }, [allUsers, loadedData]);
 
   return (
-    sortedUsers &&
+    <><Head>
+    <title>Leaderboard - Animebook</title>
+    <meta name="description" content="See the top anime creators, KI earners and MVPs on Animebook. Compete for weekly awards and climb the ranks." />
+    <meta property="og:title" content="Leaderboard - Animebook" />
+    <meta property="og:description" content="See the top anime creators, KI earners and MVPs on Animebook." />
+    <meta property="og:image" content="https://animebook.io/og-default.png" />
+    <meta property="og:url" content="https://animebook.io/leaderboard" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://animebook.io/leaderboard" />
+  </Head>
+    {sortedUsers &&
     userData && (
       <main className={`${darkMode ? "bg-[#17181C]" : "bg-[#F9F9F9]"}`}>
         <div className="hidden lg:block block z-40 sticky top-0">
@@ -1612,7 +1624,9 @@ const Leaderboard = () => {
 
         <MobileNavBar />
       </main>
-    )
+      
+    )}
+    </>
   );
 };
 

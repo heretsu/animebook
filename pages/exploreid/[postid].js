@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect, useRef } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../../lib/userContext";
 import Image from "next/image";
 import CommentItem from "@/components/commentItem";
 import supabase from "@/hooks/authenticateUser";

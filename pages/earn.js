@@ -2,7 +2,7 @@ import NavBar, { MobileNavBar } from "@/components/navBar";
 import animationData from "@/assets/kianimation.json";
 import Image from "next/image";
 import { useEffect, useState, useContext, useRef } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import dynamic from "next/dynamic";
 import PageLoadOptions from "@/hooks/pageLoadOptions";

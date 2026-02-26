@@ -2,7 +2,7 @@ import NavBar, { MobileNavBar } from "@/components/navBar";
 import supabase from "@/hooks/authenticateUser";
 import { useRouter } from "next/router";
 import { useState, useContext } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import CloudSvg from "@/components/cloudSvg";
 import Image from "next/image";
 import PageLoadOptions from "@/hooks/pageLoadOptions";

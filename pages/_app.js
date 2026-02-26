@@ -1,5 +1,5 @@
 import "@/styles/globals.css";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   ConnectionProvider,
@@ -83,6 +83,7 @@ function App({ Component, pageProps }) {
   const [chosenTag, setChosenTag] = useState("all");
   const [followingPosts, setFollowingPosts] = useState(false);
   const [storyViews, setStoryViews] = useState(null);
+  const [expandStream, setExpandStream] = useState(false)
 
   const [followerObject, setFollowerObject] = useState(null);
   const [followingObject, setFollowingObject] = useState(null);
@@ -557,6 +558,12 @@ function App({ Component, pageProps }) {
         "/create",
         "/publishmanga",
         "/subscriptionplan",
+        "/stream",
+        "/live",
+        "/stream-analytics",
+        "/streamer-earnings",
+        "/watch",
+        "/watch/[roomName]",
       ].includes(router.pathname)
     ) {
       if (!subscribed) {
@@ -631,7 +638,7 @@ function App({ Component, pageProps }) {
 
   return (
     (darkMode !== undefined ||
-      router.pathname === "/signin" ||
+      router.pathname === "/signin" || router.pathname === "/privacy-policy" || router.pathname === "/terms-of-service" ||
       allowUnloggedView ||
       onboarding) && (
       <ConnectionProvider endpoint={endpoint}>
@@ -735,6 +742,7 @@ function App({ Component, pageProps }) {
                 setFollowingPosts,
                 storyViews,
                 setStoryViews,
+                expandStream, setExpandStream,
                 followerObject,
                 setFollowerObject,
                 followingObject,
@@ -802,7 +810,12 @@ function App({ Component, pageProps }) {
                   "/subscriptionplan",
                   "/inbox",
                   "/[message]",
-                  "/privacy-policy",
+                  "/stream",
+                  "/live",
+                  "/stream-analytics",
+                  "/streamer-earnings",
+                  "/watch",
+                  "/watch/[roomName]",
                 ].includes(router.pathname) ? (
                   authLoading ? (
                     <div className="pt-8">

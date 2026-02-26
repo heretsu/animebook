@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import supabase from "@/hooks/authenticateUser";
 import Image from "next/image";
 import { useContext } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import CommentItemChild from "./commentItemChild";
 import CommentConfig from "./commentConfig";
 import PageLoadOptions from "@/hooks/pageLoadOptions";

@@ -4,7 +4,7 @@ import supabase from "@/hooks/authenticateUser";
 import ConnectionData from "@/lib/connectionData";
 import { useRouter } from "next/router";
 import LargeTopBar, { SmallTopBar } from "@/components/largeTopBar";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import { useContext } from "react";
 import SideBar from "@/components/sideBar";
 import LargeRightBar from "@/components/largeRightBar";

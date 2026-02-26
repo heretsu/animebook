@@ -3,7 +3,7 @@ import CommentConfig from "./commentConfig";
 import PlusIcon from "./plusIcon";
 import { useEffect, useState, useContext, useRef } from "react";
 import supabase from "@/hooks/authenticateUser";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import Relationships from "@/hooks/relationships";
 import DappLibrary from "@/lib/dappLibrary";
 import { useRouter } from "next/router";

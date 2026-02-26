@@ -1,4 +1,4 @@
-import NavBar, { MobileNavBar } from "@/components/navBar";
+import Head from "next/head";
 import { useRouter } from "next/router";
 
 const NotFound = () => {
@@ -6,6 +6,10 @@ const NotFound = () => {
 
   return (
     <main>
+      <Head>
+        <title>404 - Page Not Found | Animebook</title>
+        <meta name="robots" content="noindex" />
+      </Head>
       <section className="flex flex-row space-x-2 w-full">
         <div className="w-full space-y-8 flex flex-col justify-center items-center pt-4">
           <div className="flex flex-row w-full justify-center items-center text-center text-logoSize">

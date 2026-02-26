@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import CommunityPostCard from "./communityPostCard";
 
 const CommunityPosts = ({posts, community, globalCommunityComments, fetchCommunityDetails}) => {

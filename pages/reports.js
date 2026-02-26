@@ -1,6 +1,6 @@
 import NavBar, { MobileNavBar } from "@/components/navBar";
 import { useEffect, useState, useContext, useRef } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import supabase from "@/hooks/authenticateUser";
 import Image from "next/image";
 import { useRouter } from "next/router";

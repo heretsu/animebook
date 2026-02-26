@@ -1,9 +1,9 @@
-import supabase from "@/hooks/authenticateUser";
 import Head from "next/head";
+import supabase from "@/hooks/authenticateUser";
 import PageLoadOptions from "@/hooks/pageLoadOptions";
 import ConnectionData from "@/lib/connectionData";
 import { useEffect, useState, useContext } from "react";
-import { UserContext } from "@/lib/userContext";
+import { UserContext } from "../lib/userContext";
 import { useRouter } from "next/router";
 import newLogo from "@/assets/newLogo.png";
 import Image from "next/image";
@@ -274,9 +274,12 @@ const Signin = () => {
               .signUp({
                 email: manualEmail.trim(),
                 password: manualPassword,
-                options: {
-                  redirectTo: "https://animebook.io/home",
-                },
+                // options: {
+                //     redirectTo: "http://localhost:3000/home",
+                //   }
+                // options: {
+                //   redirectTo: "https://animebook-theta.vercel.app/home",
+                // },
               })
               .catch((e) => {
                 console.log(e);
@@ -286,9 +289,12 @@ const Signin = () => {
               .signInWithPassword({
                 email: manualEmail.trim(),
                 password: manualPassword,
-                options: {
-                  redirectTo: "https://animebook.io/home",
-                },
+                // options: {
+                //   redirectTo: "http://localhost:3000/home",
+                // }
+                // options: {
+                //   redirectTo: "https://animebook-theta.vercel.app/home",
+                // },
               })
               .catch((e) => {
                 console.log(e);
@@ -309,9 +315,12 @@ const Signin = () => {
       } else {
         supabase.auth.signInWithOAuth({
           provider: provider,
-          options: {
-            redirectTo: "https://animebook.io/home",
-          },
+          // options: {
+          //   redirectTo: "http://localhost:3000/home",
+          // }
+          // options: {
+          //   redirectTo: "https://animebook-theta.vercel.app/home",
+          // },
         });
       }
     } catch (error) {
@@ -333,6 +342,15 @@ const Signin = () => {
 
   return (
     <div className="bg-[#F9F9F9] h-screen flex flex-row md:items-center">
+      <Head>
+  <title>Sign In to Animebook - Anime Social Platform</title>
+  <meta name="description" content="Sign in or create your Animebook account. Connect with anime fans, share content, earn KI and watch live streams." />
+  <meta property="og:title" content="Join Animebook - Anime Social Platform" />
+  <meta property="og:description" content="Connect with anime fans, share content, earn KI and watch live streams." />
+  <meta property="og:image" content="https://animebook.io/og-default.png" />
+  <meta property="og:url" content="https://animebook.io/signin" />
+  <link rel="canonical" href="https://animebook.io/signin" />
+</Head>
       <div className="flex md:hidden w-full md:w-1/2">
         <AnimeGrid
           img1={img1}
