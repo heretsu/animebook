@@ -637,14 +637,7 @@ img {
 }
 
 @media (max-width: 980px) {
-  .whitebox.absolute.flex.flex-col.justify-between.bottom-0.md\:relative.bg-white.mx-auto.p-2.rounded-3xl.w-full.md\:w-\[50\%\].mgl {
-    justify-content: normal;
-    border-radius: 25px 25px 25px 25px;
-    height: fit-content;
-    padding: 20px 10px 20px 10px;
-
-    box-shadow: 0px 0px 30px 500px #000000cc;
-  }
+  
   /* .whitebox {
     top: 200px;
   } */

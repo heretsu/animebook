@@ -319,8 +319,8 @@ const Signin = () => {
           //   redirectTo: "http://localhost:3000/home",
           // }
           options: {
-                  redirectTo: "https://animebook.io/home",
-                },
+            redirectTo: "https://animebook.io/home",
+          },
         });
       }
     } catch (error) {
@@ -343,30 +343,28 @@ const Signin = () => {
   return (
     <div className="bg-[#F9F9F9] h-screen flex flex-row md:items-center">
       <Head>
-  <title>Sign In to Animebook - Anime Social Platform</title>
-  <meta name="description" content="Sign in or create your Animebook account. Connect with anime fans, share content, earn KI and watch live streams." />
-  <meta property="og:title" content="Join Animebook - Anime Social Platform" />
-  <meta property="og:description" content="Connect with anime fans, share content, earn KI and watch live streams." />
-  <meta property="og:image" content="https://animebook.io/og-default.png" />
-  <meta property="og:url" content="https://animebook.io/signin" />
-  <link rel="canonical" href="https://animebook.io/signin" />
-</Head>
-      <div className="flex md:hidden w-full md:w-1/2">
-        <AnimeGrid
-          img1={img1}
-          img2={img2}
-          img3={img3}
-          img4={img4}
-          img5={img5}
-          img6={img6}
-          img7={img7}
-          img8={img8}
-          img9={img9}
-          img10={img10}
+        <title>Sign In to Animebook - Anime Social Platform</title>
+        <meta
+          name="description"
+          content="Sign in or create your Animebook account. Connect with anime fans, share content, earn KI and watch live streams."
         />
-      </div>
+        <meta
+          property="og:title"
+          content="Join Animebook - Anime Social Platform"
+        />
+        <meta
+          property="og:description"
+          content="Connect with anime fans, share content, earn KI and watch live streams."
+        />
+        <meta
+          property="og:image"
+          content="https://animebook.io/og-default.png"
+        />
+        <meta property="og:url" content="https://animebook.io/signin" />
+        <link rel="canonical" href="https://animebook.io/signin" />
+      </Head>
 
-      <div className="whitebox absolute flex flex-col justify-between bottom-0 md:relative bg-white mx-auto p-2 rounded-3xl w-full md:w-[50%] mgl">
+      <div className="whitebox flex flex-col justify-between bottom-0 md:relative bg-white mx-auto p-2 rounded-3xl w-full md:w-[50%] mgl">
         {verificationLink ? (
           <div className="flex flex-col">
             <div className="pt-2 pb-0.5 mx-auto relative h-18 w-18 flex rounded-full">
